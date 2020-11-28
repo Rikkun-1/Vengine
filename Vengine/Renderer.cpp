@@ -90,7 +90,13 @@ void Renderer::initVulkan()
 						 commandPool,
 						 commandBuffers);
 
-	createSemaphores();
+	createSyncObjects(logicalDevice,
+					  MAX_FRAMES_IN_FLIGHT,
+					  swapChainImages,
+					  imageAvailableSemaphores,
+					  renderFinishedSemaphores,
+					  inFlightFences,
+					  imagesInFlight);
 }
 
 void Renderer::mainLoop()
@@ -100,10 +106,25 @@ void Renderer::mainLoop()
 		glfwPollEvents();
 		drawFrame();
 	}
+
+	// прежде чем выйти из главного цикла мы ждем чтобы видеокарта закончила выполнения последнего
+	// командного буфера 
+	vkDeviceWaitIdle(logicalDevice);
 }
 
 void Renderer::drawFrame()
 {
+	// ожидаем чтобы все заборы перешли в сигнальное состояние
+	// функия принимает массив заборов и в зависимости от 4-го параметра 
+	// ждет либо один любой забор, либо сразу все
+	// последний параметр это то как долго мы собираемся ждать в наносекундах
+	// функция завершится не дожидаясь заборов если время выйдет. В этом случае она вернет VK_TIMEOUT
+	// иначе VK_SUCCESS
+	// значение UINT64_MAX означает что ограничения по времени нет
+	vkWaitForFences(logicalDevice, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+	// переводим заборы в несигнальное состояние
+	vkResetFences(logicalDevice, 1, &inFlightFences[currentFrame]);
+
 	// индекс, указывающий какое изображение в swapChainImages 
 	// стало доступным
 	uint32_t imageIndex;
@@ -113,7 +134,7 @@ void Renderer::drawFrame()
 						  // чтобы стать доступным. значение UINT64_MAX - отключает счетчик
 						  UINT64_MAX,
 						  // семафор, который нужно сделать сигнальным когда изображение будет готово для использования
-						  imageAvailableSemaphore, 
+						  imageAvailableSemaphores[currentFrame],
 						  // аналогично, забор. Можно использовать оба одновременно. 
 						  // Мы же используем только семафор
 						  VK_NULL_HANDLE, 
@@ -121,11 +142,20 @@ void Renderer::drawFrame()
 						  // стало доступным
 						  &imageIndex); 
 
+	// если предыдущий кадр все еще использует это изображение, то мы ждем до тех пор пока 
+	// оно не освободится
+	if(imagesInFlight[imageIndex] != VK_NULL_HANDLE)
+		vkWaitForFences(logicalDevice, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+
+	// связываем изображение, полученное из цепочки показа с забором, который станет
+	// сигнальным когда рисование в это изображение будет окончено
+	imagesInFlight[imageIndex] = inFlightFences[currentFrame];
+
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
 	// описываем семафоры, котоые необходимо подождать до начала
-	VkSemaphore waitSemaphores[] = {imageAvailableSemaphore};
+	VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
 
 	// описываем во время какой стадии мы ожидаем семафоры
 	// каждый семафор соотносится со стадией с таким же индексом
@@ -143,52 +173,56 @@ void Renderer::drawFrame()
 	submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
 
 	// описывает какие семафоры зажечь после исполнения данного буфера команд
-	VkSemaphore signalSemaphores[]  = {renderFinishedSemaphore};
+	VkSemaphore signalSemaphores[]  = {renderFinishedSemaphores[currentFrame]};
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores	= signalSemaphores;
 
+	// сбрасываем забор в несигнальное состояние для этого кадра
+	// vkQueueSubmit сделает его вновь сигнальным когда закончит выполнение команд
+
+	vkResetFences(logicalDevice, 1, &inFlightFences[currentFrame]);
 	// в очерень можно отправить сразу несколько submitInfo, последовательность которых
 	// настроена благодаря светофорам 
 	// последний параметр это забор, который нужно сделать сигнальным когда выполнение 
 	// всех буферов будет закончено
-	if(vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS)
+	if(vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS)
 		throw std::runtime_error("failed to submit draw command buffer!");
-	
+
+	// эта структура необходима для того чтобы описать когда и какое изображение мы хотим вернуть
+	// обратно в цепочку показа
 	VkPresentInfoKHR presentInfo{};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
+	// список семафоров, которые необходимо дождаться прежде чем изображение можно будет вновь рисовать на экране
 	presentInfo.waitSemaphoreCount = 1;
 	presentInfo.pWaitSemaphores = signalSemaphores;
 
+	// здесь описываются цепочки показа и индекс изображения, которое мы возвращаем в цепочку для каждой из них
+	// обычно цепочка показа лишь одна
 	VkSwapchainKHR swapChains[] = {swapChain};
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = swapChains;
 	presentInfo.pImageIndices = &imageIndex;
 
-	presentInfo.pResults = nullptr; // Optional
+	// опциональный параметр который позволяет передать массив VkResult значений, в который будет записан 
+	// результат об успешности показа изображения для каждой цепочки показа
+	// Этот параметр требуется только если мы используем несколько цепочек показа
+	// если цепочка одна, то достаточно того что vkQueuePresentKHR также возвращает VkResult как ответ на попытку
+	// показать изображение
+	presentInfo.pResults = nullptr; 
 
 	vkQueuePresentKHR(presentationQueue, &presentInfo);
-}
-
-void Renderer::createSemaphores()
-{
-	VkSemaphoreCreateInfo semaphoreInfo{};
-	// согласно текущему состоянию Vulkan API для создания семафора более не требуется никакой
-	// информации кроме sType
-	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-	if(vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &imageAvailableSemaphore) != VK_SUCCESS ||
-	   vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &renderFinishedSemaphore) != VK_SUCCESS)
-	{
-
-		throw std::runtime_error("failed to create semaphores!");
-	}
+	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 void Renderer::cleanup()
 {
-	vkDestroySemaphore(logicalDevice, renderFinishedSemaphore, nullptr);
-	vkDestroySemaphore(logicalDevice, imageAvailableSemaphore, nullptr);
+	for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+	{
+		vkDestroySemaphore(logicalDevice, renderFinishedSemaphores[i], nullptr);
+		vkDestroySemaphore(logicalDevice, imageAvailableSemaphores[i], nullptr);
+		vkDestroyFence(logicalDevice, inFlightFences[i], nullptr);
+	}
 
 	vkDestroyCommandPool(logicalDevice, commandPool, nullptr);
 

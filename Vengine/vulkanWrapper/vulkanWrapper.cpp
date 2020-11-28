@@ -339,20 +339,25 @@ void createRenderPass(const VkDevice	&logicalDevice,
 		throw std::runtime_error("failed to create render pass!");
 	}
 
-	// индекс подпрохода для которого мы настраиваем зависимости
 	VkSubpassDependency dependency{};
+	// индекс подпрохода для которого мы настраиваем зависимости
 	// VK_SUBPASS_EXTERNAL описывает неявные подпроходы которые происходят до или после 
 	// нашего render pass в зависимости от того расположен он в srcSubpass или dstSubpass
 	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 
-	// индекс выходной подпрохода. Подпроход у нас один единственный и его индекст равен 0
+	// индекс выходного подпрохода. Подпроход у нас один единственный и его индекст равен 0
 	dependency.dstSubpass = 0; 
+	//dstSubpass всегда должен быть больше чем srcSubpass во избежание зацикливания в графе зависимостей
 
-	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	// здесь мы описываем то чего мы ждем прежде чем начать и на какой стадии мы этого ждем
+	// мы говорим что прежде чем начать стадию рисования в буфер мы хотим дождаться 
+	// разрешения на запись
+	// Прежде чем начать рисовать мы ждем, что цепочка показа разрешит писать в прикрепленное изображение
+	dependency.dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
 	renderPassInfo.dependencyCount = 1;
-	renderPassInfo.pDependencies = &dependency;
+	renderPassInfo.pDependencies   = &dependency;
 }
 
 ///////////////////////////////////////////////////////////
@@ -438,7 +443,6 @@ void createGraphicsPipeline(const VkDevice	 &logicalDevice,
 	VkRect2D scissor{};
 	scissor.offset = {0, 0};
 	scissor.extent = swapChainExtent;
-
 
 	//////////////////////// VIEWPORT SETUP ////////////////////////
 
@@ -544,8 +548,8 @@ void createGraphicsPipeline(const VkDevice	 &logicalDevice,
 	colorBlending.blendConstants[1] = 0.0f; // Optional
 	colorBlending.blendConstants[2] = 0.0f; // Optional
 	colorBlending.blendConstants[3] = 0.0f; // Optional
-	////////////////////////////////////////////////////////////////////////
 
+	////////////////////////////////////////////////////////////////////////
 
 	// Некоторые настройки pipeline, такие как размер viewport, толщина линий и blendConstants 
 	// можно настраивать на ходу, не пересоздавая весь pipeline
@@ -734,7 +738,7 @@ void createCommandBuffers(const VkDevice				   &logicalDevice,
 		// будет использоваться на протяжении одного прохода рендеринга(render pass)
 		// VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT - этот буфер может быть 
 		// отправлен в очередь в то же время, пока он уже находится в очереди и исполняется
-		beginInfo.flags = 0;				  // Optional
+		beginInfo.flags = 0; // Optional
 
 		// опциональный. Нужен только для вторичных буферов и описывает то, какие параметры нужно
 		// унаследовать у первичного буфера, что вызвал этот вторичный
@@ -785,3 +789,39 @@ void createCommandBuffers(const VkDevice				   &logicalDevice,
 
 
 ///////////////////////////////////////////////////////////
+
+
+void createSyncObjects(const VkDevice &logicalDevice,
+					   int MAX_FRAMES_IN_FLIGHT,
+					   const std::vector<VkImage> &swapChainImages,
+					   std::vector<VkSemaphore>	  &imageAvailableSemaphores,
+					   std::vector<VkSemaphore>   &renderFinishedSemaphores,
+					   std::vector<VkFence>		  &inFlightFences,
+					   std::vector<VkFence>		  &imagesInFlight)
+{
+	imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+	renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+	inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+	imagesInFlight.resize(swapChainImages.size(), VK_NULL_HANDLE);
+
+	// согласно текущему состоянию Vulkan API для создания семафора более не требуется никакой
+	// информации кроме sType
+	VkSemaphoreCreateInfo semaphoreInfo{};
+	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+	VkFenceCreateInfo fenceInfo{};
+	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	// говорим что при создании наш забор должен быть сразу в сигнальном состоянии
+	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+	{
+		if(vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
+		   vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
+		   vkCreateFence(logicalDevice, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
+		{
+
+			throw std::runtime_error("failed to create synchronization objects for a frame!");
+		}
+	}
+}
