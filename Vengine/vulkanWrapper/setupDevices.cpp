@@ -14,17 +14,17 @@ bool isDeviceSuitable(const VkPhysicalDevice &physicalDevice,
 
     bool extensionsSupported = checkDeviceExtensionsSupport(physicalDevice, requiredExtensions);
 
-    //bool swapChainAdequate = false;
+    bool swapChainAdequate = false;
     if(extensionsSupported)
     {
-        //SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device, surface);
-        //swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+        SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice, surface);
+        swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     }
 
     return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
            deviceFeatures.geometryShader                                       &&
            extensionsSupported                                                 &&
-           //swapChainAdequate                                                 &&
+           swapChainAdequate                                                 &&
            indices.has_value();
 }
 
