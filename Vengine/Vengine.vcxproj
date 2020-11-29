@@ -72,15 +72,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>.</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>.</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>.</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>.</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -157,7 +161,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="ClassDiagram.cd" />
     <None Include="shaders\bin\frag.spv" />
     <None Include="shaders\bin\vert.spv" />
     <None Include="shaders\compile.bat" />
@@ -166,6 +169,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="vulkanWrapper\Vertex.cpp" />
     <ClCompile Include="vkTools.cpp" />
     <ClCompile Include="vulkanWrapper\setupSwapchain.cpp" />
     <ClCompile Include="vulkanWrapper\queueFamilyIndices.cpp" />
@@ -178,6 +182,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h" />
+    <ClInclude Include="vulkanWrapper\Vertex.h" />
     <ClInclude Include="vkTools.h" />
     <ClInclude Include="vulkanWrapper\setupSwapchain.h" />
     <ClInclude Include="vulkanWrapper\extensionsCheck.h" />

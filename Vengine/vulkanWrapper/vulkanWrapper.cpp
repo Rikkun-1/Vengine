@@ -414,12 +414,15 @@ void createGraphicsPipeline(const VkDevice	 &logicalDevice,
 
 	//////////////////////// VERTEX INPUT STAGE ////////////////////////
 
+	auto bindingDescription	   = Vertex::getBindingDescription();
+	auto attributeDescriptions = Vertex::getAttributeDescriptions();
+
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 	vertexInputInfo.sType						    = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputInfo.vertexBindingDescriptionCount   = 0;
-	vertexInputInfo.pVertexBindingDescriptions	    = nullptr; // Optional
-	vertexInputInfo.vertexAttributeDescriptionCount = 0;
-	vertexInputInfo.pVertexAttributeDescriptions	= nullptr; // Optional
+	vertexInputInfo.vertexBindingDescriptionCount	= 1;
+	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+	vertexInputInfo.pVertexBindingDescriptions		= &bindingDescription;
+	vertexInputInfo.pVertexAttributeDescriptions	= attributeDescriptions.data();
 	////////////////////////////////////////////////////////////////////
 
 
@@ -820,7 +823,6 @@ void createSyncObjects(const VkDevice &logicalDevice,
 		   vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
 		   vkCreateFence(logicalDevice, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
 		{
-
 			throw std::runtime_error("failed to create synchronization objects for a frame!");
 		}
 	}

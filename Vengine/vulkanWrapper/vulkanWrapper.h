@@ -13,6 +13,7 @@
 #include "setupDevices.h"
 
 #include "setupSwapchain.h"
+#include "Vertex.h"
 
 #ifdef NDEBUG
 	const bool enableValidationLayers = false;

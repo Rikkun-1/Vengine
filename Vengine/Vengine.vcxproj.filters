@@ -21,7 +21,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ClassDiagram.cd" />
     <None Include="shaders\bin\frag.spv">
       <Filter>shaders\bin</Filter>
     </None>
@@ -69,6 +68,9 @@
     <ClCompile Include="vkTools.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="vulkanWrapper\Vertex.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h">
@@ -96,6 +98,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="vkTools.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkanWrapper\Vertex.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
