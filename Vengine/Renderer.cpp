@@ -1,5 +1,11 @@
 #include "Renderer.h"
 
+static void framebufferResizeCallback(GLFWwindow *window, int width, int height)
+{
+	auto app = reinterpret_cast<Renderer *>(glfwGetWindowUserPointer(window));
+	app->framebufferResized = true;
+}
+
 void Renderer::run()
 {
 	initWindow();
@@ -13,10 +19,15 @@ void Renderer::initWindow()
 	glfwInit();
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
 	pWindow = glfwCreateWindow(settings.windowWidth, settings.windowHeight, 
 							  settings.windowTitle, nullptr, nullptr);
+
+	// прикрепляем к окну указатель на экземпляр класса Renderer
+	// чтобы в framebufferResizeCallback иметь доступ к framebufferResized
+	glfwSetWindowUserPointer(pWindow, this);
+	glfwSetFramebufferSizeCallback(pWindow, framebufferResizeCallback);
 }
 
 void Renderer::initVulkan()
@@ -41,6 +52,51 @@ void Renderer::initVulkan()
 						graphicsQueue, 
 						presentationQueue);
 
+	recreateSwapChain();
+
+	createSyncObjects(logicalDevice,
+					  MAX_FRAMES_IN_FLIGHT,
+					  swapChainImages,
+					  imageAvailableSemaphores,
+					  renderFinishedSemaphores,
+					  inFlightFences,
+					  imagesInFlight);
+}
+
+void Renderer::mainLoop()
+{
+	while(!glfwWindowShouldClose(pWindow))
+	{
+		glfwPollEvents();
+		drawFrame();
+	}
+
+	// прежде чем выйти из главного цикла мы ждем чтобы видеокарта закончила выполнения последнего
+	// командного буфера 
+	vkDeviceWaitIdle(logicalDevice);
+}
+
+void Renderer::recreateSwapChain()
+{
+	int width  = 0, 
+		height = 0;
+
+	glfwGetFramebufferSize(pWindow, &width, &height);
+	// если размер окна в данный момент уменьшается, то glfwGetFramebufferSize вернет нули
+	// вместо ширины и высоты. Поэтому мы ждем пока размер окна не примет адекватные значения
+	// это произойдет когда окно перестанет менять размер
+	while(width == 0 || height == 0)
+	{
+		glfwGetFramebufferSize(pWindow, &width, &height);
+		glfwWaitEvents();
+	}
+
+	vkDeviceWaitIdle(logicalDevice);
+
+	if(swapChain != VK_NULL_HANDLE)
+		cleanupSwapChain();
+
+
 	createSwapChain(pWindow,
 					physicalDevice,
 					logicalDevice,
@@ -60,7 +116,7 @@ void Renderer::initVulkan()
 	createRenderPass(logicalDevice,
 					 swapChainImageFormat,
 					 renderPass);
-	
+
 
 	createGraphicsPipeline(logicalDevice,
 						   swapChainExtent,
@@ -89,27 +145,6 @@ void Renderer::initVulkan()
 						 renderPass,
 						 commandPool,
 						 commandBuffers);
-
-	createSyncObjects(logicalDevice,
-					  MAX_FRAMES_IN_FLIGHT,
-					  swapChainImages,
-					  imageAvailableSemaphores,
-					  renderFinishedSemaphores,
-					  inFlightFences,
-					  imagesInFlight);
-}
-
-void Renderer::mainLoop()
-{
-	while(!glfwWindowShouldClose(pWindow))
-	{
-		glfwPollEvents();
-		drawFrame();
-	}
-
-	// прежде чем выйти из главного цикла мы ждем чтобы видеокарта закончила выполнения последнего
-	// командного буфера 
-	vkDeviceWaitIdle(logicalDevice);
 }
 
 void Renderer::drawFrame()
@@ -122,31 +157,46 @@ void Renderer::drawFrame()
 	// иначе VK_SUCCESS
 	// значение UINT64_MAX означает что ограничения по времени нет
 	vkWaitForFences(logicalDevice, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-	// переводим заборы в несигнальное состояние
-	vkResetFences(logicalDevice, 1, &inFlightFences[currentFrame]);
 
 	// индекс, указывающий какое изображение в swapChainImages 
 	// стало доступным
 	uint32_t imageIndex;
-	vkAcquireNextImageKHR(logicalDevice,
-						  swapChain, 
-						  // время в наносекундах, данное изображению
-						  // чтобы стать доступным. значение UINT64_MAX - отключает счетчик
-						  UINT64_MAX,
-						  // семафор, который нужно сделать сигнальным когда изображение будет готово для использования
-						  imageAvailableSemaphores[currentFrame],
-						  // аналогично, забор. Можно использовать оба одновременно. 
-						  // Мы же используем только семафор
-						  VK_NULL_HANDLE, 
-						  // в imageIndex будет записан индекс изображения, которое
-						  // стало доступным
-						  &imageIndex); 
+	VkResult result = vkAcquireNextImageKHR(logicalDevice,
+											swapChain,
+											// время в наносекундах, данное изображению
+											// чтобы стать доступным. значение UINT64_MAX - отключает счетчик
+											UINT64_MAX,
+											// семафор, который нужно сделать сигнальным когда изображение будет готово для использования
+											imageAvailableSemaphores[currentFrame],
+											// аналогично, забор. Можно использовать оба одновременно. 
+											// Мы же используем только семафор
+											VK_NULL_HANDLE,
+											// в imageIndex будет записан индекс изображения, которое
+											// стало доступным
+											&imageIndex);
+	
+	// если vkAcquireNextImageKHR вернул VK_ERROR_OUT_OF_DATE_KHR
+	// то это значит что текущий формат изображений в цепочке показа более не соответсвует 
+	// поверхности к которой привязана цепочка показа
+	// такое может произойти например при изменении размера окна
+	// VK_SUBOPTIMAL_KHR означает что изображения все еще могут использоваться для отрисовки,
+	// но они более не являются изображениями, полностью совпадающими с поверхностью на экране
+	if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+	{
+		// мы пересоздаем цепочку показа чтобы она вновь стала совместимой с поверхностью для показа
+		recreateSwapChain();
+		// мы не получили изображение для отрисовки текущего кадра. 
+		// без изображения дальнейший код не может исполняться
+		return;
+	}
+	else if(result != VK_SUCCESS)
+		throw std::runtime_error("failed to acquire swap chain image!");
 
 	// если предыдущий кадр все еще использует это изображение, то мы ждем до тех пор пока 
 	// оно не освободится
 	if(imagesInFlight[imageIndex] != VK_NULL_HANDLE)
 		vkWaitForFences(logicalDevice, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
-
+	
 	// связываем изображение, полученное из цепочки показа с забором, который станет
 	// сигнальным когда рисование в это изображение будет окончено
 	imagesInFlight[imageIndex] = inFlightFences[currentFrame];
@@ -179,7 +229,6 @@ void Renderer::drawFrame()
 
 	// сбрасываем забор в несигнальное состояние для этого кадра
 	// vkQueueSubmit сделает его вновь сигнальным когда закончит выполнение команд
-
 	vkResetFences(logicalDevice, 1, &inFlightFences[currentFrame]);
 	// в очерень можно отправить сразу несколько submitInfo, последовательность которых
 	// настроена благодаря светофорам 
@@ -211,23 +260,33 @@ void Renderer::drawFrame()
 	// показать изображение
 	presentInfo.pResults = nullptr; 
 
-	vkQueuePresentKHR(presentationQueue, &presentInfo);
+	result = vkQueuePresentKHR(presentationQueue, &presentInfo);
+
+	// если в момент между рендером и показом изображения поверхность для показа изменила размер,
+	// то vkQueuePresentKHR не сможет показать изображение так как цепочка показа более
+	// не совместима с повехностью
+	if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized)
+	{
+		framebufferResized = false;
+		recreateSwapChain();
+	}
+	else if(result != VK_SUCCESS)
+		throw std::runtime_error("failed to present swap chain image!");
+
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void Renderer::cleanup()
+void Renderer::cleanupSwapChain()
 {
-	for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-	{
-		vkDestroySemaphore(logicalDevice, renderFinishedSemaphores[i], nullptr);
-		vkDestroySemaphore(logicalDevice, imageAvailableSemaphores[i], nullptr);
-		vkDestroyFence(logicalDevice, inFlightFences[i], nullptr);
-	}
-
-	vkDestroyCommandPool(logicalDevice, commandPool, nullptr);
-
 	for(auto framebuffer : swapChainFramebuffers)
 		vkDestroyFramebuffer(logicalDevice, framebuffer, nullptr);
+
+	// вместо того чтобы создавать новый командный пул и выделять буферы в нем
+	// мы можем освободить текущий и выделить новые командные буферы в нем
+	vkFreeCommandBuffers(logicalDevice, 
+						 commandPool, 
+						 static_cast<uint32_t>(commandBuffers.size()), 
+						 commandBuffers.data());
 
 	vkDestroyPipeline(logicalDevice, graphicsPipeline, nullptr);
 	vkDestroyPipelineLayout(logicalDevice, pipelineLayout, nullptr);
@@ -237,6 +296,20 @@ void Renderer::cleanup()
 		vkDestroyImageView(logicalDevice, imageView, nullptr);
 
 	vkDestroySwapchainKHR(logicalDevice, swapChain, nullptr);
+}
+
+void Renderer::cleanup()
+{
+	cleanupSwapChain();
+
+	for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+	{
+		vkDestroySemaphore(logicalDevice, renderFinishedSemaphores[i], nullptr);
+		vkDestroySemaphore(logicalDevice, imageAvailableSemaphores[i], nullptr);
+		vkDestroyFence(logicalDevice, inFlightFences[i], nullptr);
+	}
+
+	vkDestroyCommandPool(logicalDevice, commandPool, nullptr);
 
 	vkDestroyDevice(logicalDevice, nullptr);
 
@@ -251,3 +324,4 @@ void Renderer::cleanup()
 
 	glfwTerminate();
 }
+

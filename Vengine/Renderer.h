@@ -12,6 +12,7 @@ class Renderer
 {
 public:
 	vkSettings settings;
+	bool framebufferResized = false;
 
 	void run();
 
@@ -56,6 +57,8 @@ private:
 	void initVulkan();
 	void mainLoop();
 	void drawFrame();
+	void recreateSwapChain();
+	void cleanupSwapChain();
 	void cleanup();
 };
 
