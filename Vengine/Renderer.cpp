@@ -52,8 +52,10 @@ void Renderer::initVulkan()
 						graphicsQueue, 
 						presentationQueue);
 
+	VkDeviceSize vertexBufferSize = sizeof(vertices[0]) * vertices.size();
 	createVertexBuffer(physicalDevice,
 					   logicalDevice,
+					   vertexBufferSize,
 					   vertices,
 					   vertexBuffer,
 					   vertexBufferMemory);

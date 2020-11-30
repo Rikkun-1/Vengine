@@ -13,7 +13,7 @@
 #include "setupDevices.h"
 
 #include "setupSwapchain.h"
-#include "Vertex.h"
+#include "buffer.h"
 
 #ifdef NDEBUG
 	const bool enableValidationLayers = false;
@@ -117,14 +117,3 @@ void createSyncObjects(const VkDevice &logicalDevice,
 					   std::vector<VkFence>		  &inFlightFences,
 					   std::vector<VkFence>		  &imagesInFlight);
 
-
-void createVertexBuffer(const VkPhysicalDevice	  &physicalDevice,
-						const VkDevice			  &logicalDevice,
-						const std::vector<Vertex> &vertices,
-						VkBuffer				  &vertexBuffer,
-						VkDeviceMemory			  &vertexBufferMemory);
-
-
-uint32_t findMemoryType(const VkPhysicalDevice		&physicalDevice,
-						uint32_t					typeFilter,
-						VkMemoryPropertyFlags		properties);

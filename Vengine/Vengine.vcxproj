@@ -168,6 +168,7 @@
     <None Include="shaders\shader.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="vulkanWrapper\buffer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="vulkanWrapper\Vertex.cpp" />
     <ClCompile Include="vkTools.cpp" />
@@ -181,6 +182,7 @@
     <ClCompile Include="vulkanWrapper\vulkanWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="vulkanWrapper\buffer.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="vulkanWrapper\Vertex.h" />
     <ClInclude Include="vkTools.h" />
