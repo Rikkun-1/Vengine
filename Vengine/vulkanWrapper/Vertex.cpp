@@ -17,7 +17,7 @@ VkVertexInputBindingDescription Vertex::getBindingDescription()
 }
 
 // эта функия описывает то каким образом данные должны приниматься вершинным шейдером
-std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions()
+std::array<VkVertexInputAttributeDescription, 2> Vertex::getAttributeDescriptions()
 {
     std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
     // описывает из какого прикрепляения принимать данные
