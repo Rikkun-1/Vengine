@@ -52,6 +52,12 @@ void Renderer::initVulkan()
 						graphicsQueue, 
 						presentationQueue);
 
+	createVertexBuffer(physicalDevice,
+					   logicalDevice,
+					   vertices,
+					   vertexBuffer,
+					   vertexBufferMemory);
+
 	recreateSwapChain();
 
 	createSyncObjects(logicalDevice,
@@ -143,14 +149,15 @@ void Renderer::recreateSwapChain()
 					  surface,
 					  commandPool);
 
-
 	createCommandBuffers(logicalDevice,
 						 swapChainExtent,
 						 swapChainFramebuffers,
 						 graphicsPipeline,
 						 renderPass,
+						 vertexBuffer,
 						 commandPool,
-						 commandBuffers);
+						 commandBuffers,
+						 static_cast<uint32_t>(vertices.size()));
 }
 
 void Renderer::drawFrame()
@@ -307,6 +314,9 @@ void Renderer::cleanupSwapChain()
 void Renderer::cleanup()
 {
 	cleanupSwapChain();
+
+	vkDestroyBuffer(logicalDevice, vertexBuffer, nullptr);
+	vkFreeMemory(logicalDevice, vertexBufferMemory, nullptr);
 
 	for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 	{

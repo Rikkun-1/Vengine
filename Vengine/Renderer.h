@@ -51,6 +51,9 @@ private:
 	std::vector<VkFence>	 inFlightFences;
 	std::vector<VkFence>	 imagesInFlight;
 
+	VkBuffer				 vertexBuffer;
+	VkDeviceMemory			 vertexBufferMemory;
+
 	const int MAX_FRAMES_IN_FLIGHT = 2;
 	size_t currentFrame			   = 0;
 

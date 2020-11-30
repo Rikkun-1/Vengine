@@ -102,8 +102,10 @@ void createCommandBuffers(const VkDevice				   &logicalDevice,
 						  const std::vector<VkFramebuffer> &swapChainFramebuffers,
 						  const VkPipeline				   &graphicsPipeline,
 						  const VkRenderPass			   &renderPass,
+						  VkBuffer						   &vertexBuffer,
 						  VkCommandPool					   &commandPool,
-						  std::vector<VkCommandBuffer>	   &commandBuffers);
+						  std::vector<VkCommandBuffer>	   &commandBuffers,
+						  int							    amountOfVertices);
 
 ///////////////////////////////////////////////////////////
 
@@ -114,3 +116,15 @@ void createSyncObjects(const VkDevice &logicalDevice,
 					   std::vector<VkSemaphore>   &renderFinishedSemaphores,
 					   std::vector<VkFence>		  &inFlightFences,
 					   std::vector<VkFence>		  &imagesInFlight);
+
+
+void createVertexBuffer(const VkPhysicalDevice	  &physicalDevice,
+						const VkDevice			  &logicalDevice,
+						const std::vector<Vertex> &vertices,
+						VkBuffer				  &vertexBuffer,
+						VkDeviceMemory			  &vertexBufferMemory);
+
+
+uint32_t findMemoryType(const VkPhysicalDevice		&physicalDevice,
+						uint32_t					typeFilter,
+						VkMemoryPropertyFlags		properties);
