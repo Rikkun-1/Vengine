@@ -51,16 +51,63 @@ void Renderer::initVulkan()
 						logicalDevice,
 						graphicsQueue, 
 						presentationQueue);
+	createSwapChain(pWindow,
+					physicalDevice,
+					logicalDevice,
+					surface,
+					swapChain,
+					swapChainImages,
+					swapChainImageFormat,
+					swapChainExtent);
 
-	VkDeviceSize vertexBufferSize = sizeof(vertices[0]) * vertices.size();
+
+	createImageViews(logicalDevice,
+					 swapChainImageFormat,
+					 swapChainImages,
+					 swapChainImageViews);
+
+
+	createRenderPass(logicalDevice,
+					 swapChainImageFormat,
+					 renderPass);
+
+
+	createGraphicsPipeline(logicalDevice,
+						   swapChainExtent,
+						   renderPass,
+						   pipelineLayout,
+						   graphicsPipeline);
+
+
+	createFramebuffers(logicalDevice,
+					   renderPass,
+					   swapChainExtent,
+					   swapChainImageViews,
+					   swapChainFramebuffers);
+
+
+	createCommandPool(physicalDevice,
+					  logicalDevice,
+					  surface,
+					  commandPool);
+
 	createVertexBuffer(physicalDevice,
 					   logicalDevice,
-					   vertexBufferSize,
 					   vertices,
+					   commandPool,
+					   graphicsQueue,
 					   vertexBuffer,
 					   vertexBufferMemory);
 
-	recreateSwapChain();
+	createCommandBuffers(logicalDevice,
+						 swapChainExtent,
+						 swapChainFramebuffers,
+						 graphicsPipeline,
+						 renderPass,
+						 vertexBuffer,
+						 commandPool,
+						 commandBuffers,
+						 static_cast<uint32_t>(vertices.size()));
 
 	createSyncObjects(logicalDevice,
 					  MAX_FRAMES_IN_FLIGHT,
@@ -107,9 +154,7 @@ void Renderer::recreateSwapChain()
 
 	vkDeviceWaitIdle(logicalDevice);
 
-	if(swapChain != VK_NULL_HANDLE)
-		cleanupSwapChain();
-
+	cleanupSwapChain();
 
 	createSwapChain(pWindow,
 					physicalDevice,

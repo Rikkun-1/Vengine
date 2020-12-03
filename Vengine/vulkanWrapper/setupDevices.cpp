@@ -67,7 +67,6 @@ QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice &physicalDevice,
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies.data());
 
-
     int i = 0;
     for(const auto &queueFamily : queueFamilies)
     {
