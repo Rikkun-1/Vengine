@@ -103,9 +103,10 @@ void createCommandBuffers(const VkDevice				   &logicalDevice,
 						  const VkPipeline				   &graphicsPipeline,
 						  const VkRenderPass			   &renderPass,
 						  VkBuffer						   &vertexBuffer,
+						  VkBuffer						   &indexBuffer,
 						  VkCommandPool					   &commandPool,
 						  std::vector<VkCommandBuffer>	   &commandBuffers,
-						  int							    amountOfVertices);
+						  int							    indexBufferSize);
 
 ///////////////////////////////////////////////////////////
 

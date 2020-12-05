@@ -53,14 +53,21 @@ private:
 
 	VkBuffer				 vertexBuffer;
 	VkDeviceMemory			 vertexBufferMemory;
+	VkBuffer				 indexBuffer;
+	VkDeviceMemory			 indexBufferMemory;
 
 	const int MAX_FRAMES_IN_FLIGHT = 2;
 	size_t currentFrame			   = 0;
 
 	const std::vector<Vertex> vertices = {
-		{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-		{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-		{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+		{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+		{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+		{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+		{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+	};
+
+	const std::vector<uint32_t> indices = {
+		0, 1, 2, 2, 3, 0
 	};
 
 	void initWindow();

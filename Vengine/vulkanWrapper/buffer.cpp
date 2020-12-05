@@ -82,6 +82,53 @@ void createVertexBuffer(const VkPhysicalDevice		&physicalDevice,
 	vkFreeMemory(logicalDevice, stagingBufferMemory, nullptr);
 }
 
+void createIndexBuffer(const VkPhysicalDevice		&physicalDevice,
+						const VkDevice				&logicalDevice,
+						const std::vector<uint32_t>	&indices,
+						VkCommandPool				&commandPool,
+						VkQueue						&graphicsQueue,
+						VkBuffer					&indexBuffer,
+						VkDeviceMemory				&indexBufferMemory)
+{
+	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+
+	VkBuffer		stagingBuffer;
+	VkDeviceMemory	stagingBufferMemory;
+
+	createBuffer(physicalDevice,
+				 logicalDevice,
+				 bufferSize,
+				 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+				 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+				 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+				 stagingBuffer,
+				 stagingBufferMemory);
+
+	void *data;
+	vkMapMemory(logicalDevice, stagingBufferMemory, 0, bufferSize, 0, &data);
+	memcpy(data, indices.data(), (size_t) bufferSize);
+	vkUnmapMemory(logicalDevice, stagingBufferMemory);
+
+	createBuffer(physicalDevice,
+				 logicalDevice,
+				 bufferSize,
+				 VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+				 VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+				 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+				 indexBuffer,
+				 indexBufferMemory);
+
+	copyBuffer(logicalDevice,
+			   commandPool,
+			   graphicsQueue,
+			   stagingBuffer,
+			   indexBuffer,
+			   bufferSize);
+
+	vkDestroyBuffer(logicalDevice, stagingBuffer, nullptr);
+	vkFreeMemory(logicalDevice, stagingBufferMemory, nullptr);
+}
+
 void copyBuffer(const VkDevice	&logicalDevice,
 				VkCommandPool	&commandPool,
 				VkQueue			&graphicsQueue,

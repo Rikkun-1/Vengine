@@ -706,9 +706,10 @@ void createCommandBuffers(const VkDevice				   &logicalDevice,
 						  const VkPipeline				   &graphicsPipeline,
 						  const VkRenderPass			   &renderPass,
 						  VkBuffer						   &vertexBuffer,
+						  VkBuffer						   &indexBuffer,
 						  VkCommandPool					   &commandPool,
 						  std::vector<VkCommandBuffer>	   &commandBuffers,
-						  int								amountOfVertices)
+						  int								indexBufferSize)
 {
 	commandBuffers.resize(swapChainFramebuffers.size());
 
@@ -784,7 +785,11 @@ void createCommandBuffers(const VkDevice				   &logicalDevice,
 		VkDeviceSize offsets[]	 = {0};
 		vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
 
-		vkCmdDraw(commandBuffers[i], amountOfVertices, 1, 0, 0);
+		vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+		vkCmdDrawIndexed(commandBuffers[i], 
+						 static_cast<uint32_t>(indexBufferSize), 
+						 1, 0, 0, 0);
 
 		vkCmdEndRenderPass(commandBuffers[i]);
 

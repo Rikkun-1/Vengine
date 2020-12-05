@@ -24,6 +24,14 @@ void createVertexBuffer(const VkPhysicalDevice		&physicalDevice,
 						VkBuffer					&vertexBuffer,
 						VkDeviceMemory				&vertexBufferMemory);
 
+void createIndexBuffer(const VkPhysicalDevice		&physicalDevice,
+						const VkDevice				&logicalDevice,
+						const std::vector<uint32_t>	&indices,
+						VkCommandPool				&commandPool,
+						VkQueue						&graphicsQueue,
+						VkBuffer					&indexBuffer,
+						VkDeviceMemory				&indexBufferMemory);
+
 void copyBuffer(const VkDevice	&logicalDevice,
 				VkCommandPool	&commandPool,
 				VkQueue			&graphicsQueue,
