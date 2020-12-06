@@ -51,6 +51,7 @@ void Renderer::initVulkan()
 						logicalDevice,
 						graphicsQueue, 
 						presentationQueue);
+
 	createSwapChain(pWindow,
 					physicalDevice,
 					logicalDevice,
@@ -59,7 +60,6 @@ void Renderer::initVulkan()
 					swapChainImages,
 					swapChainImageFormat,
 					swapChainExtent);
-
 
 	createImageViews(logicalDevice,
 					 swapChainImageFormat,
@@ -71,12 +71,15 @@ void Renderer::initVulkan()
 					 swapChainImageFormat,
 					 renderPass);
 
+	createDescriptorSetLayout(logicalDevice,
+							  descriptorSetLayout);
 
 	createGraphicsPipeline(logicalDevice,
 						   swapChainExtent,
 						   renderPass,
 						   pipelineLayout,
-						   graphicsPipeline);
+						   graphicsPipeline,
+						   descriptorSetLayout);
 
 
 	createFramebuffers(logicalDevice,
@@ -107,6 +110,23 @@ void Renderer::initVulkan()
 					  indexBuffer,
 					  indexBufferMemory);
 
+	createUniformBuffers(physicalDevice,
+					     logicalDevice,
+					     uniformBuffers,
+					     uniformBuffersMemory,
+						 swapChainImages.size());
+
+	createDescriptorPool(logicalDevice, 
+						 swapChainImages,
+						 descriptorPool);
+
+	createDescriptorSets(logicalDevice, 
+						 swapChainImages,
+						 descriptorPool,
+						 descriptorSetLayout,
+						 descriptorSets,
+						 uniformBuffers);
+
 	createCommandBuffers(logicalDevice,
 						 swapChainExtent,
 						 swapChainFramebuffers,
@@ -116,6 +136,8 @@ void Renderer::initVulkan()
 						 indexBuffer,
 						 commandPool,
 						 commandBuffers,
+						 descriptorSets,
+						 pipelineLayout,
 						 static_cast<uint32_t>(indices.size()));
 
 	createSyncObjects(logicalDevice,
@@ -185,13 +207,15 @@ void Renderer::recreateSwapChain()
 					 swapChainImageFormat,
 					 renderPass);
 
+	createDescriptorSetLayout(logicalDevice,
+							  descriptorSetLayout);
 
 	createGraphicsPipeline(logicalDevice,
 						   swapChainExtent,
 						   renderPass,
 						   pipelineLayout,
-						   graphicsPipeline);
-
+						   graphicsPipeline,
+						   descriptorSetLayout);
 
 	createFramebuffers(logicalDevice,
 					   renderPass,
@@ -199,11 +223,22 @@ void Renderer::recreateSwapChain()
 					   swapChainImageViews,
 					   swapChainFramebuffers);
 
+	createUniformBuffers(physicalDevice,
+						 logicalDevice,
+						 uniformBuffers,
+						 uniformBuffersMemory,
+						 uniformBuffers.size());
 
-	createCommandPool(physicalDevice,
-					  logicalDevice,
-					  surface,
-					  commandPool);
+	createDescriptorPool(logicalDevice,
+						 swapChainImages,
+						 descriptorPool);
+
+	createDescriptorSets(logicalDevice,
+						 swapChainImages,
+						 descriptorPool,
+						 descriptorSetLayout,
+						 descriptorSets,
+						 uniformBuffers);
 
 	createCommandBuffers(logicalDevice,
 						 swapChainExtent,
@@ -214,6 +249,8 @@ void Renderer::recreateSwapChain()
 						 indexBuffer,
 						 commandPool,
 						 commandBuffers,
+						 descriptorSets,
+						 pipelineLayout,
 						 static_cast<uint32_t>(indices.size()));
 }
 
@@ -270,6 +307,11 @@ void Renderer::drawFrame()
 	// связываем изображение, полученное из цепочки показа с забором, который станет
 	// сигнальным когда рисование в это изображение будет окончено
 	imagesInFlight[imageIndex] = inFlightFences[currentFrame];
+
+	updateUniformBuffer(logicalDevice,
+						imageIndex,
+						swapChainExtent,
+						uniformBuffersMemory);
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -366,11 +408,21 @@ void Renderer::cleanupSwapChain()
 		vkDestroyImageView(logicalDevice, imageView, nullptr);
 
 	vkDestroySwapchainKHR(logicalDevice, swapChain, nullptr);
+
+	for(size_t i = 0; i < swapChainImages.size(); i++)
+	{
+		vkDestroyBuffer(logicalDevice, uniformBuffers[i], nullptr);
+		vkFreeMemory(logicalDevice, uniformBuffersMemory[i], nullptr);
+	}
+
+	vkDestroyDescriptorPool(logicalDevice, descriptorPool, nullptr);
 }
 
 void Renderer::cleanup()
 {
 	cleanupSwapChain();
+
+	vkDestroyDescriptorSetLayout(logicalDevice, descriptorSetLayout, nullptr);
 
 	vkDestroyBuffer(logicalDevice, indexBuffer, nullptr);
 	vkFreeMemory(logicalDevice, indexBufferMemory, nullptr);

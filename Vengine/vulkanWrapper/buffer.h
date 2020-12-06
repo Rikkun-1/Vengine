@@ -1,11 +1,26 @@
 #pragma once
 
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <chrono>
+
 #include <vulkan/vulkan.h>
 
 #include <vector>
 #include <stdexcept>
 
 #include "Vertex.h"
+
+
+
+struct UniformBufferObject
+{
+	glm::mat4 model;
+	glm::mat4 view;
+	glm::mat4 proj;
+};
 
 void createBuffer(const VkPhysicalDevice	&physicalDevice,
 				  const VkDevice			&logicalDevice,
@@ -31,6 +46,18 @@ void createIndexBuffer(const VkPhysicalDevice		&physicalDevice,
 						VkQueue						&graphicsQueue,
 						VkBuffer					&indexBuffer,
 						VkDeviceMemory				&indexBufferMemory);
+
+void createUniformBuffers(const VkPhysicalDevice		&physicalDevice,
+						  const VkDevice				&logicalDevice,
+						  std::vector<VkBuffer>			&uniformBuffers,
+						  std::vector<VkDeviceMemory>	&uniformBuffersMemory,
+						  int							amount);
+
+void updateUniformBuffer(const VkDevice					&logicalDevice,
+						 uint32_t						currentImage,
+						 VkExtent2D						&swapChainExtent,
+						 std::vector<VkDeviceMemory>	&uniformBuffersMemory);
+
 
 void copyBuffer(const VkDevice	&logicalDevice,
 				VkCommandPool	&commandPool,

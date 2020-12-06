@@ -72,11 +72,12 @@ VkShaderModule createShaderModule(const VkDevice &logicalDevice,
 								  const std::vector<char> &code);
 
 
-void createGraphicsPipeline(const VkDevice	 &logicalDevice,
-							const VkExtent2D &swapChainExtent,
-							VkRenderPass	 &renderPass,
-							VkPipelineLayout &pipelineLayout,
-							VkPipeline		 &graphicsPipeline);
+void createGraphicsPipeline(const VkDevice			&logicalDevice,
+							const VkExtent2D		&swapChainExtent,
+							VkRenderPass			&renderPass,
+							VkPipelineLayout		&pipelineLayout,
+							VkPipeline				&graphicsPipeline,
+							VkDescriptorSetLayout	&descriptorSetLayout);
 
 
 static std::vector<char> readFile(const std::string &filename);
@@ -96,7 +97,6 @@ void createCommandPool(const VkPhysicalDevice	&physicalDevice,
 					   const VkSurfaceKHR		&surface, 
 					   VkCommandPool			&commandPool);
 
-
 void createCommandBuffers(const VkDevice				   &logicalDevice,
 						  const VkExtent2D				   &swapChainExtent,
 						  const std::vector<VkFramebuffer> &swapChainFramebuffers,
@@ -106,7 +106,9 @@ void createCommandBuffers(const VkDevice				   &logicalDevice,
 						  VkBuffer						   &indexBuffer,
 						  VkCommandPool					   &commandPool,
 						  std::vector<VkCommandBuffer>	   &commandBuffers,
-						  int							    indexBufferSize);
+						  std::vector<VkDescriptorSet>	   &descriptorSets,
+						  VkPipelineLayout				   &pipelineLayout,
+						  int								indexBufferSize);
 
 ///////////////////////////////////////////////////////////
 
@@ -118,3 +120,18 @@ void createSyncObjects(const VkDevice &logicalDevice,
 					   std::vector<VkFence>		  &inFlightFences,
 					   std::vector<VkFence>		  &imagesInFlight);
 
+//////////////////////////////////////////////////////////
+
+void createDescriptorSetLayout(const VkDevice			&logicalDevice, 
+							   VkDescriptorSetLayout	&descriptorSetLayout);
+
+void createDescriptorPool(const VkDevice			 &logicalDevice,
+						  const std::vector<VkImage> &swapChainImages,
+						  VkDescriptorPool			 &descriptorPool);
+
+void createDescriptorSets(const VkDevice			   &logicalDevice,
+						  const std::vector<VkImage>   &swapChainImages,
+						  VkDescriptorPool			   &descriptorPool,
+						  VkDescriptorSetLayout		   &descriptorSetLayout,
+						  std::vector<VkDescriptorSet> &descriptorSets,
+						  std::vector<VkBuffer>		   &uniformBuffers);

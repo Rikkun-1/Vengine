@@ -129,11 +129,70 @@ void createIndexBuffer(const VkPhysicalDevice		&physicalDevice,
 	vkFreeMemory(logicalDevice, stagingBufferMemory, nullptr);
 }
 
+void createUniformBuffers(const VkPhysicalDevice		&physicalDevice,
+						  const VkDevice				&logicalDevice,
+						  std::vector<VkBuffer>			&uniformBuffers,
+						  std::vector<VkDeviceMemory>	&uniformBuffersMemory,
+						  int							amount)
+{
+	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+
+	uniformBuffers.resize(amount);
+	uniformBuffersMemory.resize(amount);
+
+	for(size_t i = 0; i < amount; i++)
+	{
+		createBuffer(physicalDevice,
+					 logicalDevice,
+					 bufferSize, 
+					 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
+					 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
+					 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+					 uniformBuffers[i], 
+					 uniformBuffersMemory[i]);
+	}
+}
+
+void updateUniformBuffer(const VkDevice					&logicalDevice,
+						 uint32_t						currentImage,
+						 VkExtent2D						&swapChainExtent,
+						 std::vector<VkDeviceMemory>	&uniformBuffersMemory)
+{
+	static auto startTime = std::chrono::high_resolution_clock::now();
+	auto currentTime = std::chrono::high_resolution_clock::now();
+	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+	UniformBufferObject ubo{};
+	ubo.model = glm::rotate(glm::mat4(1.0f),			  // текущая трансформация
+							time * glm::radians(90.0f),	  // угол
+							glm::vec3(0.0f, 0.0f, 1.0f)); // ось вращения
+
+	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), // кординаты точки зрения
+						   glm::vec3(0.0f, 0.0f, 0.0f), // координаты центра мира
+						   glm::vec3(0.0f, 0.0f, 1.0f));// ось направленная вверх
+
+	ubo.proj = glm::perspective(glm::radians(45.0f), // вертикальный угол обзора
+								// соотношение сторон
+								swapChainExtent.width / (float) swapChainExtent.height,
+								0.1f,   // ближайшая дистанция 
+								100.0f); // дальнейшая дистанция 
+	// GLM была изначально создана для OpenGL, где ось Y перевернута
+	// простейший способ компенсировать это - инвертировать Y компоненту
+	// коэффициента масштабирования
+	ubo.proj[1][1] *= -1;
+
+	void *data;
+	vkMapMemory(logicalDevice, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
+	memcpy(data, &ubo, sizeof(ubo));
+	vkUnmapMemory(logicalDevice, uniformBuffersMemory[currentImage]);
+}
+
+
 void copyBuffer(const VkDevice	&logicalDevice,
 				VkCommandPool	&commandPool,
 				VkQueue			&graphicsQueue,
-				VkBuffer		srcBuffer, 
-				VkBuffer		dstBuffer, 
+				VkBuffer		srcBuffer,
+				VkBuffer		dstBuffer,
 				VkDeviceSize	size)
 {
 	// для копирования из одного буфера в другой требуется временный коммандный буфер
@@ -168,7 +227,7 @@ void copyBuffer(const VkDevice	&logicalDevice,
 
 	vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
 	// ждем пока данные не 
-	vkQueueWaitIdle(graphicsQueue); 
+	vkQueueWaitIdle(graphicsQueue);
 
 	vkFreeCommandBuffers(logicalDevice, commandPool, 1, &commandBuffer);
 }

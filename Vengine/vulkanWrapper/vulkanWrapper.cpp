@@ -379,11 +379,12 @@ VkShaderModule createShaderModule(const VkDevice &logicalDevice,
 }
 
 
-void createGraphicsPipeline(const VkDevice	 &logicalDevice,
-							const VkExtent2D &swapChainExtent,
-							VkRenderPass	 &renderPass,
-							VkPipelineLayout &pipelineLayout,
-							VkPipeline		 &graphicsPipeline)
+void createGraphicsPipeline(const VkDevice			&logicalDevice,
+							const VkExtent2D		&swapChainExtent,
+							VkRenderPass			&renderPass,
+							VkPipelineLayout		&pipelineLayout,
+							VkPipeline				&graphicsPipeline,
+							VkDescriptorSetLayout	&descriptorSetLayout)
 {
 	auto vertShaderCode = readFile("shaders/bin/vert.spv");
 	auto fragShaderCode = readFile("shaders/bin/frag.spv");
@@ -432,6 +433,7 @@ void createGraphicsPipeline(const VkDevice	 &logicalDevice,
 	inputAssembly.sType	   = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 	inputAssembly.primitiveRestartEnable = VK_FALSE;
+
 	//////////////////////////////////////////////////////////////////////
 
 
@@ -487,7 +489,7 @@ void createGraphicsPipeline(const VkDevice	 &logicalDevice,
 
 	// определяет в какую сторону мы движемся, когда индексируем вершины полигона, 
 	// который смотрит вперед
-	rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 
 
 	rasterizer.depthBiasEnable		   = VK_FALSE;
@@ -507,6 +509,7 @@ void createGraphicsPipeline(const VkDevice	 &logicalDevice,
 	multisampling.pSampleMask		    = nullptr;  // Optional
 	multisampling.alphaToCoverageEnable = VK_FALSE; // Optional
 	multisampling.alphaToOneEnable      = VK_FALSE; // Optional
+
 	/////////////////////////////////////////////////////////////////////
 
 
@@ -568,10 +571,13 @@ void createGraphicsPipeline(const VkDevice	 &logicalDevice,
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType				  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount		  = 0;		 // Optional
-	pipelineLayoutInfo.pSetLayouts			  = nullptr; // Optional
+	pipelineLayoutInfo.setLayoutCount		  = 1;
+	pipelineLayoutInfo.pSetLayouts			  = &descriptorSetLayout;
+
 	pipelineLayoutInfo.pushConstantRangeCount = 0;		 // Optional
 	pipelineLayoutInfo.pPushConstantRanges	  = nullptr; // Optional
+
+
 
 	if(vkCreatePipelineLayout(logicalDevice, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
 	{
@@ -709,6 +715,8 @@ void createCommandBuffers(const VkDevice				   &logicalDevice,
 						  VkBuffer						   &indexBuffer,
 						  VkCommandPool					   &commandPool,
 						  std::vector<VkCommandBuffer>	   &commandBuffers,
+						  std::vector<VkDescriptorSet>	   &descriptorSets,
+						  VkPipelineLayout				   &pipelineLayout,
 						  int								indexBufferSize)
 {
 	commandBuffers.resize(swapChainFramebuffers.size());
@@ -787,6 +795,15 @@ void createCommandBuffers(const VkDevice				   &logicalDevice,
 
 		vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
+		vkCmdBindDescriptorSets(commandBuffers[i], 
+								VK_PIPELINE_BIND_POINT_GRAPHICS, 
+								pipelineLayout, 
+								0, 
+								1, 
+								&descriptorSets[i], 
+								0, 
+								nullptr);
+
 		vkCmdDrawIndexed(commandBuffers[i], 
 						 static_cast<uint32_t>(indexBufferSize), 
 						 1, 0, 0, 0);
@@ -805,8 +822,8 @@ void createCommandBuffers(const VkDevice				   &logicalDevice,
 ///////////////////////////////////////////////////////////
 
 
-void createSyncObjects(const VkDevice &logicalDevice,
-					   int MAX_FRAMES_IN_FLIGHT,
+void createSyncObjects(const VkDevice			  &logicalDevice,
+					   int						  MAX_FRAMES_IN_FLIGHT,
 					   const std::vector<VkImage> &swapChainImages,
 					   std::vector<VkSemaphore>	  &imageAvailableSemaphores,
 					   std::vector<VkSemaphore>   &renderFinishedSemaphores,
@@ -836,5 +853,96 @@ void createSyncObjects(const VkDevice &logicalDevice,
 		{
 			throw std::runtime_error("failed to create synchronization objects for a frame!");
 		}
+	}
+}
+
+void createDescriptorSetLayout(const VkDevice			&logicalDevice, 
+							   VkDescriptorSetLayout	&descriptorSetLayout)
+{
+	VkDescriptorSetLayoutBinding uboLayoutBinding{};
+	uboLayoutBinding.binding		 = 0;
+	uboLayoutBinding.descriptorType	 = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	uboLayoutBinding.descriptorCount = 1;
+	// каким стадиям будет доступно данное прикрепление?
+	// можно добавить несколько стадий используя |
+	// или VK_SHADER_STAGE_ALL_GRAPHICS если данное прикрепление требуется
+	// на всех стадиях
+	uboLayoutBinding.stageFlags		 = VK_SHADER_STAGE_VERTEX_BIT;
+
+	uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
+
+
+	VkDescriptorSetLayoutCreateInfo layoutInfo{};
+	layoutInfo.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	layoutInfo.bindingCount = 1;
+	layoutInfo.pBindings	= &uboLayoutBinding;
+
+	if(vkCreateDescriptorSetLayout(logicalDevice, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create descriptor set layout!");
+	}
+}
+
+void createDescriptorPool(const VkDevice			 &logicalDevice,
+						  const std::vector<VkImage> &swapChainImages,
+						  VkDescriptorPool			 &descriptorPool)
+{
+	VkDescriptorPoolSize poolSize{};
+	poolSize.type			 = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	poolSize.descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+
+	VkDescriptorPoolCreateInfo poolInfo{};
+	poolInfo.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	poolInfo.poolSizeCount  = 1;
+	poolInfo.pPoolSizes		= &poolSize;
+	poolInfo.maxSets		= static_cast<uint32_t>(swapChainImages.size());
+
+
+	if(vkCreateDescriptorPool(logicalDevice, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
+		throw std::runtime_error("failed to create descriptor pool!");
+}
+
+void createDescriptorSets(const VkDevice			   &logicalDevice,
+						  const std::vector<VkImage>   &swapChainImages,
+						  VkDescriptorPool			   &descriptorPool,
+						  VkDescriptorSetLayout		   &descriptorSetLayout,
+						  std::vector<VkDescriptorSet> &descriptorSets,
+						  std::vector<VkBuffer>		   &uniformBuffers)
+{
+	std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size(), descriptorSetLayout);
+	
+	VkDescriptorSetAllocateInfo allocInfo{};
+	allocInfo.sType				 = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo.descriptorPool	 = descriptorPool;
+	allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImages.size());
+	allocInfo.pSetLayouts		 = layouts.data();
+
+	descriptorSets.resize(swapChainImages.size());
+	if(vkAllocateDescriptorSets(logicalDevice, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
+		throw std::runtime_error("failed to allocate descriptor sets!");
+
+	for(size_t i = 0; i < swapChainImages.size(); i++)
+	{
+		VkDescriptorBufferInfo bufferInfo{};
+		bufferInfo.buffer = uniformBuffers[i];
+		bufferInfo.offset = 0;
+		// если мы намерены каждый раз перезаписывать буфер целиком, 
+		// то мы можем использовать VK_WHOLE_SIZE для range
+		bufferInfo.range = sizeof(UniformBufferObject);
+
+		VkWriteDescriptorSet descriptorWrite{};
+		descriptorWrite.sType			= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet			= descriptorSets[i];
+		descriptorWrite.dstBinding		= 0;
+		descriptorWrite.dstArrayElement = 0;
+
+		descriptorWrite.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorWrite.descriptorCount = 1;
+
+		descriptorWrite.pBufferInfo		 = &bufferInfo;
+		descriptorWrite.pImageInfo		 = nullptr; // Optional
+		descriptorWrite.pTexelBufferView = nullptr; // Optional
+
+		vkUpdateDescriptorSets(logicalDevice, 1, &descriptorWrite, 0, nullptr);
 	}
 }

@@ -38,7 +38,6 @@ private:
 
 	VkRenderPass			 renderPass;
 
-	VkPipelineLayout		 pipelineLayout;
 	VkPipeline				 graphicsPipeline;
 
 	vector<VkFramebuffer>	 swapChainFramebuffers;
@@ -51,10 +50,18 @@ private:
 	std::vector<VkFence>	 inFlightFences;
 	std::vector<VkFence>	 imagesInFlight;
 
-	VkBuffer				 vertexBuffer;
-	VkDeviceMemory			 vertexBufferMemory;
-	VkBuffer				 indexBuffer;
-	VkDeviceMemory			 indexBufferMemory;
+	VkBuffer					vertexBuffer;
+	VkDeviceMemory				vertexBufferMemory;
+	VkBuffer					indexBuffer;
+	VkDeviceMemory				indexBufferMemory;
+	std::vector<VkBuffer>		uniformBuffers;
+	std::vector<VkDeviceMemory> uniformBuffersMemory;
+
+	VkDescriptorPool			 descriptorPool;
+	std::vector<VkDescriptorSet> descriptorSets;
+
+	VkDescriptorSetLayout	 descriptorSetLayout;
+	VkPipelineLayout		 pipelineLayout;
 
 	const int MAX_FRAMES_IN_FLIGHT = 2;
 	size_t currentFrame			   = 0;
