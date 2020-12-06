@@ -1,6 +1,7 @@
 #pragma once
 
 #define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES // включает выравнивание по 16 бит для glm структур
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -12,8 +13,6 @@
 #include <stdexcept>
 
 #include "Vertex.h"
-
-
 
 struct UniformBufferObject
 {
