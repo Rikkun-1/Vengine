@@ -12,8 +12,8 @@ struct SwapChainSupportDetails
     std::vector<VkPresentModeKHR>   presentModes;
 };
 
-SwapChainSupportDetails querySwapChainSupport(const VkPhysicalDevice &device,
-                                              const VkSurfaceKHR	 &surface);
+SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice physicalDevice,
+                                              VkSurfaceKHR     surface);
 
 VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
 

@@ -7,7 +7,6 @@
 #include <cstring>
 #include <set>
 
-
 /*
 * ѕринимает на вход множество строк, характеризующее требуемые слои валидации и провер€ет что все 
 * требуемые слои поддерживаютс€
@@ -28,24 +27,24 @@ void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &create
 * подписыва€ тип и важность
 */
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-	VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-	VkDebugUtilsMessageTypeFlagsEXT messageType,
-	const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
-	void *pUserData);
+    VkDebugUtilsMessageSeverityFlagBitsEXT     messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT            messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+    void                                       *pUserData);
 
 /*
 * —оздает DebugMessenger согласно пол€м в структуре VkDebugUtilsMessengerCreateInfoEXT
 * и св€зывает его с этим instance
 */
-VkResult CreateDebugUtilsMessengerEXT(VkInstance &instance,
-									  const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
-									  const VkAllocationCallbacks *pAllocator,
-									  VkDebugUtilsMessengerEXT *pDebugMessenger);
+VkResult CreateDebugUtilsMessengerEXT(VkInstance                               instance,
+                                      const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
+                                      const VkAllocationCallbacks              *pAllocator,
+                                      VkDebugUtilsMessengerEXT                 *pDebugMessenger);
 
 /*
 * ”ничтожает DebugMessenger который был когда-то создан дл€ этого instance
 */
-void DestroyDebugUtilsMessengerEXT(VkInstance &instance,
-								   VkDebugUtilsMessengerEXT debugMessenger,
-								   const VkAllocationCallbacks *pAllocator);
+void DestroyDebugUtilsMessengerEXT(VkInstance                  instance,
+                                   VkDebugUtilsMessengerEXT    debugMessenger,
+                                   const VkAllocationCallbacks *pAllocator);
 

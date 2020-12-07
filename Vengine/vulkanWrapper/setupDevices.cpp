@@ -1,7 +1,7 @@
 #include "setupDevices.h"
 
-bool isDeviceSuitable(const VkPhysicalDevice &physicalDevice,
-                      const VkSurfaceKHR     &surface,
+bool isDeviceSuitable(VkPhysicalDevice         physicalDevice,
+                      VkSurfaceKHR              surface,
                       const std::vector<const char *> &requiredExtensions)
 {
     QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
@@ -28,7 +28,7 @@ bool isDeviceSuitable(const VkPhysicalDevice &physicalDevice,
            indices.has_value();
 }
 
-bool checkDeviceExtensionsSupport(const VkPhysicalDevice &physicalDevice,
+bool checkDeviceExtensionsSupport(VkPhysicalDevice          physicalDevice,
                                   const std::vector<const char *> &requiredExtensions)
 {
     uint32_t extensionCount;
@@ -40,7 +40,7 @@ bool checkDeviceExtensionsSupport(const VkPhysicalDevice &physicalDevice,
 
     std::set<std::string> requiredExtensionsSet(requiredExtensions.begin(), requiredExtensions.end());
 
-    for(const auto &extension : availableExtensions)
+    for(auto &extension : availableExtensions)
     {
         requiredExtensionsSet.erase(extension.extensionName);
     }
@@ -48,16 +48,18 @@ bool checkDeviceExtensionsSupport(const VkPhysicalDevice &physicalDevice,
     if(!requiredExtensionsSet.empty())
     {
         std::cout << "\nRequested but not supported device extensions: \n";
-        for(const auto &extension : requiredExtensionsSet)
+        for(auto &extension : requiredExtensionsSet)
+        {
             std::cout << extension << '\n';
+        }
     }
 
     return requiredExtensionsSet.empty();
 }
 
 
-QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice &physicalDevice,
-                                     const VkSurfaceKHR     &surface)
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physicalDevice,
+                                     VkSurfaceKHR     surface)
 {
     QueueFamilyIndices indices;
 
@@ -68,7 +70,7 @@ QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice &physicalDevice,
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies.data());
 
     int i = 0;
-    for(const auto &queueFamily : queueFamilies)
+    for(auto &queueFamily : queueFamilies)
     {
         if(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
             indices.graphicsFamily = i;

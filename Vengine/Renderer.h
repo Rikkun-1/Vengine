@@ -7,85 +7,83 @@
 #include "vkSettings.h"
 #include "vulkanWrapper/Vertex.h"
 
-using std::vector;
-
 class Renderer
 {
 public:
-	vkSettings settings;
-	bool framebufferResized = false;
+    vkSettings settings;
+    bool framebufferResized = false;
 
-	void run();
+    void run();
 
 private:
-	GLFWwindow				*pWindow;
-	VkInstance				 instance;
-	VkDebugUtilsMessengerEXT debugMessenger;
-	VkSurfaceKHR			 surface;
+    GLFWwindow               *pWindow;
+    VkInstance               instance;
+    VkDebugUtilsMessengerEXT debugMessenger;
+    VkSurfaceKHR             surface;
 
-	VkPhysicalDevice		 physicalDevice;
-	VkDevice				 logicalDevice;
+    VkPhysicalDevice      physicalDevice;
+    VkDevice              logicalDevice;
 
-	VkQueue					 graphicsQueue;
-	VkQueue					 presentationQueue;
+    VkQueue               graphicsQueue;
+    VkQueue               presentationQueue;
 
-	VkSwapchainKHR			 swapChain;
-	vector<VkImage>		     swapChainImages;
-	VkFormat				 swapChainImageFormat;
-	VkExtent2D				 swapChainExtent;
+    VkSwapchainKHR        swapChain;
+    std::vector<VkImage>  swapChainImages;
+    VkFormat              swapChainImageFormat;
+    VkExtent2D            swapChainExtent;
 
-	vector<VkImageView>		 swapChainImageViews;
+    std::vector<VkImageView>   swapChainImageViews;
 
-	VkRenderPass			 renderPass;
+    VkRenderPass               renderPass;
 
-	VkPipeline				 graphicsPipeline;
+    VkPipeline                 graphicsPipeline;
 
-	vector<VkFramebuffer>	 swapChainFramebuffers;
+    std::vector<VkFramebuffer> swapChainFramebuffers;
 
-	VkCommandPool			 commandPool;
-	vector<VkCommandBuffer>  commandBuffers;
+    VkCommandPool                 commandPool;
+    std::vector<VkCommandBuffer>  commandBuffers;
 
-	std::vector<VkSemaphore> imageAvailableSemaphores;
-	std::vector<VkSemaphore> renderFinishedSemaphores;
-	std::vector<VkFence>	 inFlightFences;
-	std::vector<VkFence>	 imagesInFlight;
+    std::vector<VkSemaphore> imageAvailableSemaphores;
+    std::vector<VkSemaphore> renderFinishedSemaphores;
+    std::vector<VkFence>     inFlightFences;
+    std::vector<VkFence>     imagesInFlight;
 
-	VkBuffer					vertexBuffer;
-	VkDeviceMemory				vertexBufferMemory;
-	VkBuffer					indexBuffer;
-	VkDeviceMemory				indexBufferMemory;
-	std::vector<VkBuffer>		uniformBuffers;
-	std::vector<VkDeviceMemory> uniformBuffersMemory; 
+    VkBuffer                    vertexBuffer;
+    VkDeviceMemory              vertexBufferMemory;
+    VkBuffer                    indexBuffer;
+    VkDeviceMemory              indexBufferMemory;
+    std::vector<VkBuffer>       uniformBuffers;
+    std::vector<VkDeviceMemory> uniformBuffersMemory; 
+        
+    VkImage        textureImage;
+    VkDeviceMemory textureImageMemory;
 
-	VkImage			textureImage;
-	VkDeviceMemory	textureImageMemory;
+    VkDescriptorPool             descriptorPool;
+    std::vector<VkDescriptorSet> descriptorSets;
 
-	VkDescriptorPool			 descriptorPool;
-	std::vector<VkDescriptorSet> descriptorSets;
+    VkDescriptorSetLayout descriptorSetLayout;
+    VkPipelineLayout      pipelineLayout;
 
-	VkDescriptorSetLayout	 descriptorSetLayout;
-	VkPipelineLayout		 pipelineLayout;
+    int MAX_FRAMES_IN_FLIGHT = 2;
+    size_t currentFrame      = 0;
 
-	const int MAX_FRAMES_IN_FLIGHT = 2;
-	size_t currentFrame			   = 0;
+    std::vector<Vertex> vertices = {
+        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+        {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+        {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+    };
 
-	const std::vector<Vertex> vertices = {
-		{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-		{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-		{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-		{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
-	};
+    std::vector<uint32_t> indices = {
+        0, 1, 2, 2, 3, 0
+    };
 
-	const std::vector<uint32_t> indices = {
-		0, 1, 2, 2, 3, 0
-	};
-
-	void initWindow();
-	void initVulkan();
-	void mainLoop();
-	void drawFrame();
-	void recreateSwapChain();
-	void cleanupSwapChain();
-	void cleanup();
+    void initWindow();
+    void initVulkan();
+    void mainLoop();
+    void drawFrame();
+    void recreateSwapChain();
+    void cleanupSwapChain();
+    void cleanup();
 };
 

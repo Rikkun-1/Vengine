@@ -4,26 +4,26 @@
 
 #include <vector>
 #include <stdexcept>
+#include "commandBuffer.h"
 
-void createCommandBuffers(const VkDevice				   &logicalDevice,
-						  const VkExtent2D				   &swapChainExtent,
-						  const std::vector<VkFramebuffer> &swapChainFramebuffers,
-						  const VkPipeline				   &graphicsPipeline,
-						  const VkRenderPass			   &renderPass,
-						  VkBuffer						   &vertexBuffer,
-						  VkBuffer						   &indexBuffer,
-						  VkCommandPool					   &commandPool,
-						  std::vector<VkCommandBuffer>	   &commandBuffers,
-						  std::vector<VkDescriptorSet>	   &descriptorSets,
-						  VkPipelineLayout				   &pipelineLayout,
-						  int								indexBufferSize);
-
-
-VkCommandBuffer beginSingleTimeCommands(const VkDevice &logicalDevice,
-										VkCommandPool  &commandPool);
+void createCommandBuffers(VkDevice                     logicalDevice,
+                          VkExtent2D                   swapChainExtent,
+                          std::vector<VkFramebuffer>   &swapChainFramebuffers,
+                          VkPipeline                   graphicsPipeline,
+                          VkRenderPass                 renderPass,
+                          VkBuffer                     vertexBuffer,
+                          VkBuffer                     indexBuffer,
+                          VkCommandPool                commandPool,
+                          std::vector<VkCommandBuffer> &commandBuffers,
+                          std::vector<VkDescriptorSet> &descriptorSets,
+                          VkPipelineLayout             pipelineLayout,
+                          int                          indexBufferSize);
 
 
-void endSingleTimeCommands(VkCommandBuffer	commandBuffer,
-						   const VkDevice	&logicalDevice,
-						   VkCommandPool	&commandPool,
-						   VkQueue			graphicsQueue);
+VkCommandBuffer beginSingleTimeCommands(VkDevice      logicalDevice,
+                                        VkCommandPool commandPool);
+
+void endSingleTimeCommands(VkCommandBuffer commandBuffer,
+                           VkDevice        logicalDevice,
+                           VkCommandPool   commandPool,
+                           VkQueue         graphicsQueue);

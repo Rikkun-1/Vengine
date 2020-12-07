@@ -10,17 +10,17 @@ using std::endl;
 
 int main() 
 {
-	Renderer app;
+    Renderer app;
 
-	try 
-	{
-		app.run();
-	}
-	catch(const std::exception &e) 
-	{
-		cerr << e.what() << endl;
-		return EXIT_FAILURE;
-	}
+    try 
+    {
+        app.run();
+    }
+    catch(std::exception &e) 
+    {
+        cerr << e.what() << endl;
+        return EXIT_FAILURE;
+    }
 
-	return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
