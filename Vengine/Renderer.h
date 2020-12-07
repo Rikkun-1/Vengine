@@ -55,7 +55,10 @@ private:
 	VkBuffer					indexBuffer;
 	VkDeviceMemory				indexBufferMemory;
 	std::vector<VkBuffer>		uniformBuffers;
-	std::vector<VkDeviceMemory> uniformBuffersMemory;
+	std::vector<VkDeviceMemory> uniformBuffersMemory; 
+
+	VkImage			textureImage;
+	VkDeviceMemory	textureImageMemory;
 
 	VkDescriptorPool			 descriptorPool;
 	std::vector<VkDescriptorSet> descriptorSets;

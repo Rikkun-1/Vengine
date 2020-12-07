@@ -14,6 +14,7 @@
 
 #include "setupSwapchain.h"
 #include "buffer.h"
+#include "commandBuffer.h"
 
 #ifdef NDEBUG
 	const bool enableValidationLayers = false;
@@ -96,19 +97,6 @@ void createCommandPool(const VkPhysicalDevice	&physicalDevice,
 					   const VkDevice			&logicalDevice,
 					   const VkSurfaceKHR		&surface, 
 					   VkCommandPool			&commandPool);
-
-void createCommandBuffers(const VkDevice				   &logicalDevice,
-						  const VkExtent2D				   &swapChainExtent,
-						  const std::vector<VkFramebuffer> &swapChainFramebuffers,
-						  const VkPipeline				   &graphicsPipeline,
-						  const VkRenderPass			   &renderPass,
-						  VkBuffer						   &vertexBuffer,
-						  VkBuffer						   &indexBuffer,
-						  VkCommandPool					   &commandPool,
-						  std::vector<VkCommandBuffer>	   &commandBuffers,
-						  std::vector<VkDescriptorSet>	   &descriptorSets,
-						  VkPipelineLayout				   &pipelineLayout,
-						  int								indexBufferSize);
 
 ///////////////////////////////////////////////////////////
 

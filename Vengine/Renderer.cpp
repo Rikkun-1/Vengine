@@ -94,6 +94,13 @@ void Renderer::initVulkan()
 					  surface,
 					  commandPool);
 
+	createTextureImage(physicalDevice,
+					   logicalDevice,
+					   commandPool,
+					   graphicsQueue,
+					   textureImage,
+					   textureImageMemory);
+
 	createVertexBuffer(physicalDevice,
 					   logicalDevice,
 					   vertices,
@@ -421,6 +428,9 @@ void Renderer::cleanupSwapChain()
 void Renderer::cleanup()
 {
 	cleanupSwapChain();
+
+	vkDestroyImage(logicalDevice, textureImage, nullptr);
+	vkFreeMemory(logicalDevice, textureImageMemory, nullptr);
 
 	vkDestroyDescriptorSetLayout(logicalDevice, descriptorSetLayout, nullptr);
 
