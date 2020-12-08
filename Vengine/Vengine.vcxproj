@@ -172,6 +172,7 @@
     <None Include="shaders\shader.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="vulkanWrapper\image.cpp" />
     <ClCompile Include="vulkanWrapper\commandBuffer.cpp" />
     <ClCompile Include="vulkanWrapper\buffer.cpp" />
     <ClCompile Include="main.cpp" />
@@ -187,6 +188,7 @@
     <ClCompile Include="vulkanWrapper\vulkanWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="vulkanWrapper\image.h" />
     <ClInclude Include="vulkanWrapper\commandBuffer.h" />
     <ClInclude Include="vulkanWrapper\buffer.h" />
     <ClInclude Include="Renderer.h" />

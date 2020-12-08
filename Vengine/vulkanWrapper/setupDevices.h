@@ -13,11 +13,11 @@
 /*
 * Проверяет что физическое устройство удовлетворяет всем требованиям
 */
-bool isDeviceSuitable(VkPhysicalDevice          physicalDevice,
-                      VkSurfaceKHR              surface, 
+bool isDeviceSuitable(VkPhysicalDevice                physicalDevice,
+                      VkSurfaceKHR                    surface, 
                       const std::vector<const char *> &requiredExtensions);
 
-bool checkDeviceExtensionsSupport(VkPhysicalDevice          physicalDevice,
+bool checkDeviceExtensionsSupport(VkPhysicalDevice               physicalDevice,
                                   const std::vector<const char *> &requiredExtensions);
 
 /*

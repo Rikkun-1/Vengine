@@ -17,9 +17,9 @@ VkVertexInputBindingDescription Vertex::getBindingDescription()
 }
 
 // эта функия описывает то каким образом данные должны приниматься вершинным шейдером
-std::array<VkVertexInputAttributeDescription, 2> Vertex::getAttributeDescriptions()
+std::array<VkVertexInputAttributeDescription, 3> Vertex::getAttributeDescriptions()
 {
-    std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+    std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
     // описывает из какого прикрепляения принимать данные
     attributeDescriptions[0].binding  = 0; 
     //описывает к какому location вершинного шейдера прикреплять полученные данные
@@ -31,6 +31,11 @@ std::array<VkVertexInputAttributeDescription, 2> Vertex::getAttributeDescription
     attributeDescriptions[1].location = 1;
     attributeDescriptions[1].format   = VK_FORMAT_R32G32B32_SFLOAT;
     attributeDescriptions[1].offset   = offsetof(Vertex, color);
+
+    attributeDescriptions[2].binding  = 0;
+    attributeDescriptions[2].location = 2;
+    attributeDescriptions[2].format   = VK_FORMAT_R32G32_SFLOAT;
+    attributeDescriptions[2].offset   = offsetof(Vertex, texCoord);
 
     return attributeDescriptions;
 }

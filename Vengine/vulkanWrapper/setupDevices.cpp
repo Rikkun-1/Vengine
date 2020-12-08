@@ -1,7 +1,7 @@
 #include "setupDevices.h"
 
-bool isDeviceSuitable(VkPhysicalDevice         physicalDevice,
-                      VkSurfaceKHR              surface,
+bool isDeviceSuitable(VkPhysicalDevice                physicalDevice,
+                      VkSurfaceKHR                    surface,
                       const std::vector<const char *> &requiredExtensions)
 {
     QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
@@ -21,14 +21,18 @@ bool isDeviceSuitable(VkPhysicalDevice         physicalDevice,
         swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     }
 
+    VkPhysicalDeviceFeatures supportedFeatures;
+    vkGetPhysicalDeviceFeatures(physicalDevice, &supportedFeatures);
+
     return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
            deviceFeatures.geometryShader                                       &&
            extensionsSupported                                                 &&
-           swapChainAdequate                                                 &&
-           indices.has_value();
+           swapChainAdequate                                                   &&
+           indices.has_value()                                                 &&
+           supportedFeatures.samplerAnisotropy;
 }
 
-bool checkDeviceExtensionsSupport(VkPhysicalDevice          physicalDevice,
+bool checkDeviceExtensionsSupport(VkPhysicalDevice                physicalDevice,
                                   const std::vector<const char *> &requiredExtensions)
 {
     uint32_t extensionCount;

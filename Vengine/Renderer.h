@@ -21,16 +21,16 @@ private:
     VkDebugUtilsMessengerEXT debugMessenger;
     VkSurfaceKHR             surface;
 
-    VkPhysicalDevice      physicalDevice;
-    VkDevice              logicalDevice;
+    VkPhysicalDevice         physicalDevice;
+    VkDevice                 logicalDevice;
 
-    VkQueue               graphicsQueue;
-    VkQueue               presentationQueue;
+    VkQueue                  graphicsQueue;
+    VkQueue                  presentationQueue;
 
-    VkSwapchainKHR        swapChain;
-    std::vector<VkImage>  swapChainImages;
-    VkFormat              swapChainImageFormat;
-    VkExtent2D            swapChainExtent;
+    VkSwapchainKHR           swapChain;
+    std::vector<VkImage>     swapChainImages;
+    VkFormat                 swapChainImageFormat;
+    VkExtent2D               swapChainExtent;
 
     std::vector<VkImageView>   swapChainImageViews;
 
@@ -43,10 +43,10 @@ private:
     VkCommandPool                 commandPool;
     std::vector<VkCommandBuffer>  commandBuffers;
 
-    std::vector<VkSemaphore> imageAvailableSemaphores;
-    std::vector<VkSemaphore> renderFinishedSemaphores;
-    std::vector<VkFence>     inFlightFences;
-    std::vector<VkFence>     imagesInFlight;
+    std::vector<VkSemaphore>    imageAvailableSemaphores;
+    std::vector<VkSemaphore>    renderFinishedSemaphores;
+    std::vector<VkFence>        inFlightFences;
+    std::vector<VkFence>        imagesInFlight;
 
     VkBuffer                    vertexBuffer;
     VkDeviceMemory              vertexBufferMemory;
@@ -56,7 +56,9 @@ private:
     std::vector<VkDeviceMemory> uniformBuffersMemory; 
         
     VkImage        textureImage;
+    VkImageView    textureImageView;
     VkDeviceMemory textureImageMemory;
+    VkSampler      textureSampler;
 
     VkDescriptorPool             descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
@@ -68,10 +70,10 @@ private:
     size_t currentFrame      = 0;
 
     std::vector<Vertex> vertices = {
-        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-        {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-        {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+        {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+        {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+        {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
     };
 
     std::vector<uint32_t> indices = {

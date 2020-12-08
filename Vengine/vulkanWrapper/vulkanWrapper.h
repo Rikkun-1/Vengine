@@ -15,6 +15,7 @@
 #include "setupSwapchain.h"
 #include "buffer.h"
 #include "commandBuffer.h"
+#include "image.h"
 
 #ifdef NDEBUG
     const bool enableValidationLayers = false;
@@ -35,12 +36,12 @@ VkPhysicalDevice pickPhysicalDevice(VkInstance                      instance,
                                     const std::vector<const char *> &requiredExtenisons);
 
 
-void createLogicalDevice(VkPhysicalDevice          physicalDevice,
-                         VkDevice                  &logicalDevice,
-                         VkSurfaceKHR              surface,
-                         std::vector<const char *> &requiredExtenisons,
-                         VkQueue                   &graphicsQueue,
-                         VkQueue                   &presentQueue);
+void createLogicalDevice(VkPhysicalDevice                physicalDevice,
+                         VkDevice                        &logicalDevice,
+                         VkSurfaceKHR                    surface,
+                         const std::vector<const char *> &requiredExtenisons,
+                         VkQueue                         &graphicsQueue,
+                         VkQueue                         &presentQueue);
 
 
 void createSwapChain(GLFWwindow           *pWindow,
@@ -116,4 +117,6 @@ void createDescriptorSets(VkDevice                     logicalDevice,
                           VkDescriptorPool             descriptorPool,
                           VkDescriptorSetLayout        descriptorSetLayout,
                           std::vector<VkDescriptorSet> &descriptorSets,
-                          std::vector<VkBuffer>        &uniformBuffers);
+                          std::vector<VkBuffer>        &uniformBuffers,
+                          VkImageView                  textureImageView,
+                          VkSampler                    textureSampler);

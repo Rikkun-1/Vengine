@@ -32,35 +32,6 @@ void Renderer::initWindow()
 
 void Renderer::initVulkan()
 {
-    std::cout << sizeof(instance) << std::endl;
-    std::cout << std::endl;
-    std::cout << sizeof(physicalDevice) << std::endl;
-    std::cout << sizeof(logicalDevice) << std::endl;
-    std::cout << std::endl;
-    std::cout << sizeof(debugMessenger) << std::endl;
-    std::cout << sizeof(surface) << std::endl;
-    std::cout << std::endl;
-    std::cout << sizeof(graphicsQueue) << std::endl;
-    std::cout << sizeof(presentationQueue) << std::endl;
-    std::cout << std::endl;
-    std::cout << sizeof(swapChain) << std::endl;
-    std::cout << sizeof(swapChainImageFormat) << std::endl;
-    std::cout << sizeof(swapChainExtent) << std::endl;
-    std::cout << std::endl;
-    std::cout << sizeof(renderPass) << std::endl;
-    std::cout << sizeof(graphicsPipeline) << std::endl;
-    std::cout << std::endl;
-    std::cout << sizeof(commandPool) << std::endl;
-    std::cout << std::endl;
-    std::cout << sizeof(vertexBuffer) << std::endl;
-    std::cout << sizeof(vertexBufferMemory) << std::endl;
-    std::cout << sizeof(indexBuffer) << std::endl;
-    std::cout << sizeof(indexBufferMemory) << std::endl;
-    std::cout << std::endl;
-    std::cout << sizeof(descriptorPool) << std::endl;
-    std::cout << sizeof(descriptorSetLayout) << std::endl;
-    std::cout << sizeof(pipelineLayout) << std::endl;
-
     createInstance(settings.validationLayers,
                    settings.instanceExtensions,
                    instance);
@@ -130,6 +101,14 @@ void Renderer::initVulkan()
                        textureImage,
                        textureImageMemory);
 
+    createTextureImageView(logicalDevice,
+                           textureImage,
+                           textureImageView);
+
+    createTextureSampler(physicalDevice,
+                         logicalDevice,
+                         textureSampler);
+
     createVertexBuffer(physicalDevice,
                        logicalDevice,
                        vertices,
@@ -161,7 +140,9 @@ void Renderer::initVulkan()
                          descriptorPool,
                          descriptorSetLayout,
                          descriptorSets,
-                         uniformBuffers);
+                         uniformBuffers,
+                         textureImageView,
+                         textureSampler);
 
     createCommandBuffers(logicalDevice,
                          swapChainExtent,
@@ -274,7 +255,9 @@ void Renderer::recreateSwapChain()
                          descriptorPool,
                          descriptorSetLayout,
                          descriptorSets,
-                         uniformBuffers);
+                         uniformBuffers,
+                         textureImageView,
+                         textureSampler);
 
     createCommandBuffers(logicalDevice,
                          swapChainExtent,
@@ -457,6 +440,9 @@ void Renderer::cleanupSwapChain()
 void Renderer::cleanup()
 {
     cleanupSwapChain();
+
+    vkDestroySampler(logicalDevice, textureSampler, nullptr);
+    vkDestroyImageView(logicalDevice, textureImageView, nullptr);
 
     vkDestroyImage(logicalDevice, textureImage, nullptr);
     vkFreeMemory(logicalDevice, textureImageMemory, nullptr);

@@ -70,8 +70,8 @@ void setupDebugMessenger(VkInstance instance, VkDebugUtilsMessengerEXT &debugMes
 }
 
 
-VkPhysicalDevice pickPhysicalDevice(VkInstance                     instance,
-                                    VkSurfaceKHR                   surface,
+VkPhysicalDevice pickPhysicalDevice(VkInstance                      instance,
+                                    VkSurfaceKHR                    surface,
                                     const std::vector<const char *> &requiredExtenisons)
 {
     uint32_t deviceCount = 0;
@@ -94,12 +94,12 @@ VkPhysicalDevice pickPhysicalDevice(VkInstance                     instance,
 }
 
 
-void createLogicalDevice(VkPhysicalDevice          physicalDevice,
-                         VkDevice                  &logicalDevice,
-                         VkSurfaceKHR              surface,
-                         std::vector<const char *> &requiredExtenisons,
-                         VkQueue                   &graphicsQueue,
-                         VkQueue                   &presentQueue)
+void createLogicalDevice(VkPhysicalDevice                physicalDevice,
+                         VkDevice                        &logicalDevice,
+                         VkSurfaceKHR                    surface,
+                         const std::vector<const char *> &requiredExtenisons,
+                         VkQueue                         &graphicsQueue,
+                         VkQueue                         &presentQueue)
 {
     QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
 
@@ -120,6 +120,7 @@ void createLogicalDevice(VkPhysicalDevice          physicalDevice,
     }
 
     VkPhysicalDeviceFeatures deviceFeatures{};
+    deviceFeatures.samplerAnisotropy = VK_TRUE;
 
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -218,31 +219,9 @@ void createImageViews(VkDevice                   logicalDevice,
 {
     swapChainImageViews.resize(swapChainImages.size());
 
-    for(size_t i = 0; i < swapChainImages.size(); i++)
+    for(uint32_t i = 0; i < swapChainImages.size(); i++)
     {
-        VkImageViewCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        createInfo.image = swapChainImages[i];
-
-        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        createInfo.format   = swapChainImageFormat;
-
-        createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-        createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-
-        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-
-        // Эти параметры отвечают за количество слоев в изображении
-        // Мы указываем что каждое изображение состоит из одного слоя
-        createInfo.subresourceRange.baseMipLevel   = 0;
-        createInfo.subresourceRange.levelCount     = 1;
-        createInfo.subresourceRange.baseArrayLayer = 0;
-        createInfo.subresourceRange.layerCount     = 1;
-
-        if(vkCreateImageView(logicalDevice, &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS)
-            throw std::runtime_error("failed to create image views!");
+        swapChainImageViews[i] = createImageView(logicalDevice, swapChainImages[i], swapChainImageFormat);
     }
 }
 ///////////////////////////////////////////////////////////
@@ -730,11 +709,19 @@ void createDescriptorSetLayout(VkDevice              logicalDevice,
 
     uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
 
+    VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+    samplerLayoutBinding.binding            = 1;
+    samplerLayoutBinding.descriptorCount    = 1;
+    samplerLayoutBinding.descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    samplerLayoutBinding.pImmutableSamplers = nullptr;
+    samplerLayoutBinding.stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
 
     VkDescriptorSetLayoutCreateInfo layoutInfo{};
     layoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings    = &uboLayoutBinding;
+    layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+    layoutInfo.pBindings    = bindings.data();
 
     if(vkCreateDescriptorSetLayout(logicalDevice, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
         throw std::runtime_error("failed to create descriptor set layout!");
@@ -744,19 +731,26 @@ void createDescriptorPool(VkDevice                   logicalDevice,
                           const std::vector<VkImage> swapChainImages,
                           VkDescriptorPool           &descriptorPool)
 {
-    VkDescriptorPoolSize poolSize{};
-    poolSize.type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSize.descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+    std::array<VkDescriptorPoolSize, 2> poolSizes{};
+
+    poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    poolSizes[0].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+
+    poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    poolSizes[1].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+
 
     VkDescriptorPoolCreateInfo poolInfo{};
-    poolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = 1;
-    poolInfo.pPoolSizes    = &poolSize;
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+    poolInfo.pPoolSizes    = poolSizes.data();
     poolInfo.maxSets       = static_cast<uint32_t>(swapChainImages.size());
 
 
     if(vkCreateDescriptorPool(logicalDevice, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
         throw std::runtime_error("failed to create descriptor pool!");
+
+
 }
 
 void createDescriptorSets(VkDevice                     logicalDevice,
@@ -764,7 +758,9 @@ void createDescriptorSets(VkDevice                     logicalDevice,
                           VkDescriptorPool             descriptorPool,
                           VkDescriptorSetLayout        descriptorSetLayout,
                           std::vector<VkDescriptorSet> &descriptorSets,
-                          std::vector<VkBuffer>        &uniformBuffers)
+                          std::vector<VkBuffer>        &uniformBuffers,
+                          VkImageView                  textureImageView,
+                          VkSampler                    textureSampler)
 {
     std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size(), descriptorSetLayout);
     
@@ -787,19 +783,33 @@ void createDescriptorSets(VkDevice                     logicalDevice,
         // то мы можем использовать VK_WHOLE_SIZE для range
         bufferInfo.range = sizeof(UniformBufferObject);
 
-        VkWriteDescriptorSet descriptorWrite{};
-        descriptorWrite.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrite.dstSet          = descriptorSets[i];
-        descriptorWrite.dstBinding      = 0;
-        descriptorWrite.dstArrayElement = 0;
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView   = textureImageView;
+        imageInfo.sampler     = textureSampler;
 
-        descriptorWrite.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptorWrite.descriptorCount = 1;
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
 
-        descriptorWrite.pBufferInfo      = &bufferInfo;
-        descriptorWrite.pImageInfo       = nullptr; // Optional
-        descriptorWrite.pTexelBufferView = nullptr; // Optional
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet          = descriptorSets[i];
+        descriptorWrites[0].dstBinding      = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo     = &bufferInfo;
 
-        vkUpdateDescriptorSets(logicalDevice, 1, &descriptorWrite, 0, nullptr);
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet          = descriptorSets[i];
+        descriptorWrites[1].dstBinding      = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = 1;
+        descriptorWrites[1].pImageInfo      = &imageInfo;
+
+        vkUpdateDescriptorSets(logicalDevice, 
+                               static_cast<uint32_t>(descriptorWrites.size()), 
+                               descriptorWrites.data(), 
+                               0, 
+                               nullptr);
     }
 }
