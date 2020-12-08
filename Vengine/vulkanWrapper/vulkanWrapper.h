@@ -60,9 +60,10 @@ void createImageViews(VkDevice                   logicalDevice,
 
 ///////////////////////////////////////////////////////////
 
-void createRenderPass(VkDevice     logicalDevice,
-                      VkFormat     swapChainImageFormat,
-                      VkRenderPass &renderPass);
+void createRenderPass(VkPhysicalDevice physicalDevice,
+                      VkDevice         logicalDevice,
+                      VkFormat         swapChainImageFormat,
+                      VkRenderPass     &renderPass);
 
 ///////////////////////////////////////////////////////////
 
@@ -86,8 +87,8 @@ void createFramebuffers(VkDevice                       logicalDevice,
                         VkRenderPass                   renderPass,
                         VkExtent2D                     swapChainExtent,
                         const std::vector<VkImageView> &swapChainImageViews,
-                        std::vector<VkFramebuffer>     &swapChainFramebuffers);
-
+                        std::vector<VkFramebuffer>     &swapChainFramebuffers,
+                        VkImageView                    depthImageView);
 ///////////////////////////////////////////////////////////
 
 void createCommandPool(VkPhysicalDevice physicalDevice,

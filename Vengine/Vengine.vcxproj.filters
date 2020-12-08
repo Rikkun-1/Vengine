@@ -41,19 +41,16 @@
     <ClCompile Include="main.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer.cpp">
+    <ClCompile Include="vulkanWrapper\buffer.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="vulkanWrapper\setupValidationLayers.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="vulkanWrapper\vulkanWrapper.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="vkSettings.cpp">
+    <ClCompile Include="vulkanWrapper\commandBuffer.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="vulkanWrapper\extensionsCheck.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkanWrapper\image.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="vulkanWrapper\queueFamilyIndices.cpp">
@@ -65,27 +62,41 @@
     <ClCompile Include="vulkanWrapper\setupSwapchain.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="vkTools.cpp">
+    <ClCompile Include="vulkanWrapper\setupValidationLayers.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="vulkanWrapper\Vertex.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="vulkanWrapper\buffer.cpp">
+    <ClCompile Include="vulkanWrapper\vulkanWrapper.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="vulkanWrapper\commandBuffer.cpp">
+    <ClCompile Include="Renderer.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="vulkanWrapper\image.cpp">
+    <ClCompile Include="vkSettings.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="vkTools.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Renderer.h">
+    <Image Include="textures\texture.jpg">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="vulkanWrapper\buffer.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="vulkanWrapper\vulkanWrapper.h">
+    <ClInclude Include="vulkanWrapper\commandBuffer.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkanWrapper\extensionsCheck.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkanWrapper\image.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="vulkanWrapper\queueFamilyIndices.h">
@@ -94,37 +105,26 @@
     <ClInclude Include="vulkanWrapper\setupDevices.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="vulkanWrapper\setupValidationLayers.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="vkSettings.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="vulkanWrapper\extensionsCheck.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="vulkanWrapper\setupSwapchain.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="vkTools.h">
+    <ClInclude Include="vulkanWrapper\setupValidationLayers.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="vulkanWrapper\Vertex.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="vulkanWrapper\buffer.h">
+    <ClInclude Include="vulkanWrapper\vulkanWrapper.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="vulkanWrapper\commandBuffer.h">
+    <ClInclude Include="Renderer.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="vulkanWrapper\image.h">
+    <ClInclude Include="vkSettings.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="textures\texture.jpg">
-      <Filter>Файлы ресурсов</Filter>
-    </Image>
+    <ClInclude Include="vkTools.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

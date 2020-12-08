@@ -2,9 +2,9 @@
 
 #include <vulkan/vulkan.h>
 
+#include <array>
 #include <vector>
 #include <stdexcept>
-#include "commandBuffer.h"
 
 void createCommandBuffers(VkDevice                     logicalDevice,
                           VkExtent2D                   swapChainExtent,

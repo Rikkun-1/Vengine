@@ -67,7 +67,8 @@ void Renderer::initVulkan()
                      swapChainImageViews);
 
 
-    createRenderPass(logicalDevice,
+    createRenderPass(physicalDevice,
+                     logicalDevice,
                      swapChainImageFormat,
                      renderPass);
 
@@ -81,18 +82,26 @@ void Renderer::initVulkan()
                            graphicsPipeline,
                            descriptorSetLayout);
 
+    createCommandPool(physicalDevice,
+                      logicalDevice,
+                      surface,
+                      commandPool);
+
+    createDepthResources(physicalDevice,
+                         logicalDevice,
+                         commandPool,
+                         graphicsQueue,
+                         swapChainExtent,
+                         depthImage,
+                         depthImageMemory,
+                         depthImageView);
 
     createFramebuffers(logicalDevice,
                        renderPass,
                        swapChainExtent,
                        swapChainImageViews,
-                       swapChainFramebuffers);
-
-
-    createCommandPool(physicalDevice,
-                      logicalDevice,
-                      surface,
-                      commandPool);
+                       swapChainFramebuffers,
+                       depthImageView);
 
     createTextureImage(physicalDevice,
                        logicalDevice,
@@ -213,19 +222,15 @@ void Renderer::recreateSwapChain()
                     swapChainImageFormat,
                     swapChainExtent);
 
-
     createImageViews(logicalDevice,
                      swapChainImageFormat,
                      swapChainImages,
                      swapChainImageViews);
 
-
-    createRenderPass(logicalDevice,
+    createRenderPass(physicalDevice,
+                     logicalDevice,
                      swapChainImageFormat,
                      renderPass);
-
-    createDescriptorSetLayout(logicalDevice,
-                              descriptorSetLayout);
 
     createGraphicsPipeline(logicalDevice,
                            swapChainExtent,
@@ -234,11 +239,21 @@ void Renderer::recreateSwapChain()
                            graphicsPipeline,
                            descriptorSetLayout);
 
+    createDepthResources(physicalDevice,
+                         logicalDevice,
+                         commandPool,
+                         graphicsQueue,
+                         swapChainExtent,
+                         depthImage,
+                         depthImageMemory,
+                         depthImageView);
+
     createFramebuffers(logicalDevice,
                        renderPass,
                        swapChainExtent,
                        swapChainImageViews,
-                       swapChainFramebuffers);
+                       swapChainFramebuffers,
+                       depthImageView);
 
     createUniformBuffers(physicalDevice,
                          logicalDevice,
@@ -409,6 +424,10 @@ void Renderer::drawFrame()
 
 void Renderer::cleanupSwapChain()
 {
+    vkDestroyImageView(logicalDevice, depthImageView, nullptr);
+    vkDestroyImage(logicalDevice, depthImage, nullptr);
+    vkFreeMemory(logicalDevice, depthImageMemory, nullptr);
+
     for(auto framebuffer : swapChainFramebuffers)
         vkDestroyFramebuffer(logicalDevice, framebuffer, nullptr);
 

@@ -40,9 +40,10 @@ void createTextureImage(VkPhysicalDevice physicalDevice,
                         VkImage          &textureImage,
                         VkDeviceMemory   &textureImageMemory);
 
-VkImageView createImageView(VkDevice logicalDevice,
-                            VkImage  image, 
-                            VkFormat format);
+VkImageView createImageView(VkDevice           logicalDevice,
+                            VkImage            image,
+                            VkFormat           format,
+                            VkImageAspectFlags aspectFlags);
 
 void createTextureImageView(VkDevice    logicalDevice,
                             VkImage     textureImage,
@@ -52,3 +53,22 @@ void createTextureImageView(VkDevice    logicalDevice,
 void createTextureSampler(VkPhysicalDevice physicalDevice,
                           VkDevice         logicalDevice,
                           VkSampler        &textureSampler);
+
+
+void createDepthResources(VkPhysicalDevice physicalDevice,
+                          VkDevice         logicalDevice,
+                          VkCommandPool    commandPool,
+                          VkQueue          graphicsQueue,
+                          VkExtent2D       swapChainExtent,
+                          VkImage          &depthImage,
+                          VkDeviceMemory   &depthImageMemory,
+                          VkImageView      &depthImageView);
+
+VkFormat findSupportedFormat(VkPhysicalDevice            physicalDevice,
+                             const std::vector<VkFormat> &candidates,
+                             VkImageTiling               tiling,
+                             VkFormatFeatureFlags        features);
+
+VkFormat findDepthFormat(VkPhysicalDevice physicalDevice);
+
+bool hasStencilComponent(VkFormat format);
