@@ -26,7 +26,7 @@ void createCommandBuffers(VkDevice                     logicalDevice,
     // отправлен в очередь напрямую, но может быть вызван из первичных буферов
     // во вторичном буфере можно описать частоиспользуемые команды чтобы вызывать их 
     // из главного буфера в нужные моменты
-    allocInfo.level               = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandBufferCount = (uint32_t) commandBuffers.size();
 
     if(vkAllocateCommandBuffers(logicalDevice, &allocInfo, commandBuffers.data()) != VK_SUCCESS)

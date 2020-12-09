@@ -163,11 +163,13 @@ void updateUniformBuffer(VkDevice                    logicalDevice,
     float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
     UniformBufferObject ubo{};
+    ubo.model = glm::mat4(1.0f);
+    
     ubo.model = glm::rotate(glm::mat4(1.0f),              // текущая трансформация
                             time * glm::radians(90.0f),   // угол
-                            glm::vec3(0.0f, 1.0f, 1.0f)); // ось вращения
-
-    ubo.view = glm::lookAt(glm::vec3(1.0f, 1.0f, 1.0f), // кординаты точки зрения
+                            glm::vec3(0.0f, 0.0f, 1.0f)); // ось вращения
+    
+    ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), // кординаты точки зрения
                            glm::vec3(0.0f, 0.0f, 0.0f), // координаты центра мира
                            glm::vec3(0.0f, 0.0f, 1.0f));// ось направленная вверх
 

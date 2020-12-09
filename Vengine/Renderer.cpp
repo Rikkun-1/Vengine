@@ -103,7 +103,8 @@ void Renderer::initVulkan()
                        swapChainFramebuffers,
                        depthImageView);
 
-    createTextureImage(physicalDevice,
+    createTextureImage(settings.texture_path,
+                       physicalDevice,
                        logicalDevice,
                        commandPool,
                        graphicsQueue,
@@ -117,6 +118,10 @@ void Renderer::initVulkan()
     createTextureSampler(physicalDevice,
                          logicalDevice,
                          textureSampler);
+
+    loadModel(settings.model_path,
+              vertices,
+              indices);
 
     createVertexBuffer(physicalDevice,
                        logicalDevice,
@@ -191,23 +196,23 @@ void Renderer::mainLoop()
 void Renderer::recreateSwapChain()
 {
 
-    /*
-    //int width  = 0, 
-    //    height = 0;
-    //glfwGetFramebufferSize(pWindow, &width, &height);
+    
+    int width  = 0, 
+        height = 0;
+    glfwGetFramebufferSize(pWindow, &width, &height);
     // если размер окна в данный момент уменьшается, то glfwGetFramebufferSize вернет нули
     // вместо ширины и высоты. Поэтому мы ждем пока размер окна не примет адекватные значения
     // это произойдет когда окно перестанет менять размер
-    //std::cout << width << "  " << height << std::endl;
-    //while(width == 0 || height == 0)
-    //{
-    //    std::cout << width << " || " << height << std::endl;
-    //    glfwGetFramebufferSize(pWindow, &width, &height);
-    //    glfwWaitEvents();
-    //}
+    std::cout << width << "  " << height << std::endl;
+    while(width == 0 || height == 0)
+    {
+        std::cout << width << " || " << height << std::endl;
+        glfwGetFramebufferSize(pWindow, &width, &height);
+        glfwWaitEvents();
+    }
     // не актуально. Программа не заходит в цикл так как при минимизации GLFW возвращает 
     // конечные адекватные значения заместо нулей.
-    */
+    
 
     vkDeviceWaitIdle(logicalDevice);
 

@@ -2,6 +2,7 @@
 
 #include <vulkan/vulkan.h>
 
+#include <string>
 #include <vector>
 
 /*
@@ -17,6 +18,9 @@ struct vkSettings
     std::vector<const char *> validationLayers;
     std::vector<const char *> instanceExtensions;
     std::vector<const char *> deviceExtensions;
+
+    std::string model_path;
+    std::string texture_path;
 
     vkSettings();
 };

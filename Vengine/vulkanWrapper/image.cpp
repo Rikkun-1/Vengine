@@ -1,7 +1,7 @@
 #include "image.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#include "../libraries/stb_image.h"
 
 void createImage(VkPhysicalDevice      physicalDevice,
                  VkDevice              logicalDevice,
@@ -176,7 +176,8 @@ void copyBufferToImage(VkDevice      logicalDevice,
                           graphicsQueue);
 }
 
-void createTextureImage(VkPhysicalDevice physicalDevice,
+void createTextureImage(std::string      path,
+                        VkPhysicalDevice physicalDevice,
                         VkDevice         logicalDevice,
                         VkCommandPool    commandPool,
                         VkQueue          graphicsQueue,
@@ -187,7 +188,7 @@ void createTextureImage(VkPhysicalDevice physicalDevice,
         texHeight,
         texChannels;
 
-    stbi_uc *pixels = stbi_load("textures/texture.jpg",
+    stbi_uc *pixels = stbi_load(path.c_str(),
                                 &texWidth,
                                 &texHeight,
                                 &texChannels,

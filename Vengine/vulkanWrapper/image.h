@@ -33,7 +33,8 @@ void copyBufferToImage(VkDevice      logicalDevice,
                        uint32_t      width,
                        uint32_t      height);
 
-void createTextureImage(VkPhysicalDevice physicalDevice,
+void createTextureImage(std::string      path,
+                        VkPhysicalDevice physicalDevice,
                         VkDevice         logicalDevice,
                         VkCommandPool    commandPool,
                         VkQueue          graphicsQueue,

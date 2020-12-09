@@ -93,7 +93,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>D:\Programms\Vulkan\1.2.154.1\Include;D:\Programms\GLFW\glfw-3.3.2.bin.WIN64\include;D:\Programms\GLM\GLM-0.9.9.8;D:\Programms\STB\stb-master;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Programms\Vulkan\1.2.154.1\Include;D:\Programms\GLFW\glfw-3.3.2.bin.WIN64\include;D:\Programms\GLM\GLM-0.9.9.8;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
@@ -112,7 +112,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\Programms\Vulkan\1.2.154.1\Include;D:\Programms\GLFW\glfw-3.3.2.bin.WIN64\include;D:\Programms\GLM\GLM-0.9.9.8;D:\Programms\STB\stb-master;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Programms\Vulkan\1.2.154.1\Include;D:\Programms\GLFW\glfw-3.3.2.bin.WIN64\include;D:\Programms\GLM\GLM-0.9.9.8;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -131,7 +131,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\Programms\Vulkan\1.2.154.1\Include;D:\Programms\GLFW\glfw-3.3.2.bin.WIN64\include;D:\Programms\GLM\GLM-0.9.9.8;D:\Programms\STB\stb-master;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Programms\Vulkan\1.2.154.1\Include;D:\Programms\GLFW\glfw-3.3.2.bin.WIN64\include;D:\Programms\GLM\GLM-0.9.9.8;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -151,7 +151,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\Programms\Vulkan\1.2.154.1\Include;D:\Programms\GLFW\glfw-3.3.2.bin.WIN64\include;D:\Programms\GLM\GLM-0.9.9.8;D:\Programms\STB\stb-master;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Programms\Vulkan\1.2.154.1\Include;D:\Programms\GLFW\glfw-3.3.2.bin.WIN64\include;D:\Programms\GLM\GLM-0.9.9.8;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -172,10 +172,6 @@
     <None Include="shaders\shader.vert" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="Renderer.cpp" />
-    <ClCompile Include="vkSettings.cpp" />
-    <ClCompile Include="vkTools.cpp" />
     <ClCompile Include="vulkanWrapper\buffer.cpp" />
     <ClCompile Include="vulkanWrapper\commandBuffer.cpp" />
     <ClCompile Include="vulkanWrapper\extensionsCheck.cpp" />
@@ -186,14 +182,12 @@
     <ClCompile Include="vulkanWrapper\setupValidationLayers.cpp" />
     <ClCompile Include="vulkanWrapper\Vertex.cpp" />
     <ClCompile Include="vulkanWrapper\vulkanWrapper.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="vkSettings.cpp" />
+    <ClCompile Include="vkTools.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="textures\texture.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Renderer.h" />
-    <ClInclude Include="vkSettings.h" />
-    <ClInclude Include="vkTools.h" />
     <ClInclude Include="vulkanWrapper\buffer.h" />
     <ClInclude Include="vulkanWrapper\commandBuffer.h" />
     <ClInclude Include="vulkanWrapper\extensionsCheck.h" />
@@ -204,6 +198,11 @@
     <ClInclude Include="vulkanWrapper\setupValidationLayers.h" />
     <ClInclude Include="vulkanWrapper\Vertex.h" />
     <ClInclude Include="vulkanWrapper\vulkanWrapper.h" />
+    <ClInclude Include="libraries\stb_image.h" />
+    <ClInclude Include="libraries\tiny_obj_loader.h" />
+    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="vkSettings.h" />
+    <ClInclude Include="vkTools.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

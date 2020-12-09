@@ -82,11 +82,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="textures\texture.jpg">
-      <Filter>Файлы ресурсов</Filter>
-    </Image>
-  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="libraries\stb_image.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\tiny_obj_loader.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
     <ClInclude Include="vulkanWrapper\buffer.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
