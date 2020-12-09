@@ -172,10 +172,20 @@
     <None Include="shaders\shader.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="graphics\Renderer.cpp" />
+    <ClCompile Include="graphics\vkSettings.cpp" />
+    <ClCompile Include="graphics\vkTools.cpp" />
+    <ClCompile Include="graphics\vulkanWrapper\buffer.cpp" />
+    <ClCompile Include="graphics\vulkanWrapper\commandBuffer.cpp" />
+    <ClCompile Include="graphics\vulkanWrapper\extensionsCheck.cpp" />
+    <ClCompile Include="graphics\vulkanWrapper\image.cpp" />
+    <ClCompile Include="graphics\vulkanWrapper\queueFamilyIndices.cpp" />
+    <ClCompile Include="graphics\vulkanWrapper\setupDevices.cpp" />
+    <ClCompile Include="graphics\vulkanWrapper\setupSwapchain.cpp" />
+    <ClCompile Include="graphics\vulkanWrapper\setupValidationLayers.cpp" />
+    <ClCompile Include="graphics\vulkanWrapper\Vertex.cpp" />
+    <ClCompile Include="graphics\vulkanWrapper\vulkanWrapper.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Renderer.cpp" />
-    <ClCompile Include="vkSettings.cpp" />
-    <ClCompile Include="vkTools.cpp" />
     <ClCompile Include="vulkanWrapper\buffer.cpp" />
     <ClCompile Include="vulkanWrapper\commandBuffer.cpp" />
     <ClCompile Include="vulkanWrapper\extensionsCheck.cpp" />
@@ -191,9 +201,19 @@
     <Image Include="textures\texture.jpg" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Renderer.h" />
-    <ClInclude Include="vkSettings.h" />
-    <ClInclude Include="vkTools.h" />
+    <ClInclude Include="graphics\Renderer.h" />
+    <ClInclude Include="graphics\vkSettings.h" />
+    <ClInclude Include="graphics\vkTools.h" />
+    <ClInclude Include="graphics\vulkanWrapper\buffer.h" />
+    <ClInclude Include="graphics\vulkanWrapper\commandBuffer.h" />
+    <ClInclude Include="graphics\vulkanWrapper\extensionsCheck.h" />
+    <ClInclude Include="graphics\vulkanWrapper\image.h" />
+    <ClInclude Include="graphics\vulkanWrapper\queueFamilyIndices.h" />
+    <ClInclude Include="graphics\vulkanWrapper\setupDevices.h" />
+    <ClInclude Include="graphics\vulkanWrapper\setupSwapchain.h" />
+    <ClInclude Include="graphics\vulkanWrapper\setupValidationLayers.h" />
+    <ClInclude Include="graphics\vulkanWrapper\Vertex.h" />
+    <ClInclude Include="graphics\vulkanWrapper\vulkanWrapper.h" />
     <ClInclude Include="vulkanWrapper\buffer.h" />
     <ClInclude Include="vulkanWrapper\commandBuffer.h" />
     <ClInclude Include="vulkanWrapper\extensionsCheck.h" />
