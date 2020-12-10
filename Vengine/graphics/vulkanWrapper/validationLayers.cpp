@@ -1,4 +1,4 @@
-#include "setupValidationLayers.h"
+#include "validationLayers.h"
 
 bool checkValidationLayerSupport(const std::vector<const char *> &requiredLayers)
 {

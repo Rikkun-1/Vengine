@@ -1,169 +1,25 @@
 #include "vulkanWrapper.h"
 
-void createInstance(const std::vector<const char *> &validationLayers,
-                    const std::vector<const char *> &instanceExtensions,
-                    VkInstance                      &instance)
+void createSwapChain(const LogicalDevice &device,
+                     VkSurfaceKHR        surface,
+                     VkExtent2D          &requiredExtent,
+                     SwapChain           &swapChain)
 {
-    if(enableValidationLayers && !checkValidationLayerSupport(validationLayers))
-        throw std::runtime_error("validation layers requested, but not available");
-
-
-    VkApplicationInfo appInfo{};
-    appInfo.sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    appInfo.pApplicationName   = "3D graphics engine";
-    appInfo.pEngineName        = "Vengine";
-    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.engineVersion      = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion         = VK_API_VERSION_1_0;
-
-
-    VkInstanceCreateInfo createInfo{};
-    createInfo.sType            = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    createInfo.pApplicationInfo = &appInfo;
-
-
-    auto extensions = getRequiredExtensions(enableValidationLayers);
-
-    // Прибавляем к расширениям требуемым для glfw и слоев валидации расширения, те
-    // которые требует пользователь
-    extensions.insert(extensions.end(), 
-                      instanceExtensions.begin(), 
-                      instanceExtensions.end());
-
-    if(!checkExtensionsSupport(extensions))
-        std::runtime_error("UNSUPPORTED EXTENSION");
-    
-    createInfo.enabledExtensionCount   = static_cast<uint32_t>(extensions.size());
-    createInfo.ppEnabledExtensionNames = extensions.data();
-
-
-    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
-    if(enableValidationLayers)
-    {
-        createInfo.enabledLayerCount   = static_cast<uint32_t>(validationLayers.size());
-        createInfo.ppEnabledLayerNames = validationLayers.data();
-
-        populateDebugMessengerCreateInfo(debugCreateInfo);
-        createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *) &debugCreateInfo;
-    }
-    else
-    {
-        createInfo.enabledLayerCount = 0;
-
-        createInfo.pNext = nullptr;
-    }
-
-    if(vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS)
-        throw std::runtime_error("failed to create instance!");
-}
-
-
-void setupDebugMessenger(VkInstance instance, VkDebugUtilsMessengerEXT &debugMessenger)
-{
-    if(!enableValidationLayers) return;
-
-    VkDebugUtilsMessengerCreateInfoEXT createInfo{};
-    populateDebugMessengerCreateInfo(createInfo);
-    
-    if(CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS)
-        throw std::runtime_error("failed to set up debug messenger!");
-}
-
-
-VkPhysicalDevice pickPhysicalDevice(VkInstance                      instance,
-                                    VkSurfaceKHR                    surface,
-                                    const std::vector<const char *> &requiredExtenisons)
-{
-    uint32_t deviceCount = 0;
-    vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
-
-    if(deviceCount == 0)
-        throw std::runtime_error("failed to find GPUs with Vulkan support!");
-
-    std::vector<VkPhysicalDevice> devices(deviceCount);
-    vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
-
-    for(auto &device : devices)
-    {
-        if(isDeviceSuitable(device, surface, requiredExtenisons))
-            return device;
-    }
-
-    // Если не удалось подобрать подходящее устройство
-    throw std::runtime_error("failed to find a suitable GPU!");
-}
-
-
-void createLogicalDevice(VkPhysicalDevice                physicalDevice,
-                         VkDevice                        &logicalDevice,
-                         VkSurfaceKHR                    surface,
-                         const std::vector<const char *> &requiredExtenisons,
-                         VkQueue                         &graphicsQueue,
-                         VkQueue                         &presentQueue)
-{
-    QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
-
-    std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value()};
-
-    float queuePriority = 1.0f;
-    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-
-    for(uint32_t queueFamily : uniqueQueueFamilies)
-    {
-        VkDeviceQueueCreateInfo queueCreateInfo{};
-        queueCreateInfo.sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueCreateInfo.queueFamilyIndex = queueFamily;
-        queueCreateInfo.queueCount       = 1;
-        queueCreateInfo.pQueuePriorities = &queuePriority;
-
-        queueCreateInfos.push_back(queueCreateInfo);
-    }
-
-    VkPhysicalDeviceFeatures deviceFeatures{};
-    deviceFeatures.samplerAnisotropy = VK_TRUE;
-
-    VkDeviceCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-
-    createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
-    createInfo.pQueueCreateInfos    = queueCreateInfos.data();
-
-    createInfo.pEnabledFeatures = &deviceFeatures;
-
-    createInfo.enabledExtensionCount   = static_cast<uint32_t>(requiredExtenisons.size());
-    createInfo.ppEnabledExtensionNames = requiredExtenisons.data();
-
-    if(vkCreateDevice(physicalDevice, &createInfo, nullptr, &logicalDevice) != VK_SUCCESS)
-        throw std::runtime_error("failed to create logical device!");
-
-    vkGetDeviceQueue(logicalDevice, indices.graphicsFamily.value(), 0, &graphicsQueue);
-    vkGetDeviceQueue(logicalDevice, indices.presentFamily.value(), 0, &presentQueue);
-}
-
-
-void createSwapChain(GLFWwindow           *pWindow,
-                     VkPhysicalDevice     physicalDevice,
-                     VkDevice             logicalDevice,
-                     VkSurfaceKHR         surface,
-                     VkSwapchainKHR       &swapChain,
-                     std::vector<VkImage> &swapChainImages,
-                     VkFormat             &swapChainImageFormat,
-                     VkExtent2D           &swapChainExtent)
-{
-    SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice, surface);
+    SwapChainSupportDetails swapChainSupport = querySwapChainSupport  (device.physicalDevice, surface);
     VkSurfaceFormatKHR      surfaceFormat    = chooseSwapSurfaceFormat(swapChainSupport.formats);
-    VkPresentModeKHR        presentMode      = chooseSwapPresentMode(swapChainSupport.presentModes);
+    VkPresentModeKHR        presentMode      = chooseSwapPresentMode  (swapChainSupport.presentModes);
     
-    int width;
-    int height;
-    glfwGetFramebufferSize(pWindow, &width, &height);
-    VkExtent2D extent = chooseSwapExtent(width, height, swapChainSupport.capabilities);
+   
+    VkExtent2D actualExtent = chooseSwapExtent(requiredExtent, swapChainSupport.capabilities);
 
     uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
 
     //maxImageCount равный нулю означает что здесь нет ограничения на количество изображений
-    if(swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount)
+    if(swapChainSupport.capabilities.maxImageCount > 0  &&
+       imageCount > swapChainSupport.capabilities.maxImageCount)
+    {
         imageCount = swapChainSupport.capabilities.maxImageCount;
+    }
 
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType   = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -172,13 +28,13 @@ void createSwapChain(GLFWwindow           *pWindow,
     createInfo.minImageCount    = imageCount;
     createInfo.imageFormat      = surfaceFormat.format;
     createInfo.imageColorSpace  = surfaceFormat.colorSpace;
-    createInfo.imageExtent      = extent;
+    createInfo.imageExtent      = actualExtent;
     createInfo.imageArrayLayers = 1; // Количество слоев на которых будут располагаться
 
     // данная цепочка показа предназначается непосредственно для рисования прямо в нее
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    QueueFamilyIndices indices    = findQueueFamilies(physicalDevice, surface);
+    QueueFamilyIndices indices    = findQueueFamilies(device.physicalDevice, surface);
     uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
 
     if(indices.graphicsFamily != indices.presentFamily)
@@ -201,103 +57,58 @@ void createSwapChain(GLFWwindow           *pWindow,
 
     createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-    if(vkCreateSwapchainKHR(logicalDevice, &createInfo, nullptr, &swapChain) != VK_SUCCESS)
+    if(vkCreateSwapchainKHR(device.handle, &createInfo, nullptr, &swapChain.handle) != VK_SUCCESS)
         throw std::runtime_error("failed to create swap chain!");
 
-    vkGetSwapchainImagesKHR(logicalDevice, swapChain, &imageCount, nullptr);
-    swapChainImages.resize(imageCount);
-    vkGetSwapchainImagesKHR(logicalDevice, swapChain, &imageCount, swapChainImages.data());
+    vkGetSwapchainImagesKHR(device.handle, swapChain.handle, &imageCount, nullptr);
 
-    swapChainImageFormat = surfaceFormat.format;
-    swapChainExtent = extent;
+    swapChain.images.resize(imageCount);
+    vkGetSwapchainImagesKHR(device.handle, swapChain.handle, &imageCount, swapChain.images.data());
+
+    createImageViews(device, swapChain);
+
+    swapChain.imageFormat = surfaceFormat.format;
+    swapChain.extent      = actualExtent;
 }
 
-void createImageViews(VkDevice                   logicalDevice,
-                      VkFormat                   swapChainImageFormat,
-                      const std::vector<VkImage> &swapChainImages,
-                      std::vector<VkImageView>   &swapChainImageViews)
+
+VkRenderPass createRenderPass(const LogicalDevice &device,
+                              VkFormat            swapChainImageFormat)
 {
-    swapChainImageViews.resize(swapChainImages.size());
+    VkAttachmentDescription colorAttachment;
+    fillColorAttachmentDescription(colorAttachment);
+    colorAttachment.format = swapChainImageFormat;
 
-    for(uint32_t i = 0; i < swapChainImages.size(); i++)
-    {
-        swapChainImageViews[i] = createImageView(logicalDevice, swapChainImages[i], swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
-    }
-}
-///////////////////////////////////////////////////////////
 
-void createRenderPass(VkPhysicalDevice physicalDevice,
-                      VkDevice         logicalDevice,
-                      VkFormat         swapChainImageFormat,
-                      VkRenderPass     &renderPass)
-{
-    VkAttachmentDescription colorAttachment{};
-    colorAttachment.format  = swapChainImageFormat;
-    colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    VkAttachmentDescription depthAttachment;
+    fillDepthAttachmentDescription(depthAttachment);
+    depthAttachment.format = findDepthFormat(device.physicalDevice);
 
-    // что делать с данными во до рендеринга
-    // VK_ATTACHMENT_LOAD_OP_CLEAR - зачистить буфер до рендеринга. Изображение начинается с черного полотна
-    // VK_ATTACHMENT_LOAD_OP_LOAD  - оставить как есть
-    // VK_ATTACHMENT_LOAD_OP_DONT_CARE - нам не важно
-    colorAttachment.loadOp  = VK_ATTACHMENT_LOAD_OP_CLEAR;
-
-    // что делать после рендеринга
-    // VK_ATTACHMENT_STORE_OP_STORE - сохранить буфер для последующего использования. Например для показа
-    // VK_ATTACHMENT_STORE_OP_DONT_CARE - нас не заботит что произойдет с результатом после рендеринга
-    colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-
-    // тоже самое для буфера - трафарета. Мы его пока не используем. Нас не заботит его состояние
-    colorAttachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-
-    // данный параметр позволяет представлять изображения в буфере наиболее эфективным способом.
-    // Т.е. мы говорим что мы хотим делать с изображением и видеокарта будет хранить его в том виде,
-    // который будет наиболее оптимальным для данной операции
-    // initialLayout - для каких целей это изображение использовалось ранее
-    // finalLayout - для каких целей это изображение будет использоваться после всех операций
-    // VK_IMAGE_LAYOUT_PRESENT_SRC_KHR - это изображение будет ресурсом при отправке в swap chain
-    // мы хотим чтобы после обработки это изображение сразу же было готово к отправке в swap chain
-    // VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL - мы намерены просто рисовать сюда
-    // VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL - это изображение пункт назначения для копирования
-    // очень важно чтобы изображения находились в подходящем состоянии для нужных операций
-    // VK_IMAGE_LAYOUT_UNDEFINED - мы не знаем в каком состоянии было изначальное изображение
-    // это чревато тем что изображение может быть в неправильном состоянии для данной задачи
-    // нас это не заботит так как мы все равно зачистим изображение 
-    colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachment.finalLayout   = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
     VkAttachmentReference colorAttachmentRef{};
     colorAttachmentRef.attachment = 0; // индекс attachment на которое мы ссылаемся
     // для каких целей будет использоваться этот attachment непосредственно сейчас
     // VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL - оптимизорован для рисования в него
-    colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    colorAttachmentRef.layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-    VkAttachmentDescription depthAttachment{};
-    depthAttachment.format         = findDepthFormat(physicalDevice);
-    depthAttachment.samples        = VK_SAMPLE_COUNT_1_BIT;
-    depthAttachment.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    depthAttachment.storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    depthAttachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    depthAttachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
-    depthAttachment.finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
     VkAttachmentReference depthAttachmentRef{};
     depthAttachmentRef.attachment = 1;
     depthAttachmentRef.layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-    // описание текущего прохода
+
+    // описание текущего подпрохода
     VkSubpassDescription subpass{};
     // чем является данный проход
     // VK_PIPELINE_BIND_POINT_GRAPHICS - данный проход работает с графикой
     // VK_PIPELINE_BIND_POINT_COMPUTE - данный проход работает с вычислениями
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-
     // индекс attachment'а это и есть слой на который мы рисуем во время работы с шейдером
     // layout(location = 0) out vec4 outColor
     subpass.colorAttachmentCount    = 1;
     subpass.pColorAttachments       = &colorAttachmentRef;
     subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
 
     VkSubpassDependency dependency{};
     // индекс подпрохода для которого мы настраиваем зависимости
@@ -316,8 +127,9 @@ void createRenderPass(VkPhysicalDevice physicalDevice,
     dependency.dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | 
                                VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 
-    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | 
+    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT          | 
                                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
 
     // В один проход может быть помещено несколько приложений:
     // pInputAttachments: это приложение будет использоваться как ввод для шейдеров
@@ -328,7 +140,7 @@ void createRenderPass(VkPhysicalDevice physicalDevice,
     std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
 
     VkRenderPassCreateInfo renderPassInfo{};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+    renderPassInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
     renderPassInfo.pAttachments    = attachments.data();
     renderPassInfo.subpassCount    = 1;
@@ -337,26 +149,48 @@ void createRenderPass(VkPhysicalDevice physicalDevice,
     renderPassInfo.pDependencies   = &dependency;
 
 
-    if(vkCreateRenderPass(logicalDevice, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
+    VkRenderPass renderPass;
+    if(vkCreateRenderPass(device.handle, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
         throw std::runtime_error("failed to create render pass!");
+
+    return renderPass;
 }
+
 
 ///////////////////////////////////////////////////////////
-VkShaderModule createShaderModule(VkDevice                logicalDevice,
-                                  const std::vector<char> &code)
+
+void createDescriptorSetLayout(VkDevice              logicalDevice, 
+                               VkDescriptorSetLayout &descriptorSetLayout)
 {
-    VkShaderModuleCreateInfo createInfo{};
-    createInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    createInfo.codeSize = code.size();
-    createInfo.pCode    = reinterpret_cast<const uint32_t *>(code.data());
+    VkDescriptorSetLayoutBinding uboLayoutBinding{};
+    uboLayoutBinding.binding         = 0;
+    uboLayoutBinding.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    uboLayoutBinding.descriptorCount = 1;
+    // каким стадиям будет доступно данное прикрепление?
+    // можно добавить несколько стадий используя |
+    // или VK_SHADER_STAGE_ALL_GRAPHICS если данное прикрепление требуется
+    // на всех стадиях
+    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-    VkShaderModule shaderModule;
-    if(vkCreateShaderModule(logicalDevice, &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
-        throw std::runtime_error("failed to create shader module!");
+    uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
 
-    return shaderModule;
+    VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+    samplerLayoutBinding.binding            = 1;
+    samplerLayoutBinding.descriptorCount    = 1;
+    samplerLayoutBinding.descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    samplerLayoutBinding.pImmutableSamplers = nullptr;
+    samplerLayoutBinding.stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
+
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+    layoutInfo.pBindings    = bindings.data();
+
+    if(vkCreateDescriptorSetLayout(logicalDevice, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+        throw std::runtime_error("failed to create descriptor set layout!");
 }
-
 
 void createGraphicsPipeline(VkDevice              logicalDevice,
                             VkExtent2D            swapChainExtent,
@@ -614,26 +448,6 @@ void createGraphicsPipeline(VkDevice              logicalDevice,
     vkDestroyShaderModule(logicalDevice, vertShaderModule, nullptr);
 }
 
-
-static std::vector<char> readFile(const std::string &filename)
-{
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-    if(!file.is_open())
-        throw std::runtime_error("failed to open file!");
-
-    size_t fileSize = (size_t) file.tellg();
-
-    std::vector<char> buffer(fileSize);
-
-    file.seekg(0);
-    file.read(buffer.data(), fileSize);
-
-    file.close();
-
-    return buffer;
-}
-
 ///////////////////////////////////////////////////////////
 
 void createFramebuffers(VkDevice                       logicalDevice,
@@ -730,38 +544,6 @@ void createSyncObjects(VkDevice                   logicalDevice,
     }
 }
 
-void createDescriptorSetLayout(VkDevice              logicalDevice, 
-                               VkDescriptorSetLayout &descriptorSetLayout)
-{
-    VkDescriptorSetLayoutBinding uboLayoutBinding{};
-    uboLayoutBinding.binding         = 0;
-    uboLayoutBinding.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uboLayoutBinding.descriptorCount = 1;
-    // каким стадиям будет доступно данное прикрепление?
-    // можно добавить несколько стадий используя |
-    // или VK_SHADER_STAGE_ALL_GRAPHICS если данное прикрепление требуется
-    // на всех стадиях
-    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-    uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
-
-    VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-    samplerLayoutBinding.binding            = 1;
-    samplerLayoutBinding.descriptorCount    = 1;
-    samplerLayoutBinding.descriptorType     = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    samplerLayoutBinding.pImmutableSamplers = nullptr;
-    samplerLayoutBinding.stageFlags         = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
-
-    VkDescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-    layoutInfo.pBindings    = bindings.data();
-
-    if(vkCreateDescriptorSetLayout(logicalDevice, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
-        throw std::runtime_error("failed to create descriptor set layout!");
-}
 
 void createDescriptorPool(VkDevice                   logicalDevice,
                           const std::vector<VkImage> swapChainImages,

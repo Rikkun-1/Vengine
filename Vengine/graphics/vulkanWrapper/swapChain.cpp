@@ -1,4 +1,6 @@
-#include "setupSwapchain.h"
+#include "swapChain.h"
+
+#include "image.h"
 
 SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice physicalDevice,
                                               VkSurfaceKHR     surface)
@@ -53,8 +55,7 @@ VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> &avai
     return VK_PRESENT_MODE_FIFO_KHR; // Только этот режим гарантированно поддерживается
 }
 
-VkExtent2D chooseSwapExtent(int width,
-                            int height,
+VkExtent2D chooseSwapExtent(VkExtent2D                     requiredExtent,
                             const VkSurfaceCapabilitiesKHR &capabilities)
 {
     if(capabilities.currentExtent.width != UINT32_MAX)
@@ -64,14 +65,29 @@ VkExtent2D chooseSwapExtent(int width,
     else
     {
         VkExtent2D actualExtent = {
-            static_cast<uint32_t>(width),
-            static_cast<uint32_t>(height)
+            static_cast<uint32_t>(requiredExtent.width),
+            static_cast<uint32_t>(requiredExtent.height)
         };
 
         actualExtent.width  = std::max(capabilities.minImageExtent.width,  std::min(capabilities.maxImageExtent.width, actualExtent.width));
         actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
 
         return actualExtent;
+    }
+}
+
+
+void createImageViews(LogicalDevice device,
+                      SwapChain     swapChain)
+{
+    swapChain.imageViews.resize(swapChain.images.size());
+
+    for(uint32_t i = 0; i < swapChain.images.size(); i++)
+    {
+        swapChain.imageViews[i] = createImageView(device.handle,
+                                                  swapChain.images[i],
+                                                  swapChain.imageFormat,
+                                                  VK_IMAGE_ASPECT_COLOR_BIT);
     }
 }
 

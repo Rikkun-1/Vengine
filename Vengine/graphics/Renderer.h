@@ -5,7 +5,8 @@
 
 #include "vulkanWrapper/vulkanWrapper.h"
 #include "vkSettings.h"
-#include "vulkanWrapper/Vertex.h"
+#include "Model.h"
+#include "Shader.h"
 
 class Renderer
 {
@@ -15,24 +16,20 @@ public:
 
     void run();
 
+    void changeModel(Model model);
+
+    void loadShader(Shader shader);
+
 private:
-    GLFWwindow               *pWindow;
     VkInstance               instance;
+
     VkDebugUtilsMessengerEXT debugMessenger;
+
+    GLFWwindow               *pWindow;
     VkSurfaceKHR             surface;
 
-    VkPhysicalDevice         physicalDevice;
-    VkDevice                 logicalDevice;
-
-    VkQueue                  graphicsQueue;
-    VkQueue                  presentationQueue;
-
-    VkSwapchainKHR           swapChain;
-    std::vector<VkImage>     swapChainImages;
-    VkFormat                 swapChainImageFormat;
-    VkExtent2D               swapChainExtent;
-
-    std::vector<VkImageView>   swapChainImageViews;
+    LogicalDevice            device;
+    SwapChain                swapChain;
 
     VkRenderPass               renderPass;
 
@@ -73,22 +70,10 @@ private:
     int MAX_FRAMES_IN_FLIGHT = 2;
     size_t currentFrame      = 0;
 
-    const std::vector<Vertex> vertices = {
-        {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-        {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-        {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-        {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
+    Model model;
 
-        {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-        {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-        {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-        {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
-    };
-
-    const std::vector<uint32_t> indices = {
-        0, 1, 2, 2, 3, 0,
-        4, 5, 6, 6, 7, 4
-    };
+    ShaderModule vertexShader;
+    ShaderModule fragmentShader;
 
     void initWindow();
     void initVulkan();

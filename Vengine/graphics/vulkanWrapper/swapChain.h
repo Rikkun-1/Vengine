@@ -5,6 +5,17 @@
 
 #include <vector>
 
+#include "LogicalDevice.h"
+
+struct SwapChain
+{
+    VkSwapchainKHR           handle;
+    std::vector<VkImage>     images;
+    std::vector<VkImageView> imageViews;
+    VkFormat                 imageFormat;
+    VkExtent2D               extent;
+};
+
 struct SwapChainSupportDetails
 {
     VkSurfaceCapabilitiesKHR        capabilities;
@@ -15,11 +26,16 @@ struct SwapChainSupportDetails
 SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice physicalDevice,
                                               VkSurfaceKHR     surface);
 
+
 VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
+
 
 VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes);
 
-VkExtent2D chooseSwapExtent(int width,
-                            int height,
+
+VkExtent2D chooseSwapExtent(VkExtent2D                     requiredExtent,
                             const VkSurfaceCapabilitiesKHR &capabilities);
 
+
+void createImageViews(LogicalDevice device,
+                      SwapChain     swapChain);

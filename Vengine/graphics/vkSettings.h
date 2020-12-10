@@ -3,7 +3,7 @@
 #include <vulkan/vulkan.h>
 
 #include <vector>
-
+#include <string>
 /*
 * Структура, описывающая настройки для Renderer
 */
@@ -17,6 +17,9 @@ struct vkSettings
     std::vector<const char *> validationLayers;
     std::vector<const char *> instanceExtensions;
     std::vector<const char *> deviceExtensions;
+
+    std::string model_path;
+    std::string texture_path;
 
     vkSettings();
 };

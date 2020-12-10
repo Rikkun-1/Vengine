@@ -6,6 +6,33 @@ static void framebufferResizeCallback(GLFWwindow *window, int width, int height)
     app->framebufferResized = true;
 }
 
+void Renderer::loadShader(Shader shader) 
+{
+    if(shader.stage == ShaderStages::VERTEX_STAGE)
+    {
+        ShaderModule shaderModule(device.handle,
+                                  shader.binaryCode,
+                                  VK_SHADER_STAGE_VERTEX_BIT,
+                                  shader.entry);
+
+        this->vertexShader = shaderModule;
+    }
+
+    if(shader.stage == ShaderStages::VERTEX_STAGE)
+    {
+         ShaderModule shaderModule(device.handle,
+                                  shader.binaryCode,
+                                  VK_SHADER_STAGE_FRAGMENT_BIT,
+                                  shader.entry);
+
+        this->fragmentShader = shaderModule;
+    }
+}
+
+void Renderer::changeModel(Model model) 
+{
+}
+
 void Renderer::run()
 {
     initWindow();
@@ -32,48 +59,39 @@ void Renderer::initWindow()
 
 void Renderer::initVulkan()
 {
-    createInstance(settings.validationLayers,
-                   settings.instanceExtensions,
-                   instance);
+    instance = createInstance(settings.validationLayers,
+                              settings.instanceExtensions);
 
-    setupDebugMessenger(instance, debugMessenger);
+    debugMessenger = setupDebugMessenger(instance);
 
     if(glfwCreateWindowSurface(instance, pWindow, nullptr, &surface) != VK_SUCCESS)
         std::runtime_error("failed to create window surface");
 
+    VkPhysicalDevice physicalDevice;
     physicalDevice = pickPhysicalDevice(instance, 
                                         surface, 
                                         settings.deviceExtensions);
 
-    createLogicalDevice(physicalDevice,
-                        logicalDevice,
-                        surface, 
-                        settings.deviceExtensions, 
-                        graphicsQueue, 
-                        presentationQueue);
+    device = createLogicalDevice(instance,
+                                 physicalDevice,
+                                 surface, 
+                                 settings.deviceExtensions);
 
-    createSwapChain(pWindow,
-                    physicalDevice,
-                    logicalDevice,
+    int width, height;
+    glfwGetFramebufferSize(pWindow, &width, &height);
+
+    VkExtent2D extent {width, height};
+
+    createSwapChain(device,
                     surface,
-                    swapChain,
-                    swapChainImages,
-                    swapChainImageFormat,
-                    swapChainExtent);
+                    extent,
+                    this->swapChain);
 
-    createImageViews(logicalDevice,
-                     swapChainImageFormat,
-                     swapChainImages,
-                     swapChainImageViews);
+    this->renderPass          = createRenderPass(device, swapChain.imageFormat);
 
+    this->descriptorSetLayout = createDescriptorSetLayout(device.handle);
 
-    createRenderPass(physicalDevice,
-                     logicalDevice,
-                     swapChainImageFormat,
-                     renderPass);
-
-    createDescriptorSetLayout(logicalDevice,
-                              descriptorSetLayout);
+    this->pipelineLayout      = createPipelineLayout(device.handle, descriptorSetLayout);
 
     createGraphicsPipeline(logicalDevice,
                            swapChainExtent,
@@ -191,23 +209,22 @@ void Renderer::mainLoop()
 void Renderer::recreateSwapChain()
 {
 
-    /*
-    //int width  = 0, 
-    //    height = 0;
-    //glfwGetFramebufferSize(pWindow, &width, &height);
-    // если размер окна в данный момент уменьшается, то glfwGetFramebufferSize вернет нули
+    
+    int width  = 0, 
+        height = 0;
+    glfwGetFramebufferSize(pWindow, &width, &height);
+
+    // если окно свернуто, то glfwGetFramebufferSize вернет нули
     // вместо ширины и высоты. Поэтому мы ждем пока размер окна не примет адекватные значения
-    // это произойдет когда окно перестанет менять размер
-    //std::cout << width << "  " << height << std::endl;
-    //while(width == 0 || height == 0)
-    //{
-    //    std::cout << width << " || " << height << std::endl;
-    //    glfwGetFramebufferSize(pWindow, &width, &height);
-    //    glfwWaitEvents();
-    //}
-    // не актуально. Программа не заходит в цикл так как при минимизации GLFW возвращает 
-    // конечные адекватные значения заместо нулей.
-    */
+    // это произойдет когда окно вновь будет развернуто
+    std::cout << width << "  " << height << std::endl;
+    while(width == 0 || height == 0)
+    {
+        std::cout << width << " || " << height << std::endl;
+        glfwGetFramebufferSize(pWindow, &width, &height);
+        glfwWaitEvents();
+    }
+    
 
     vkDeviceWaitIdle(logicalDevice);
 

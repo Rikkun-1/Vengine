@@ -10,66 +10,35 @@
 
 #include "setupValidationLayers.h"
 #include "extensionsCheck.h"
-#include "setupDevices.h"
 
-#include "setupSwapchain.h"
+#include "setupPhysicalDevice.h"
+#include "LogicalDevice.h"
+
+#include "SwapChain.h"
+#include "setupRenderPass.h"
+
 #include "buffer.h"
 #include "commandBuffer.h"
 #include "image.h"
-
-#ifdef NDEBUG
-    const bool enableValidationLayers = false;
-#else
-    const bool enableValidationLayers = true;
-#endif
-
-void createInstance(const std::vector<const char *> &validationLayers,
-                    const std::vector<const char *> &instanceExtensions,
-                    VkInstance                      &instance);
+#include "shaderModule.h"
+#include "descriptorSetLayout.h"
+#include "pipelineLayout.h"
 
 
-void setupDebugMessenger(VkInstance instance, VkDebugUtilsMessengerEXT &debugMessenger);
 
 
-VkPhysicalDevice pickPhysicalDevice(VkInstance                      instance,
-                                    VkSurfaceKHR                    surface,
-                                    const std::vector<const char *> &requiredExtenisons);
 
 
-void createLogicalDevice(VkPhysicalDevice                physicalDevice,
-                         VkDevice                        &logicalDevice,
-                         VkSurfaceKHR                    surface,
-                         const std::vector<const char *> &requiredExtenisons,
-                         VkQueue                         &graphicsQueue,
-                         VkQueue                         &presentQueue);
+void createSwapChain(const LogicalDevice  &device,
+                     VkSurfaceKHR          surface,
+                     VkExtent2D           &requiredExtent,
+                     SwapChain            &swapChain);
 
 
-void createSwapChain(GLFWwindow           *pWindow,
-                     VkPhysicalDevice     physicalDevice,
-                     VkDevice             logicalDevice,
-                     VkSurfaceKHR         surface,
-                     VkSwapchainKHR       &swapChain,
-                     std::vector<VkImage> &swapChainImages,
-                     VkFormat             &swapChainImageFormat,
-                     VkExtent2D           &swapChainExtent);
-
-void createImageViews(VkDevice                   logicalDevice,
-                      VkFormat                   swapChainImageFormat,
-                      const std::vector<VkImage> &swapChainImages,
-                      std::vector<VkImageView>   &swapChainImageViews);
+VkRenderPass createRenderPass(const LogicalDevice &device,
+                              VkFormat            swapChainImageFormat);
 
 ///////////////////////////////////////////////////////////
-
-void createRenderPass(VkPhysicalDevice physicalDevice,
-                      VkDevice         logicalDevice,
-                      VkFormat         swapChainImageFormat,
-                      VkRenderPass     &renderPass);
-
-///////////////////////////////////////////////////////////
-
-VkShaderModule createShaderModule(VkDevice                logicalDevice,
-                                  const std::vector<char> &code);
-
 
 void createGraphicsPipeline(VkDevice              logicalDevice,
                             VkExtent2D            swapChainExtent,
@@ -77,9 +46,6 @@ void createGraphicsPipeline(VkDevice              logicalDevice,
                             VkPipelineLayout      &pipelineLayout,
                             VkPipeline            &graphicsPipeline,
                             VkDescriptorSetLayout &descriptorSetLayout);
-
-
-static std::vector<char> readFile(const std::string &filename);
 
 ///////////////////////////////////////////////////////////
 
