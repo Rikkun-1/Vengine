@@ -5,16 +5,18 @@
 
 #include <vector>
 
-#include "LogicalDevice.h"
+#include "device.h"
 
 struct SwapChain
 {
-    VkSwapchainKHR           handle;
-    std::vector<VkImage>     images;
-    std::vector<VkImageView> imageViews;
-    VkFormat                 imageFormat;
-    VkExtent2D               extent;
+    VkSwapchainKHR              handle;
+    std::vector<VkImage>        images;
+    std::vector<VkImageView>    imageViews;
+    std::vector<VkFramebuffer>  frameBuffers;
+    VkFormat                    imageFormat;
+    VkExtent2D                  extent;
 };
+
 
 struct SwapChainSupportDetails
 {
@@ -23,19 +25,22 @@ struct SwapChainSupportDetails
     std::vector<VkPresentModeKHR>   presentModes;
 };
 
+
 SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice physicalDevice,
                                               VkSurfaceKHR     surface);
 
 
-VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
+void createFramebuffers(VkDevice          logicalDevice,
+                        VkRenderPass      renderPass,
+                        SwapChain         swapChain,
+                        VkImageView       depthImageView);
 
 
-VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes);
+void createImageViews(const LogicalDevice &device,
+                      SwapChain           swapChain);
 
 
-VkExtent2D chooseSwapExtent(VkExtent2D                     requiredExtent,
-                            const VkSurfaceCapabilitiesKHR &capabilities);
-
-
-void createImageViews(LogicalDevice device,
-                      SwapChain     swapChain);
+void createSwapChain(const LogicalDevice &device,
+                     VkSurfaceKHR        surface,
+                     VkExtent2D          &requiredExtent,
+                     SwapChain           &swapChain);

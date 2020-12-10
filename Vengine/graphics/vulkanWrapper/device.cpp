@@ -3,15 +3,14 @@
 #include <stdexcept>
 #include <set>
 
-#include "queueFamilyIndices.h"
 #include "swapChain.h"
 
 /*
 * Возвращает семейства очередей этого физического устройства, 
 * которые удовлетворяет всем требованиям
 */
-static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physicalDevice,
-                                            VkSurfaceKHR     surface)
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physicalDevice,
+                                      VkSurfaceKHR     surface)
 {
     QueueFamilyIndices indices;
 
@@ -42,7 +41,7 @@ static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physicalDevice,
 }
 
 static bool checkDeviceExtensionsSupport(VkPhysicalDevice                physicalDevice,
-                                  const std::vector<const char *> &requiredExtensions)
+                                         const std::vector<const char *> &requiredExtensions)
 {
     uint32_t extensionCount;
     vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr);
@@ -105,6 +104,27 @@ static bool isDeviceSuitable(VkPhysicalDevice                physicalDevice,
                    supportedFeatures.samplerAnisotropy;
         }
 
+static void setupQueueFamilies(const std::set<uint32_t>             &uniqueQueueFamilies,
+                               std::vector<VkDeviceQueueCreateInfo> &queueCreateInfos)
+{
+    float queuePriority = 1.0f;
+
+    for(uint32_t queueFamily : uniqueQueueFamilies)
+    {
+        VkDeviceQueueCreateInfo queueCreateInfo{};
+        queueCreateInfo.sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfo.queueFamilyIndex = queueFamily;
+        queueCreateInfo.queueCount       = 1;
+        queueCreateInfo.pQueuePriorities = &queuePriority;
+
+        queueCreateInfos.push_back(queueCreateInfo);
+    }
+}
+
+static void setupDeviceFetures(VkPhysicalDeviceFeatures  &deviceFeatures)
+{
+    deviceFeatures.samplerAnisotropy = VK_TRUE;
+}
 
 VkPhysicalDevice pickPhysicalDevice(VkInstance                      instance,
                                     VkSurfaceKHR                    surface,
@@ -139,23 +159,14 @@ LogicalDevice createLogicalDevice(VkInstance                      instance,
 
     std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), 
                                                indices.presentFamily.value() };
-
-    float queuePriority = 1.0f;
+    
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-
-    for(uint32_t queueFamily : uniqueQueueFamilies)
-    {
-        VkDeviceQueueCreateInfo queueCreateInfo{};
-        queueCreateInfo.sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueCreateInfo.queueFamilyIndex = queueFamily;
-        queueCreateInfo.queueCount       = 1;
-        queueCreateInfo.pQueuePriorities = &queuePriority;
-
-        queueCreateInfos.push_back(queueCreateInfo);
-    }
-
+    setupQueueFamilies(uniqueQueueFamilies,
+                       queueCreateInfos);
+    
     VkPhysicalDeviceFeatures deviceFeatures{};
-    deviceFeatures.samplerAnisotropy = VK_TRUE;
+    setupDeviceFetures(deviceFeatures);
+
 
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -167,13 +178,14 @@ LogicalDevice createLogicalDevice(VkInstance                      instance,
 
     createInfo.enabledExtensionCount   = static_cast<uint32_t>(requiredExtensions.size());
     createInfo.ppEnabledExtensionNames = requiredExtensions.data();
-
+    
     LogicalDevice device;
+    device.familyIndices = indices;
     if(vkCreateDevice(physicalDevice, &createInfo, nullptr, &device.handle) != VK_SUCCESS)
         throw std::runtime_error("failed to create logical device!");
 
     vkGetDeviceQueue(device.handle, indices.graphicsFamily.value(), 0, &device.graphicsQueue);
     vkGetDeviceQueue(device.handle, indices.presentFamily.value(),  0, &device.presentQueue);
 
-    return device ;
+    return device;
 }

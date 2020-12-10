@@ -24,44 +24,6 @@
 #include "descriptorSetLayout.h"
 #include "pipelineLayout.h"
 
-
-
-
-
-
-void createSwapChain(const LogicalDevice  &device,
-                     VkSurfaceKHR          surface,
-                     VkExtent2D           &requiredExtent,
-                     SwapChain            &swapChain);
-
-
-VkRenderPass createRenderPass(const LogicalDevice &device,
-                              VkFormat            swapChainImageFormat);
-
-///////////////////////////////////////////////////////////
-
-void createGraphicsPipeline(VkDevice              logicalDevice,
-                            VkExtent2D            swapChainExtent,
-                            VkRenderPass          renderPass,
-                            VkPipelineLayout      &pipelineLayout,
-                            VkPipeline            &graphicsPipeline,
-                            VkDescriptorSetLayout &descriptorSetLayout);
-
-///////////////////////////////////////////////////////////
-
-void createFramebuffers(VkDevice                       logicalDevice,
-                        VkRenderPass                   renderPass,
-                        VkExtent2D                     swapChainExtent,
-                        const std::vector<VkImageView> &swapChainImageViews,
-                        std::vector<VkFramebuffer>     &swapChainFramebuffers,
-                        VkImageView                    depthImageView);
-///////////////////////////////////////////////////////////
-
-void createCommandPool(VkPhysicalDevice physicalDevice,
-                       VkDevice         logicalDevice,
-                       VkSurfaceKHR     surface, 
-                       VkCommandPool    &commandPool);
-
 ///////////////////////////////////////////////////////////
 
 void createSyncObjects(VkDevice                   logicalDevice,
@@ -72,18 +34,3 @@ void createSyncObjects(VkDevice                   logicalDevice,
                        std::vector<VkFence>       &inFlightFences,
                        std::vector<VkFence>       &imagesInFlight);
 
-void createDescriptorSetLayout(VkDevice              logicalDevice, 
-                               VkDescriptorSetLayout &descriptorSetLayout);
-
-void createDescriptorPool(VkDevice                   logicalDevice,
-                          const std::vector<VkImage> swapChainImages,
-                          VkDescriptorPool           &descriptorPool);
-
-void createDescriptorSets(VkDevice                     logicalDevice,
-                          const std::vector<VkImage>   swapChainImages,
-                          VkDescriptorPool             descriptorPool,
-                          VkDescriptorSetLayout        descriptorSetLayout,
-                          std::vector<VkDescriptorSet> &descriptorSets,
-                          std::vector<VkBuffer>        &uniformBuffers,
-                          VkImageView                  textureImageView,
-                          VkSampler                    textureSampler);

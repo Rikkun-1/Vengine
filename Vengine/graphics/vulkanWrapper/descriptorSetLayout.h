@@ -5,10 +5,10 @@
 #include <array>
 #include <stdexcept>
 
-void setupDescriptorSetLayoutBinding(int                          binding,
-                                     int                          count,
+void setupDescriptorSetLayoutBinding(uint32_t                     binding,
+                                     uint32_t                     count,
                                      VkDescriptorType             descriptorType,
                                      VkShaderStageFlags           shaderStage,
                                      VkDescriptorSetLayoutBinding &uboLayoutBinding);
 
-VkDescriptorSetLayout createDescriptorSetLayout(VkDevice          logicalDevice);
+VkDescriptorSetLayout createDescriptorSetLayout(VkDevice logicalDevice);

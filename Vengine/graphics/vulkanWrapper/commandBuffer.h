@@ -2,28 +2,32 @@
 
 #include <vulkan/vulkan.h>
 
-#include <array>
 #include <vector>
-#include <stdexcept>
+
+#include "device.h"
+#include "swapChain.h"
 
 void createCommandBuffers(VkDevice                     logicalDevice,
-                          VkExtent2D                   swapChainExtent,
-                          std::vector<VkFramebuffer>   &swapChainFramebuffers,
-                          VkPipeline                   graphicsPipeline,
+                          SwapChain                    &swapChain,
                           VkRenderPass                 renderPass,
+                          VkPipeline                   graphicsPipeline,
+                          VkPipelineLayout             pipelineLayout,
                           VkBuffer                     vertexBuffer,
                           VkBuffer                     indexBuffer,
-                          VkCommandPool                commandPool,
-                          std::vector<VkCommandBuffer> &commandBuffers,
                           std::vector<VkDescriptorSet> &descriptorSets,
-                          VkPipelineLayout             pipelineLayout,
-                          int                          indexBufferSize);
+                          int                          indexBufferSize,
+                          VkCommandPool                commandPool,
+                          std::vector<VkCommandBuffer> &commandBuffers);
 
 
 VkCommandBuffer beginSingleTimeCommands(VkDevice      logicalDevice,
                                         VkCommandPool commandPool);
 
-void endSingleTimeCommands(VkCommandBuffer commandBuffer,
-                           VkDevice        logicalDevice,
-                           VkCommandPool   commandPool,
-                           VkQueue         graphicsQueue);
+
+void endSingleTimeCommands(const LogicalDevice  &device,
+                           VkCommandBuffer      commandBuffer,
+                           VkCommandPool        commandPool);
+
+
+VkCommandPool createCommandPool(const LogicalDevice  &device,
+                                VkSurfaceKHR         surface);

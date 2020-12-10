@@ -178,11 +178,11 @@
     <ClCompile Include="graphics\vulkanWrapper\buffer.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\commandBuffer.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\descriptorSetLayout.cpp" />
+    <ClCompile Include="graphics\vulkanWrapper\descriptorSets.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\image.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\instance.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\pipeline.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\pipelineLayout.cpp" />
-    <ClCompile Include="graphics\vulkanWrapper\queueFamilyIndices.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\device.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\swapChain.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\validationLayers.cpp" />
@@ -193,7 +193,7 @@
     <ClCompile Include="graphics\Mesh.cpp" />
     <ClCompile Include="graphics\Texture.cpp" />
     <ClCompile Include="graphics\Pixel.cpp" />
-    <ClCompile Include="graphics\vulkanWrapper\setupRenderPass.cpp" />
+    <ClCompile Include="graphics\vulkanWrapper\renderPass.cpp" />
     <ClCompile Include="graphics\Shader.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\shaderModule.cpp" />
     <ClCompile Include="vulkanWrapper\buffer.cpp" />
@@ -219,11 +219,11 @@
     <ClInclude Include="graphics\vulkanWrapper\buffer.h" />
     <ClInclude Include="graphics\vulkanWrapper\commandBuffer.h" />
     <ClInclude Include="graphics\vulkanWrapper\descriptorSetLayout.h" />
+    <ClInclude Include="graphics\vulkanWrapper\descriptorSets.h" />
     <ClInclude Include="graphics\vulkanWrapper\image.h" />
     <ClInclude Include="graphics\vulkanWrapper\instance.h" />
     <ClInclude Include="graphics\vulkanWrapper\pipeline.h" />
     <ClInclude Include="graphics\vulkanWrapper\pipelineLayout.h" />
-    <ClInclude Include="graphics\vulkanWrapper\queueFamilyIndices.h" />
     <ClInclude Include="graphics\vulkanWrapper\device.h" />
     <ClInclude Include="graphics\vulkanWrapper\validationLayers.h" />
     <ClInclude Include="graphics\vulkanWrapper\swapChain.h" />
@@ -233,7 +233,7 @@
     <ClInclude Include="graphics\Mesh.h" />
     <ClInclude Include="graphics\Texture.h" />
     <ClInclude Include="graphics\Pixel.h" />
-    <ClInclude Include="graphics\vulkanWrapper\setupRenderPass.h" />
+    <ClInclude Include="graphics\vulkanWrapper\renderPass.h" />
     <ClInclude Include="graphics\Shader.h" />
     <ClInclude Include="graphics\vulkanWrapper\shaderModule.h" />
     <ClInclude Include="vulkanWrapper\buffer.h" />

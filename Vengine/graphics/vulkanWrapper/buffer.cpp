@@ -1,162 +1,225 @@
 #include "buffer.h"
 
-void createBuffer(VkPhysicalDevice      physicalDevice,
-                  VkDevice              logicalDevice,
-                  VkDeviceSize          size,
-                  VkBufferUsageFlags    usage,
-                  VkMemoryPropertyFlags properties,
-                  VkBuffer              &buffer,
-                  VkDeviceMemory        &bufferMemory)
+#include <stdexcept>
+
+
+static uint32_t findMemoryType(VkPhysicalDevice       physicalDevice,
+                               uint32_t               typeFilter,
+                               VkMemoryPropertyFlags  properties)
 {
+    VkPhysicalDeviceMemoryProperties memProperties;
+    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+    for(uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+    {
+        // проверяем что бит, отвечающий за доступность определенного типа памяти
+        // true и проверяем что этот бит равен тому что мы запрашивали
+        if((typeFilter & (1 << i)) &&
+           // проверяем массив memoryTypes на наличие типа памяти,
+           // который поддерживает все нужные нам возможности
+           // например доступность этой памяти из CPU
+           (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+        {
+            return i;
+        }
+    }
+
+    throw std::runtime_error("failed to find suitable memory type!");
+}
+
+Buffer::Buffer(const LogicalDevice &device)
+{
+    this->device = &device;
+    this->handle = VK_NULL_HANDLE;
+    this->memory = VK_NULL_HANDLE;
+    this->size   = 0;
+}
+
+void Buffer::create(VkDeviceSize           size,
+                    VkBufferUsageFlags     usage,
+                    VkMemoryPropertyFlags  properties)
+{
+    createBuffer(size, usage);
+    allocateMemory(properties);
+}
+
+void Buffer::destroy()
+{
+    vkDestroyBuffer(this->device->handle, this->handle, nullptr);
+    vkFreeMemory   (this->device->handle, this->memory, nullptr);
+}
+
+void Buffer::createBuffer(VkDeviceSize        size,
+                          VkBufferUsageFlags  usage) 
+{
+    this->size = size;
+
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferInfo.size = size;
+    bufferInfo.size  = size;
     bufferInfo.usage = usage;
     // буфер может использоваться конкретным семейством или же быть
     // быть общим для нескольких
     bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if(vkCreateBuffer(logicalDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
+    if(vkCreateBuffer(device->handle, &bufferInfo, nullptr, &this->handle) != VK_SUCCESS)
         throw std::runtime_error("failed to create vertex buffer!");
+}
 
+void Buffer::allocateMemory(VkMemoryPropertyFlags properties)
+{
     VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(logicalDevice, buffer, &memRequirements);
+    vkGetBufferMemoryRequirements(device->handle, this->handle, &memRequirements);
 
     VkMemoryAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = findMemoryType(physicalDevice,
+    allocInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize  = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(device->physicalDevice,
                                                memRequirements.memoryTypeBits,
                                                properties);
 
-    if(vkAllocateMemory(logicalDevice, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
+    if(vkAllocateMemory(device->handle, &allocInfo, nullptr, &this->memory) != VK_SUCCESS)
         throw std::runtime_error("failed to allocate vertex buffer memory!");
 
-    vkBindBufferMemory(logicalDevice, buffer, bufferMemory, 0);
+    vkBindBufferMemory(device->handle, this->handle, this->memory, 0);
 }
 
-void createVertexBuffer(VkPhysicalDevice          physicalDevice,
-                        VkDevice                  logicalDevice,
+
+void Buffer::mapMemory(VkDeviceSize  dataSize,
+                       const void   *data)
+{
+    void *destination;
+    vkMapMemory(this->device->handle, this->memory, 0, dataSize, 0, &destination);
+    memcpy(destination, data, (size_t) dataSize);
+    vkUnmapMemory(this->device->handle, this->memory);
+}
+
+
+static void setupAsStagingBuffer(VkDeviceSize bufferSize,
+                                 Buffer       &buffer)
+{
+    buffer.create(bufferSize, 
+                  VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                  VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+}
+
+static void setupAsUniformBuffer(VkDeviceSize bufferSize,
+                                 Buffer       &buffer)
+{
+     buffer.create(bufferSize,
+                   VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
+                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
+                   VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+}
+
+
+void copyBuffer(const LogicalDevice  &device,
+                VkCommandPool        commandPool,
+                Buffer               srcBuffer,
+                Buffer               dstBuffer,
+                VkDeviceSize         size)
+{
+    VkCommandBuffer commandBuffer;
+    commandBuffer = beginSingleTimeCommands(device.handle, commandPool);
+
+    VkBufferCopy copyRegion{};
+    copyRegion.size = size;
+    vkCmdCopyBuffer(commandBuffer, 
+                    srcBuffer.handle, 
+                    dstBuffer.handle, 
+                    1, &copyRegion);
+
+    endSingleTimeCommands(device, commandBuffer, commandPool);
+}
+
+
+static void transferBufferToGPU(const LogicalDevice &device,
+                                VkCommandPool       commandPool,
+                                Buffer              &srcBuffer,
+                                Buffer              &gpuBuffer)
+{
+    gpuBuffer.create(srcBuffer.size,
+                     VK_BUFFER_USAGE_TRANSFER_DST_BIT | 
+                     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+
+    copyBuffer(device, 
+               commandPool, 
+               srcBuffer, 
+               gpuBuffer, 
+               srcBuffer.size);
+}
+
+
+static void transferDataToGPU(const LogicalDevice &device,
+                              VkCommandPool        commandPool,
+                              VkDeviceSize         dataSize,
+                              const void          *data,
+                              Buffer              &bufferOnGpu)
+{
+    Buffer stagingBuffer(device);
+    setupAsStagingBuffer(dataSize, stagingBuffer);
+
+    stagingBuffer.mapMemory(dataSize, data);
+
+    transferBufferToGPU(device, commandPool, stagingBuffer, bufferOnGpu);
+
+    stagingBuffer.destroy();
+}
+
+
+void createVertexBuffer(const LogicalDevice       &device,
                         const std::vector<Vertex> &vertices,
                         VkCommandPool             commandPool,
-                        VkQueue                   graphicsQueue,
-                        VkBuffer                  &vertexBuffer,
-                        VkDeviceMemory            &vertexBufferMemory)
+                        Buffer                    &vertexBuffer)
 {
     VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
-    VkBuffer        stagingBuffer;
-    VkDeviceMemory    stagingBufferMemory;
-
-    createBuffer(physicalDevice,
-                 logicalDevice,
-                 bufferSize,
-                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                 stagingBuffer,
-                 stagingBufferMemory);
-
-    void *data;
-    vkMapMemory(logicalDevice, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, vertices.data(), (size_t) bufferSize);
-    vkUnmapMemory(logicalDevice, stagingBufferMemory);
-
-    createBuffer(physicalDevice,
-                 logicalDevice,
-                 bufferSize,
-                 VK_BUFFER_USAGE_TRANSFER_DST_BIT | 
-                 VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
-                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                 vertexBuffer,
-                 vertexBufferMemory);
-
-    copyBuffer(logicalDevice, 
-               commandPool, 
-               graphicsQueue, 
-               stagingBuffer, 
-               vertexBuffer, 
-               bufferSize);
-
-    vkDestroyBuffer(logicalDevice, stagingBuffer, nullptr);
-    vkFreeMemory(logicalDevice, stagingBufferMemory, nullptr);
+    transferDataToGPU(device, 
+                      commandPool,
+                      bufferSize,
+                      vertices.data(),
+                      vertexBuffer);
 }
 
-void createIndexBuffer(VkPhysicalDevice             physicalDevice,
-                        VkDevice                    logicalDevice,
-                        const std::vector<uint32_t> &indices,
-                        VkCommandPool               commandPool,
-                        VkQueue                     graphicsQueue,
-                        VkBuffer                    &indexBuffer,
-                        VkDeviceMemory              &indexBufferMemory)
+
+void createIndexBuffer(const LogicalDevice         &device,
+                       const std::vector<uint32_t> &indices,
+                       VkCommandPool               commandPool,
+                       Buffer                      &indexBuffer)
 {
     VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
-    VkBuffer        stagingBuffer;
-    VkDeviceMemory    stagingBufferMemory;
-
-    createBuffer(physicalDevice,
-                 logicalDevice,
-                 bufferSize,
-                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                 stagingBuffer,
-                 stagingBufferMemory);
-
-    void *data;
-    vkMapMemory(logicalDevice, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, indices.data(), (size_t) bufferSize);
-    vkUnmapMemory(logicalDevice, stagingBufferMemory);
-
-    createBuffer(physicalDevice,
-                 logicalDevice,
-                 bufferSize,
-                 VK_BUFFER_USAGE_TRANSFER_DST_BIT |
-                 VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                 indexBuffer,
-                 indexBufferMemory);
-
-    copyBuffer(logicalDevice,
-               commandPool,
-               graphicsQueue,
-               stagingBuffer,
-               indexBuffer,
-               bufferSize);
-
-    vkDestroyBuffer(logicalDevice, stagingBuffer, nullptr);
-    vkFreeMemory(logicalDevice, stagingBufferMemory, nullptr);
+    transferDataToGPU(device, 
+                      commandPool,
+                      bufferSize,
+                      indices.data(),
+                      indexBuffer);
 }
 
-void createUniformBuffers(VkPhysicalDevice            physicalDevice,
-                          VkDevice                    logicalDevice,
-                          std::vector<VkBuffer>       &uniformBuffers,
-                          std::vector<VkDeviceMemory> &uniformBuffersMemory,
+
+void createUniformBuffers(const LogicalDevice         &device,
+                          std::vector<Buffer>         &uniformBuffers,
                           int                         amount)
 {
     VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
     uniformBuffers.resize(amount);
-    uniformBuffersMemory.resize(amount);
 
     for(size_t i = 0; i < amount; i++)
     {
-        createBuffer(physicalDevice,
-                     logicalDevice,
-                     bufferSize, 
-                     VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
-                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
-                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
-                     uniformBuffers[i], 
-                     uniformBuffersMemory[i]);
+        uniformBuffers[i].device = &device;
+        setupAsUniformBuffer(bufferSize, uniformBuffers[i]);
     }
 }
+
 
 void updateUniformBuffer(VkDevice                    logicalDevice,
                          uint32_t                    currentImage,
                          VkExtent2D                  swapChainExtent,
-                         std::vector<VkDeviceMemory> &uniformBuffersMemory)
+                         std::vector<Buffer>         &uniformBuffers)
 {
     static auto startTime = std::chrono::high_resolution_clock::now();
     auto currentTime = std::chrono::high_resolution_clock::now();
@@ -181,53 +244,8 @@ void updateUniformBuffer(VkDevice                    logicalDevice,
     // коэффициента масштабирования
     ubo.proj[1][1] *= -1;
 
-    void *data;
-    vkMapMemory(logicalDevice, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
-    memcpy(data, &ubo, sizeof(ubo));
-    vkUnmapMemory(logicalDevice, uniformBuffersMemory[currentImage]);
+    uniformBuffers[currentImage].mapMemory(sizeof(ubo), &ubo);
 }
 
-void copyBuffer(VkDevice      logicalDevice,
-                VkCommandPool commandPool,
-                VkQueue       graphicsQueue,
-                VkBuffer      srcBuffer,
-                VkBuffer      dstBuffer,
-                VkDeviceSize  size)
-{
-    VkCommandBuffer commandBuffer = beginSingleTimeCommands(logicalDevice,
-                                                            commandPool);
 
-    VkBufferCopy copyRegion{};
-    copyRegion.size = size;
-    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-
-    endSingleTimeCommands(commandBuffer,
-                          logicalDevice,
-                          commandPool,
-                          graphicsQueue);
-}
-
-uint32_t findMemoryType(VkPhysicalDevice      physicalDevice,
-                        uint32_t              typeFilter,
-                        VkMemoryPropertyFlags properties)
-{
-    VkPhysicalDeviceMemoryProperties memProperties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
-
-    for(uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
-    {
-        // проверяем что бит, отвечающий за доступность определенного типа памяти
-        // true и проверяем что этот бит равен тому что мы запрашивали
-        if((typeFilter & (1 << i)) &&
-           // проверяем массив memoryTypes на наличие типа памяти,
-           // который поддерживает все нужные нам возможности
-           // например доступность этой памяти из CPU
-           (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
-        {
-            return i;
-        }
-    }
-
-    throw std::runtime_error("failed to find suitable memory type!");
-}
 

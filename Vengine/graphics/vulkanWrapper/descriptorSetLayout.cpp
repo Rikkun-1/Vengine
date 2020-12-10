@@ -1,13 +1,13 @@
 #include "descriptorSetLayout.h"
 
-void setupDescriptorSetLayoutBinding(int                          binding,
-                                     int                          count,
+void setupDescriptorSetLayoutBinding(uint32_t                     binding,
+                                     uint32_t                     count,
                                      VkDescriptorType             descriptorType,
                                      VkShaderStageFlags           shaderStage,
                                      VkDescriptorSetLayoutBinding &uboLayoutBinding)
 {
-    uboLayoutBinding.binding         = static_cast<uint32_t>(binding);
-    uboLayoutBinding.descriptorCount = static_cast<uint32_t>(count);
+    uboLayoutBinding.binding         = binding;
+    uboLayoutBinding.descriptorCount = count;
     uboLayoutBinding.descriptorType  = descriptorType;
     // каким стадиям будет доступно данное прикрепление?
     // можно добавить несколько стадий используя |
@@ -18,7 +18,7 @@ void setupDescriptorSetLayoutBinding(int                          binding,
     uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
 }
 
-VkDescriptorSetLayout createDescriptorSetLayout(VkDevice              logicalDevice)
+VkDescriptorSetLayout createDescriptorSetLayout(VkDevice  logicalDevice)
 {
     VkDescriptorSetLayoutBinding uboLayoutBinding{};
     setupDescriptorSetLayoutBinding(0, //binding

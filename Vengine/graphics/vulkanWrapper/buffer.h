@@ -11,10 +11,10 @@
 #include <vulkan/vulkan.h>
 
 #include <vector>
-#include <stdexcept>
 
 #include "Vertex.h"
 #include "commandBuffer.h"
+#include "device.h"
 
 struct UniformBufferObject
 {
@@ -23,49 +23,56 @@ struct UniformBufferObject
     glm::mat4 proj;
 };
 
-void createBuffer(VkPhysicalDevice      physicalDevice,
-                  VkDevice              logicalDevice,
-                  VkDeviceSize          size,
-                  VkBufferUsageFlags    usage,
-                  VkMemoryPropertyFlags properties,
-                  VkBuffer              &buffer,
-                  VkDeviceMemory        &bufferMemory);
+struct Buffer
+{
+    VkBuffer              handle;
+    VkDeviceMemory        memory;
+    VkDeviceSize          size;
+    const LogicalDevice   *device;
 
-void createVertexBuffer(VkPhysicalDevice          physicalDevice,
-                        VkDevice                  logicalDevice,
+    Buffer() = default;
+
+    Buffer(const LogicalDevice &logicalDevice);
+
+    void create(VkDeviceSize          size, 
+                VkBufferUsageFlags    usage, 
+                VkMemoryPropertyFlags properties);
+    
+    void mapMemory(VkDeviceSize dataSize, const void *data);
+
+    void destroy();
+
+private:
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage);
+    void allocateMemory(VkMemoryPropertyFlags properties);
+};
+
+
+void copyBuffer(const LogicalDevice  &device,
+                VkCommandPool        commandPool,
+                Buffer               srcBuffer,
+                Buffer               dstBuffer,
+                VkDeviceSize         size);
+
+
+void createVertexBuffer(const LogicalDevice       &device,
                         const std::vector<Vertex> &vertices,
                         VkCommandPool             commandPool,
-                        VkQueue                   graphicsQueue,
-                        VkBuffer                  &vertexBuffer,
-                        VkDeviceMemory            &vertexBufferMemory);
+                        Buffer                    &vertexBuffer);
 
-void createIndexBuffer(VkPhysicalDevice            physicalDevice,
-                       VkDevice                    logicalDevice,
+
+void createIndexBuffer(const LogicalDevice         &device,
                        const std::vector<uint32_t> &indices,
                        VkCommandPool               commandPool,
-                       VkQueue                     graphicsQueue,
-                       VkBuffer                    &indexBuffer,
-                       VkDeviceMemory              &indexBufferMemory);
+                       Buffer                      &indexBuffer);
 
-void createUniformBuffers(VkPhysicalDevice            physicalDevice,
-                          VkDevice                    logicalDevice,
-                          std::vector<VkBuffer>       &uniformBuffers,
-                          std::vector<VkDeviceMemory> &uniformBuffersMemory,
+
+void createUniformBuffers(const LogicalDevice         &device,
+                          std::vector<Buffer>         &uniformBuffers,
                           int                         amount);
+
 
 void updateUniformBuffer(VkDevice                    logicalDevice,
                          uint32_t                    currentImage,
                          VkExtent2D                  swapChainExtent,
-                         std::vector<VkDeviceMemory> &uniformBuffersMemory);
-
-void copyBuffer(VkDevice      logicalDevice,
-                VkCommandPool commandPool,
-                VkQueue       graphicsQueue,
-                VkBuffer      srcBuffer,
-                VkBuffer      dstBuffer,
-                VkDeviceSize  size);
-
-uint32_t findMemoryType(VkPhysicalDevice      physicalDevice,
-                        uint32_t              typeFilter,
-                        VkMemoryPropertyFlags properties);
-
+                         std::vector<Buffer>         &uniformBuffers);

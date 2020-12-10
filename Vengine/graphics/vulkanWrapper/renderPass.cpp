@@ -1,8 +1,8 @@
-#include "setupRenderPass.h"
+#include "renderPass.h"
 
 #include "image.h"
 
-void fillColorAttachmentDescription(VkAttachmentDescription &colorAttachment)
+static void fillColorAttachmentDescription(VkAttachmentDescription &colorAttachment)
 {
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 
@@ -38,7 +38,7 @@ void fillColorAttachmentDescription(VkAttachmentDescription &colorAttachment)
     colorAttachment.finalLayout   = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 }
 
-void fillDepthAttachmentDescription(VkAttachmentDescription &depthAttachment)
+static void fillDepthAttachmentDescription(VkAttachmentDescription &depthAttachment)
 {
     depthAttachment.samples        = VK_SAMPLE_COUNT_1_BIT;
     depthAttachment.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -49,45 +49,8 @@ void fillDepthAttachmentDescription(VkAttachmentDescription &depthAttachment)
     depthAttachment.finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 }
 
-VkRenderPass createRenderPass(const LogicalDevice &device,
-                              VkFormat            swapChainImageFormat)
+static void fillSubpassDependencies(VkSubpassDependency &dependency)
 {
-    VkAttachmentDescription colorAttachment;
-    fillColorAttachmentDescription(colorAttachment);
-    colorAttachment.format = swapChainImageFormat;
-
-
-    VkAttachmentDescription depthAttachment;
-    fillDepthAttachmentDescription(depthAttachment);
-    depthAttachment.format = findDepthFormat(device.physicalDevice);
-
-
-    VkAttachmentReference colorAttachmentRef{};
-    colorAttachmentRef.attachment = 0; // индекс attachment на которое мы ссылаемся
-    // для каких целей будет использоваться этот attachment непосредственно сейчас
-    // VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL - оптимизорован для рисования в него
-    colorAttachmentRef.layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-
-    VkAttachmentReference depthAttachmentRef{};
-    depthAttachmentRef.attachment = 1;
-    depthAttachmentRef.layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-
-    // описание текущего подпрохода
-    VkSubpassDescription subpass{};
-    // чем является данный проход
-    // VK_PIPELINE_BIND_POINT_GRAPHICS - данный проход работает с графикой
-    // VK_PIPELINE_BIND_POINT_COMPUTE - данный проход работает с вычислениями
-    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    // индекс attachment'а это и есть слой на который мы рисуем во время работы с шейдером
-    // layout(location = 0) out vec4 outColor
-    subpass.colorAttachmentCount    = 1;
-    subpass.pColorAttachments       = &colorAttachmentRef;
-    subpass.pDepthStencilAttachment = &depthAttachmentRef;
-
-
-    VkSubpassDependency dependency{};
     // индекс подпрохода для которого мы настраиваем зависимости
     // VK_SUBPASS_EXTERNAL описывает неявные подпроходы которые происходят до или после 
     // нашего render pass в зависимости от того расположен он в srcSubpass или dstSubpass
@@ -106,8 +69,46 @@ VkRenderPass createRenderPass(const LogicalDevice &device,
 
     dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT          | 
                                VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+}
+
+static void setupAttachmentRef(uint32_t              attachmentIndex,
+                               VkImageLayout         layout, 
+                               VkAttachmentReference &attachmentRef)
+{
+    attachmentRef.attachment = attachmentIndex; // индекс attachment на которое мы ссылаемся
+    // для каких целей будет использоваться этот attachment непосредственно сейчас
+    // VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL - оптимизорован для рисования в него
+    attachmentRef.layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+}
+
+static void setupSubpassDescription(const VkAttachmentReference &colorAttachmentRef,
+                                    const VkAttachmentReference &depthAttachmentRef,
+                                    VkSubpassDescription        &subpass)
+{
+    // чем является данный проход
+    // VK_PIPELINE_BIND_POINT_GRAPHICS - данный проход работает с графикой
+    // VK_PIPELINE_BIND_POINT_COMPUTE - данный проход работает с вычислениями
+    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    // индекс attachment'а это и есть слой на который мы рисуем во время работы с шейдером
+    // layout(location = 0) out vec4 outColor
+    subpass.colorAttachmentCount    = 1;
+    subpass.pColorAttachments       = &colorAttachmentRef;
+    subpass.pDepthStencilAttachment = &depthAttachmentRef;
+}
 
 
+VkRenderPass createRenderPass(const LogicalDevice &device,
+                              VkFormat            swapChainImageFormat)
+{
+    VkAttachmentDescription colorAttachment;
+    VkAttachmentDescription depthAttachment;
+
+    fillColorAttachmentDescription(colorAttachment);
+    fillDepthAttachmentDescription(depthAttachment);
+
+    colorAttachment.format = swapChainImageFormat;
+    depthAttachment.format = findDepthFormat(device.physicalDevice);
+    
     // В один проход может быть помещено несколько приложений:
     // pInputAttachments: это приложение будет использоваться как ввод для шейдеров
     // pResolveAttachments : это приложение используется для мультисемплинга
@@ -115,6 +116,22 @@ VkRenderPass createRenderPass(const LogicalDevice &device,
     // pPreserveAttachments : этот слой не используется во время текущего прохода, 
     // но его данные должны быть приготовленны к использованию
     std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
+
+
+    VkAttachmentReference colorAttachmentRef{};
+    VkAttachmentReference depthAttachmentRef{};
+
+    setupAttachmentRef(0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,         colorAttachmentRef);
+    setupAttachmentRef(1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, depthAttachmentRef);
+
+    
+    VkSubpassDescription subpass{};
+    setupSubpassDescription(colorAttachmentRef, depthAttachmentRef, subpass);
+    
+
+    VkSubpassDependency dependency{};
+    fillSubpassDependencies(dependency);
+
 
     VkRenderPassCreateInfo renderPassInfo{};
     renderPassInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;

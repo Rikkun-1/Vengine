@@ -119,12 +119,6 @@
     <ClCompile Include="graphics\vulkanWrapper\pipelineLayout.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="graphics\vulkanWrapper\queueFamilyIndices.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="graphics\vulkanWrapper\setupRenderPass.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="graphics\vulkanWrapper\shaderModule.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -138,6 +132,12 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="graphics\vulkanWrapper\device.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="graphics\vulkanWrapper\renderPass.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="graphics\vulkanWrapper\descriptorSets.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -231,12 +231,6 @@
     <ClInclude Include="graphics\vulkanWrapper\pipelineLayout.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="graphics\vulkanWrapper\queueFamilyIndices.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="graphics\vulkanWrapper\setupRenderPass.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="graphics\vulkanWrapper\shaderModule.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
@@ -250,6 +244,12 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="graphics\vulkanWrapper\device.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics\vulkanWrapper\renderPass.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics\vulkanWrapper\descriptorSets.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
