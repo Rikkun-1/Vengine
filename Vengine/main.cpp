@@ -2,10 +2,6 @@
 #include <stdexcept>
 #include <cstdlib> // макросы EXIT_SUCCESS и EXIT_FAILURE
 
-struct Image;
-struct CommandPool;
-struct SwapChain;
-
 #ifdef NDEBUG
     #define USE_VALIDATION_LAYERS
 #endif

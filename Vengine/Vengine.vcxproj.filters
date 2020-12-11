@@ -95,9 +95,6 @@
     <ClCompile Include="graphics\Shader.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="graphics\vulkanWrapper\buffer.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="graphics\vulkanWrapper\commandBuffer.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -159,6 +156,9 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="graphics\vulkanWrapper\vertex.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="graphics\vulkanWrapper\buffer.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -231,9 +231,6 @@
     <ClInclude Include="graphics\vulkanWrapper\vulkanWrapper.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="graphics\vulkanWrapper\buffer.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="graphics\vulkanWrapper\commandBuffer.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
@@ -292,6 +289,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="graphics\vulkanWrapper\vertex.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics\vulkanWrapper\buffer.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

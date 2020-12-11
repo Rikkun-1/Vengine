@@ -65,12 +65,12 @@ namespace vkTools
     }
 
 
-    unsigned char *loadImage(std::string  path,
-                             int &loadedWidth,
-                             int &loadedHeight,
-                             int &loadedChanels)
+    unsigned char *loadImage(const std::string  path,
+                             int                &loadedWidth,
+                             int                &loadedHeight,
+                             int                &loadedChanels)
     {
-        stbi_uc *pixels = stbi_load("textures/texture.jpg",
+        stbi_uc *pixels = stbi_load(path.c_str(),
                                     &loadedWidth,
                                     &loadedHeight,
                                     &loadedChanels,

@@ -5,6 +5,7 @@
 
 #include "commandBuffer.h"
 
+
 static uint32_t findMemoryType(VkPhysicalDevice       physicalDevice,
                                uint32_t               typeFilter,
                                VkMemoryPropertyFlags  properties)
@@ -29,6 +30,7 @@ static uint32_t findMemoryType(VkPhysicalDevice       physicalDevice,
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
+    
 Buffer::Buffer()
 {
     this->device = VK_NULL_HANDLE;

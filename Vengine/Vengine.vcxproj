@@ -180,11 +180,11 @@
     <None Include="shaders\shader.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="graphics\vulkanWrapper\buffer.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\commandPool.cpp" />
     <ClCompile Include="graphics\Renderer.cpp" />
     <ClCompile Include="graphics\vkSettings.cpp" />
     <ClCompile Include="graphics\vkTools.cpp" />
-    <ClCompile Include="graphics\vulkanWrapper\buffer.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\commandBuffer.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\descriptorPool.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\descriptorSetLayout.cpp" />
@@ -216,28 +216,18 @@
     <ClCompile Include="graphics\vulkanWrapper\renderPass.cpp" />
     <ClCompile Include="graphics\Shader.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\shaderModule.cpp" />
-    <ClCompile Include="vulkanWrapper\buffer.cpp" />
-    <ClCompile Include="vulkanWrapper\commandBuffer.cpp" />
-    <ClCompile Include="vulkanWrapper\extensionsCheck.cpp" />
-    <ClCompile Include="vulkanWrapper\image.cpp" />
-    <ClCompile Include="vulkanWrapper\queueFamilyIndices.cpp" />
-    <ClCompile Include="vulkanWrapper\setupDevices.cpp" />
-    <ClCompile Include="vulkanWrapper\setupSwapchain.cpp" />
-    <ClCompile Include="vulkanWrapper\setupValidationLayers.cpp" />
-    <ClCompile Include="vulkanWrapper\Vertex.cpp" />
-    <ClCompile Include="vulkanWrapper\vulkanWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="textures\texture.jpg" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="graphics\vulkanWrapper\buffer.h" />
     <ClInclude Include="graphics\vulkanWrapper\commandPool.h" />
     <ClInclude Include="graphics\libraries\stb_image.h" />
     <ClInclude Include="graphics\libraries\tiny_obj_loader.h" />
     <ClInclude Include="graphics\Renderer.h" />
     <ClInclude Include="graphics\vkSettings.h" />
     <ClInclude Include="graphics\vkTools.h" />
-    <ClInclude Include="graphics\vulkanWrapper\buffer.h" />
     <ClInclude Include="graphics\vulkanWrapper\commandBuffer.h" />
     <ClInclude Include="graphics\vulkanWrapper\descriptorPool.h" />
     <ClInclude Include="graphics\vulkanWrapper\descriptorSetLayout.h" />
@@ -263,16 +253,6 @@
     <ClInclude Include="graphics\vulkanWrapper\renderPass.h" />
     <ClInclude Include="graphics\Shader.h" />
     <ClInclude Include="graphics\vulkanWrapper\shaderModule.h" />
-    <ClInclude Include="vulkanWrapper\buffer.h" />
-    <ClInclude Include="vulkanWrapper\commandBuffer.h" />
-    <ClInclude Include="vulkanWrapper\extensionsCheck.h" />
-    <ClInclude Include="vulkanWrapper\image.h" />
-    <ClInclude Include="vulkanWrapper\queueFamilyIndices.h" />
-    <ClInclude Include="vulkanWrapper\setupDevices.h" />
-    <ClInclude Include="vulkanWrapper\setupSwapchain.h" />
-    <ClInclude Include="vulkanWrapper\setupValidationLayers.h" />
-    <ClInclude Include="vulkanWrapper\Vertex.h" />
-    <ClInclude Include="vulkanWrapper\vulkanWrapper.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

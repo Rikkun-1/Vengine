@@ -10,7 +10,7 @@ ShaderModule::ShaderModule()
     stage  = VK_SHADER_STAGE_ALL;
 }
 
-ShaderModule::ShaderModule(const LogicalDevice               &device,
+ShaderModule::ShaderModule(const LogicalDevice         &device,
                            const std::vector<char>     &code,
                            enum VkShaderStageFlagBits   stage,
                            const std::string           &entry)

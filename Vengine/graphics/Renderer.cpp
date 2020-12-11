@@ -157,7 +157,7 @@ void Renderer::initVulkan()
 
     commandPool.allocateCommandBuffers(static_cast<uint32_t>(model.mesh.indices.size()),
                                        commandBuffers.data());
-
+    /*
     writeCommandBuffersForDrawing(commandPool,
                                   swapChain,
                                   renderPass,
@@ -168,7 +168,7 @@ void Renderer::initVulkan()
                                   model.mesh.indices.size(),
                                   descriptorSets,
                                   commandBuffers);
-
+                                  */
     createSyncObjects(device,
                       MAX_FRAMES_IN_FLIGHT,
                       swapChain,
@@ -246,7 +246,7 @@ void Renderer::recreateSwapChain()
                          textureImageView,
                          textureSampler,
                          swapChain.images.size());
-
+    /*
     writeCommandBuffersForDrawing(commandPool,
                                   swapChain,
                                   renderPass,
@@ -256,7 +256,7 @@ void Renderer::recreateSwapChain()
                                   indexBuffer.handle,
                                   model.mesh.indices.size(),
                                   descriptorSets,
-                                  commandBuffers);
+                                  commandBuffers);*/
 }
 
 void Renderer::drawFrame()
