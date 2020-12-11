@@ -1,6 +1,7 @@
 #include "swapChain.h"
 
 #include "image.h"
+#include "framebuffer.h"
 
 SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice physicalDevice,
                                               VkSurfaceKHR     surface)
@@ -110,56 +111,50 @@ static uint32_t getMinImageCount(SwapChainSupportDetails &swapChainSupport)
 }
 
 
-void createImageViews(const LogicalDevice &device,
-                      SwapChain           swapChain)
+void SwapChain::createImageViews()
 {
-    swapChain.imageViews.resize(swapChain.images.size());
+    imageViews.resize(images.size());
 
-    for(uint32_t i = 0; i < swapChain.images.size(); i++)
+    for(uint32_t i = 0; i < images.size(); i++)
     {
-        swapChain.imageViews[i] = createImageView(device.handle,
-                                                  swapChain.images[i],
-                                                  swapChain.imageFormat,
-                                                  VK_IMAGE_ASPECT_COLOR_BIT);
+        imageViews[i] = createImageView(device->handle,
+                                        images[i],
+                                        imageFormat,
+                                        VK_IMAGE_ASPECT_COLOR_BIT);
     }
 }
 
 
-void createFramebuffers(VkDevice          logicalDevice,
-                        VkRenderPass      renderPass,
-                        SwapChain         swapChain,
-                        VkImageView       depthImageView)
+void SwapChain::createFrameBuffers(VkRenderPass         renderPass,
+                                   VkImageView          depthImageView)
 {
-    swapChain.frameBuffers.resize(swapChain.imageViews.size());
+    frameBuffers.resize(imageViews.size());
 
-    for(size_t i = 0; i < swapChain.imageViews.size(); i++)
+    VkExtent3D extent {
+        extent.width,
+        extent.height,
+        1
+    };
+
+    for(size_t i = 0; i < imageViews.size(); i++)
     {
         // вложения буфера. В нашем случае каждый буфер хранит в себе одно изображение из 
         // swap chain и общую для всех изображений карту глубины
         std::array<VkImageView, 2> attachments = {
-            swapChain.imageViews[i],
+            imageViews[i],
             depthImageView
         };
 
-        VkFramebufferCreateInfo framebufferInfo{};
-        framebufferInfo.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebufferInfo.renderPass      = renderPass;
-        framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-        framebufferInfo.pAttachments    = attachments.data();
-        framebufferInfo.width           = swapChain.extent.width;
-        framebufferInfo.height          = swapChain.extent.height;
-        framebufferInfo.layers          = 1;
-
-        if(vkCreateFramebuffer(logicalDevice, &framebufferInfo, nullptr, &swapChain.frameBuffers[i]) != VK_SUCCESS)
-            throw std::runtime_error("failed to create framebuffer!");
+        frameBuffers[i] = createFrameBuffer(*device,
+                                            renderPass,
+                                            extent,
+                                            attachments);
     }
 }
 
-
-void createSwapChain(const LogicalDevice &device,
-                     VkSurfaceKHR        surface,
-                     VkExtent2D          &requiredExtent,
-                     SwapChain           &swapChain)
+void SwapChain::create(const LogicalDevice &device,
+                       VkSurfaceKHR        surface,
+                       VkExtent2D          &requiredExtent)
 {
     SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device.physicalDevice, surface);
     VkSurfaceFormatKHR      surfaceFormat    = chooseSwapSurfaceFormat(swapChainSupport.formats);
@@ -168,8 +163,8 @@ void createSwapChain(const LogicalDevice &device,
     uint32_t                imageCount       = getMinImageCount(swapChainSupport);
 
     VkSwapchainCreateInfoKHR createInfo{};
-    createInfo.sType   = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = surface;
+    createInfo.sType            = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    createInfo.surface          = surface;
 
     createInfo.minImageCount    = imageCount;
     createInfo.imageFormat      = surfaceFormat.format;
@@ -178,7 +173,7 @@ void createSwapChain(const LogicalDevice &device,
     createInfo.imageArrayLayers = 1; // Количество слоев на которых будут располагаться
 
     // данная цепочка показа предназначается непосредственно для рисования прямо в нее
-    createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    createInfo.imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
     setupSharingMode(device.physicalDevice, surface, createInfo);
 
@@ -189,17 +184,32 @@ void createSwapChain(const LogicalDevice &device,
 
     createInfo.oldSwapchain   = VK_NULL_HANDLE;
 
-    if(vkCreateSwapchainKHR(device.handle, &createInfo, nullptr, &swapChain.handle) != VK_SUCCESS)
+    if(vkCreateSwapchainKHR(device.handle, &createInfo, nullptr, &handle) != VK_SUCCESS)
         throw std::runtime_error("failed to create swap chain!");
 
 
-    vkGetSwapchainImagesKHR(device.handle, swapChain.handle, &imageCount, nullptr);
+    vkGetSwapchainImagesKHR(device.handle, handle, &imageCount, nullptr);
 
-    swapChain.images.resize(imageCount);
-    vkGetSwapchainImagesKHR(device.handle, swapChain.handle, &imageCount, swapChain.images.data());
+    images.resize(imageCount);
+    vkGetSwapchainImagesKHR(device.handle, handle, &imageCount, images.data());
 
-    createImageViews(device, swapChain);
+    createImageViews();
 
-    swapChain.imageFormat = surfaceFormat.format;
-    swapChain.extent      = actualExtent;
+    imageFormat = surfaceFormat.format;
+    extent      = actualExtent;
+}
+
+void SwapChain::destroy()
+{
+    for(auto framebuffer : frameBuffers)
+        vkDestroyFramebuffer(device->handle, framebuffer, nullptr);
+
+    for(auto imageView : imageViews)
+        vkDestroyImageView(device->handle, imageView, nullptr);
+    
+    vkDestroySwapchainKHR(device->handle, handle, nullptr);
+
+    imageFormat = VkFormat{};
+    extent      = VkExtent2D{};
+    images.clear();
 }

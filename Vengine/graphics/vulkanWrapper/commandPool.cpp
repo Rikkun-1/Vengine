@@ -1,12 +1,20 @@
 #include "CommandPool.h"
 
+void CommandPool::freeCommandBuffers(int              amount,
+                                     VkCommandBuffer *commandBuffers)
+{
+     vkFreeCommandBuffers(device->handle, 
+                          handle, 
+                          static_cast<uint32_t>(amount), 
+                          commandBuffers);
+}
 
-void CommandPool::allocateCommandBuffers(uint32_t         amount,
+void CommandPool::allocateCommandBuffers(int              amount,
                                          VkCommandBuffer  *commandBuffers)  
 {
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType       = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = this->handle;
+    allocInfo.commandPool = handle;
 
     // Этот буфер является первичным или вторичным
     // VK_COMMAND_BUFFER_LEVEL_PRIMARY - буфер является первичным.
@@ -16,19 +24,19 @@ void CommandPool::allocateCommandBuffers(uint32_t         amount,
     // во вторичном буфере можно описать частоиспользуемые команды чтобы вызывать их 
     // из главного буфера в нужные моменты
     allocInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = amount;
+    allocInfo.commandBufferCount = static_cast<uint32_t>(amount);
 
-    if(vkAllocateCommandBuffers(this->device->handle, &allocInfo, commandBuffers) != VK_SUCCESS)
+    if(vkAllocateCommandBuffers(device->handle, &allocInfo, commandBuffers) != VK_SUCCESS)
         throw std::runtime_error("failed to allocate command buffers!");
 }
 
 
-CommandPool::CommandPool(const LogicalDevice  &device) 
+CommandPool::CommandPool(LogicalDevice *device = VK_NULL_HANDLE)
 {
-    this->handle           = VK_NULL_HANDLE;;
-    this->queueFamilyIndex = device.familyIndices.graphicsFamily.value();
+    handle           = VK_NULL_HANDLE;;
+    device           = device;
+    queueFamilyIndex = device->familyIndices.graphicsFamily.value();
 }
-
 
 void CommandPool::create() 
 {
@@ -49,6 +57,11 @@ void CommandPool::create()
         throw std::runtime_error("failed to create command pool!");
 }
 
+void CommandPool::setDevice(LogicalDevice *device)
+{
+    this->device           = device;
+    this->queueFamilyIndex = device->familyIndices.graphicsFamily.value();
+}
 
 void CommandPool::destroy()
 {

@@ -30,14 +30,16 @@ private:
 
     LogicalDevice            device;
     SwapChain                swapChain;
-
+    
     VkRenderPass               renderPass;
+    VkDescriptorSetLayout      descriptorSetLayout;
+    VkPipelineLayout           pipelineLayout;
 
     VkPipeline                 graphicsPipeline;
 
     std::vector<VkFramebuffer> swapChainFramebuffers;
 
-    VkCommandPool                 commandPool;
+    CommandPool                   commandPool;
     std::vector<VkCommandBuffer>  commandBuffers;
 
     std::vector<VkSemaphore>    imageAvailableSemaphores;
@@ -45,27 +47,20 @@ private:
     std::vector<VkFence>        inFlightFences;
     std::vector<VkFence>        imagesInFlight;
 
-    VkBuffer                    vertexBuffer;
-    VkDeviceMemory              vertexBufferMemory;
-    VkBuffer                    indexBuffer;
-    VkDeviceMemory              indexBufferMemory;
-    std::vector<VkBuffer>       uniformBuffers;
-    std::vector<VkDeviceMemory> uniformBuffersMemory; 
+    Buffer                      vertexBuffer;
+    Buffer                      indexBuffer;
+    std::vector<Buffer>         uniformBuffers;
         
-    VkImage        textureImage;
+    Image          textureImage;
     VkImageView    textureImageView;
-    VkDeviceMemory textureImageMemory;
     VkSampler      textureSampler;
 
-    VkImage        depthImage;
-    VkDeviceMemory depthImageMemory;
+    Image          depthImage;
     VkImageView    depthImageView;
 
     VkDescriptorPool             descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
 
-    VkDescriptorSetLayout descriptorSetLayout;
-    VkPipelineLayout      pipelineLayout;
 
     int MAX_FRAMES_IN_FLIGHT = 2;
     size_t currentFrame      = 0;

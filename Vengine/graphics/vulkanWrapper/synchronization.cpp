@@ -1,9 +1,9 @@
 #include "synchronization.h"
 
 
-void createSyncObjects(VkDevice                   logicalDevice,
+void createSyncObjects(const LogicalDevice        &device,
                        int                        MAX_FRAMES_IN_FLIGHT,
-                       const std::vector<VkImage> &swapChainImages,
+                       const SwapChain            &swapChain,
                        std::vector<VkSemaphore>   &imageAvailableSemaphores,
                        std::vector<VkSemaphore>   &renderFinishedSemaphores,
                        std::vector<VkFence>       &inFlightFences,
@@ -12,7 +12,7 @@ void createSyncObjects(VkDevice                   logicalDevice,
     imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-    imagesInFlight.resize(swapChainImages.size(), VK_NULL_HANDLE);
+    imagesInFlight.resize(swapChain.images.size(), VK_NULL_HANDLE);
 
     // согласно текущему состоянию Vulkan API для создания семафора более не требуется никакой
     // информации кроме sType
@@ -26,9 +26,9 @@ void createSyncObjects(VkDevice                   logicalDevice,
 
     for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
-        if(vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
-           vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
-           vkCreateFence(logicalDevice, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
+        if(vkCreateSemaphore(device.handle, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
+           vkCreateSemaphore(device.handle, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
+           vkCreateFence(device.handle, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create synchronization objects for a frame!");
         }

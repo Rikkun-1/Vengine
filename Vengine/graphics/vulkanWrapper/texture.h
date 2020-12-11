@@ -8,16 +8,16 @@ static void setupSamplerCreateInfo(LogicalDevice        &device,
                                    VkSamplerCreateInfo  &samplerInfo);
 
 
-void createTextureImage(unsigned char      *pixels,
+void createTextureImage(void               *pixels,
                         int                 textureChannels,
                         VkExtent3D         &textureExtent,
                         CommandPool        &commandPool,
                         Image              &textureImage);
 
 
-void createTextureImageView(VkDevice    logicalDevice,
-                            Image       textureImage,
-                            VkImageView &textureImageView);
+void createTextureImageView(LogicalDevice  &device,
+                            Image          &textureImage,
+                            VkImageView    &textureImageView);
 
 
 void createTextureSampler(LogicalDevice    &device,

@@ -6,10 +6,11 @@
 #include <vector>
 
 #include "instance.h"
-#include "validationLayers"
+#include "validationLayers.h"
 #include "device.h"
 
 #include "swapChain.h"
+#include "frameBuffer.h"
 #include "renderPass.h"
 #include "shaderModule.h"
 #include "pipeline.h"
@@ -22,10 +23,11 @@
 #include "image.h"
 
 #include "descriptorSetLayout.h"
-#include "descriptorSets.h"
-#include "transitionI.h"
-
+#include "descriptorPool.h"
+#include "descriptorSet.h"
 
 #include "transitionImageLayout.h"
 #include "texture.h"
 #include "vertex.h"
+
+#include "synchronization.h"

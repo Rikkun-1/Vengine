@@ -15,7 +15,7 @@ void writeCommandBuffersForDrawing(CommandPool                  &commandPool,
                                    VkPipelineLayout             pipelineLayout,
                                    VkBuffer                     vertexBuffer,
                                    VkBuffer                     indexBuffer,
-                                   uint32_t                     indexBufferSize,
+                                   uint32_t                     indicesCount,
                                    std::vector<VkDescriptorSet> &descriptorSets,
                                    std::vector<VkCommandBuffer> &commandBuffers);
 

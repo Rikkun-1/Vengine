@@ -178,8 +178,10 @@
     <ClCompile Include="graphics\vkTools.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\buffer.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\commandBuffer.cpp" />
+    <ClCompile Include="graphics\vulkanWrapper\descriptorPool.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\descriptorSetLayout.cpp" />
-    <ClCompile Include="graphics\vulkanWrapper\descriptorSets.cpp" />
+    <ClCompile Include="graphics\vulkanWrapper\descriptorSet.cpp" />
+    <ClCompile Include="graphics\vulkanWrapper\frameBuffer.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\image.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\instance.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\pipeline.cpp" />
@@ -222,8 +224,10 @@
     <ClInclude Include="graphics\vkTools.h" />
     <ClInclude Include="graphics\vulkanWrapper\buffer.h" />
     <ClInclude Include="graphics\vulkanWrapper\commandBuffer.h" />
+    <ClInclude Include="graphics\vulkanWrapper\descriptorPool.h" />
     <ClInclude Include="graphics\vulkanWrapper\descriptorSetLayout.h" />
-    <ClInclude Include="graphics\vulkanWrapper\descriptorSets.h" />
+    <ClInclude Include="graphics\vulkanWrapper\descriptorSet.h" />
+    <ClInclude Include="graphics\vulkanWrapper\frameBuffer.h" />
     <ClInclude Include="graphics\vulkanWrapper\image.h" />
     <ClInclude Include="graphics\vulkanWrapper\instance.h" />
     <ClInclude Include="graphics\vulkanWrapper\pipeline.h" />

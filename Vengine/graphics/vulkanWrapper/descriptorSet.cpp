@@ -1,4 +1,4 @@
-#include "descriptorSets.h"
+#include "descriptorSet.h"
 
 #include <stdexcept>
 #include <array>
@@ -49,41 +49,16 @@ static void setupDescriptorImageInfo(VkImageLayout          layout,
 }
 
 
-void createDescriptorPool(VkDevice                   logicalDevice,
-                          const std::vector<VkImage> swapChainImages,
-                          VkDescriptorPool           &descriptorPool)
-{
-    std::array<VkDescriptorPoolSize, 2> poolSizes{};
-
-    poolSizes[0].type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[0].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
-
-    poolSizes[1].type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[1].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
-
-
-    VkDescriptorPoolCreateInfo poolInfo{};
-    poolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-    poolInfo.pPoolSizes    = poolSizes.data();
-    poolInfo.maxSets       = static_cast<uint32_t>(swapChainImages.size());
-
-
-    if(vkCreateDescriptorPool(logicalDevice, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
-        throw std::runtime_error("failed to create descriptor pool!");
-}
-
-
-void createDescriptorSets(VkDevice                     logicalDevice,
+void createDescriptorSets(const LogicalDevice          &device,
                           VkDescriptorPool             descriptorPool,
                           VkDescriptorSetLayout        descriptorSetLayout,
                           std::vector<VkDescriptorSet> &descriptorSets,
-                          std::vector<VkBuffer>        &uniformBuffers,
+                          std::vector<Buffer>          &uniformBuffers,
                           VkImageView                  textureImageView,
                           VkSampler                    textureSampler,
                           int                          amount)
 {
-    allocateDescriptorSets(logicalDevice,
+    allocateDescriptorSets(device.handle,
                            descriptorPool,
                            descriptorSetLayout,
                            descriptorSets,
@@ -92,7 +67,7 @@ void createDescriptorSets(VkDevice                     logicalDevice,
     for(size_t i = 0; i < amount; i++)
     {
         VkDescriptorBufferInfo bufferInfo{};
-        setupDescriptorBufferInfo(uniformBuffers[i], 
+        setupDescriptorBufferInfo(uniformBuffers[i].handle, 
                                   0, 
                                   sizeof(UniformBufferObject), 
                                   bufferInfo);
@@ -121,7 +96,7 @@ void createDescriptorSets(VkDevice                     logicalDevice,
         descriptorWrites[1].descriptorCount = 1;
         descriptorWrites[1].pImageInfo      = &imageInfo;
 
-        vkUpdateDescriptorSets(logicalDevice, 
+        vkUpdateDescriptorSets(device.handle,
                                static_cast<uint32_t>(descriptorWrites.size()), 
                                descriptorWrites.data(), 
                                0, 

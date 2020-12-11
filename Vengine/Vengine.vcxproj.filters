@@ -134,9 +134,6 @@
     <ClCompile Include="graphics\vulkanWrapper\renderPass.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="graphics\vulkanWrapper\descriptorSets.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="graphics\vulkanWrapper\commandPool.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -147,6 +144,15 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="graphics\vulkanWrapper\synchronization.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="graphics\vulkanWrapper\frameBuffer.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="graphics\vulkanWrapper\descriptorPool.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="graphics\vulkanWrapper\descriptorSet.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -258,9 +264,6 @@
     <ClInclude Include="graphics\vulkanWrapper\renderPass.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="graphics\vulkanWrapper\descriptorSets.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="graphics\vulkanWrapper\commandPool.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
@@ -271,6 +274,15 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="graphics\vulkanWrapper\synchronization.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics\vulkanWrapper\frameBuffer.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics\vulkanWrapper\descriptorPool.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics\vulkanWrapper\descriptorSet.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

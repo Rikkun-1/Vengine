@@ -30,7 +30,7 @@ static void setupSamplerCreateInfo(LogicalDevice        &device,
 }
 
 
-void createTextureImage(unsigned char      *pixels,
+void createTextureImage(void               *pixels,
                         int                 textureChannels,
                         VkExtent3D         &textureExtent,
                         CommandPool        &commandPool,
@@ -74,16 +74,15 @@ void createTextureImage(unsigned char      *pixels,
 }
 
 
-void createTextureImageView(VkDevice    logicalDevice,
-                            Image       textureImage,
-                            VkImageView &textureImageView)
+void createTextureImageView(LogicalDevice  &device,
+                            Image          &textureImage,
+                            VkImageView    &textureImageView)
 {
-    textureImageView = createImageView(logicalDevice, 
-                                       textureImage, 
+    textureImageView = createImageView(device.handle, 
+                                       textureImage.handle, 
                                        VK_FORMAT_R8G8B8A8_SRGB, 
                                        VK_IMAGE_ASPECT_COLOR_BIT);
 }
-
 
 void createTextureSampler(LogicalDevice    &device,
                           VkSampler        &textureSampler)

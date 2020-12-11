@@ -7,9 +7,10 @@
 
 #include "Vertex.h"
 #include "shaderModule.h"
+#include "device.h"
 
-VkPipeline createGraphicsPipeline(VkDevice                    logicalDevice,
-                                  VkExtent2D                  swapChainExtent,
+VkPipeline createGraphicsPipeline(LogicalDevice               &device,
+                                  VkExtent2D                  &swapChainExtent,
                                   VkRenderPass                renderPass,
                                   const ShaderModule          &vertexShader,
                                   const ShaderModule          &fragmentShader,

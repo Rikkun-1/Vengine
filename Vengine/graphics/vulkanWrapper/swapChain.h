@@ -9,12 +9,24 @@
 
 struct SwapChain
 {
+    LogicalDevice              *device;
     VkSwapchainKHR              handle;
     std::vector<VkImage>        images;
     std::vector<VkImageView>    imageViews;
     std::vector<VkFramebuffer>  frameBuffers;
     VkFormat                    imageFormat;
     VkExtent2D                  extent;
+
+    void create(const LogicalDevice &device,
+                VkSurfaceKHR        surface,
+                VkExtent2D          &requiredExtent);
+
+    void destroy();
+    
+    void createFrameBuffers(VkRenderPass  renderPass,
+                            VkImageView   depthImageView);
+private:
+    void createImageViews();
 };
 
 
@@ -30,17 +42,5 @@ SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice physicalDevice,
                                               VkSurfaceKHR     surface);
 
 
-void createFramebuffers(VkDevice          logicalDevice,
-                        VkRenderPass      renderPass,
-                        SwapChain         swapChain,
-                        VkImageView       depthImageView);
 
 
-void createImageViews(const LogicalDevice &device,
-                      SwapChain           swapChain);
-
-
-void createSwapChain(const LogicalDevice &device,
-                     VkSurfaceKHR        surface,
-                     VkExtent2D          &requiredExtent,
-                     SwapChain           &swapChain);

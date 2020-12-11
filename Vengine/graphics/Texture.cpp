@@ -7,15 +7,9 @@ Texture::Texture(std::string path)
     loadFromFile(path);
 }
 
-int Texture::getWidth()
-{
-    return width;
-}
-
-int Texture::getHeigt()
-{
-    return height;
-}
+int Texture::getWidth()    { return width;  }
+int Texture::getHeight()   { return height; }
+int Texture::getChannels() { return height; }
 
 void Texture::loadFromFile(std::string path)
 {
@@ -32,7 +26,7 @@ Pixel Texture::getPixel(int x, int y)
     return pixels[y * height + x];
 }
 
-Pixel *Texture::getRaw()
+void *Texture::getRaw()
 {
-    return pixels.data();
+    return static_cast<void *>(pixels.data());
 }

@@ -9,10 +9,12 @@
 
 struct Image: public Buffer
 {
-    VkImage  handle;
-    int      width;
-    int      height;
-    int      channels;
+    const LogicalDevice   *device;
+    VkImage                handle;
+
+    int                    width;
+    int                    height;
+    int                    channels;
 
     Image(const LogicalDevice *device);
 
@@ -21,11 +23,16 @@ struct Image: public Buffer
                 VkImageTiling         tiling,
                 VkImageUsageFlags     usage,
                 VkMemoryPropertyFlags properties);
+
+    void destroy();
+
 private:
     void createImage(const VkExtent3D      &extent,
                      VkFormat              format,
                      VkImageTiling         tiling,
                      VkImageUsageFlags     usage);
+
+    void resetImageInfo();
 };
 
 void copyBufferToImage(CommandPool    &commandPool,
@@ -35,7 +42,7 @@ void copyBufferToImage(CommandPool    &commandPool,
 
 
 VkImageView createImageView(VkDevice           logicalDevice,
-                            Image              &image, 
+                            VkImage            image, 
                             VkFormat           format,
                             VkImageAspectFlags aspectFlags);
 

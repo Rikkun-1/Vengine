@@ -9,12 +9,17 @@ struct CommandPool
     
     LogicalDevice       *device;
 
-    CommandPool(const LogicalDevice  &device);
+    CommandPool(LogicalDevice  *device);
 
     void create();
 
-    void allocateCommandBuffers(uint32_t         amount,
-                                VkCommandBuffer  *commandBuffers);
+    void setDevice(LogicalDevice  *device);
+
+    void allocateCommandBuffers(int              amount,
+                                VkCommandBuffer *commandBuffers);
+
+    void freeCommandBuffers(int               amount,
+                            VkCommandBuffer  *commandBuffers);
 
     void destroy();
 

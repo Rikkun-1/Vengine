@@ -221,8 +221,8 @@ void setupFixedFunctions(const VkExtent2D            &swapChainExtent,
     setupDynamicStates         (fixedFunctions.dynamicState);
 }
 
-VkPipeline createGraphicsPipeline(VkDevice                    logicalDevice,
-                                  VkExtent2D                  swapChainExtent,
+VkPipeline createGraphicsPipeline(LogicalDevice               &device,
+                                  VkExtent2D                  &swapChainExtent,
                                   VkRenderPass                renderPass,
                                   const ShaderModule          &vertexShader,
                                   const ShaderModule          &fragmentShader,
@@ -233,9 +233,7 @@ VkPipeline createGraphicsPipeline(VkDevice                    logicalDevice,
     setupMultipleShaderStages  (vertexShader, fragmentShader, shaderStages);
   
     PipelineFixedFunctions fixedFunctions{};
-    setupFixedFunctions(vertexShader, 
-                        fragmentShader, 
-                        swapChainExtent,
+    setupFixedFunctions(swapChainExtent,
                         fixedFunctions);
 
 
@@ -268,7 +266,7 @@ VkPipeline createGraphicsPipeline(VkDevice                    logicalDevice,
     VkPipeline graphicsPipeline;
     // pipelineInfo и pipelineInfo могут указывать на массивы
     // это позволяет создавать много pipeline за один вызов
-    if(vkCreateGraphicsPipelines(logicalDevice, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
+    if(vkCreateGraphicsPipelines(device.handle, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
         throw std::runtime_error("failed to setup graphics pipeline!");
 
     return graphicsPipeline;

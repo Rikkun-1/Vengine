@@ -1,5 +1,11 @@
 #include "Renderer.h"
 
+#ifdef NDEBUG
+    const bool enableValidationLayers = false;
+#else
+    const bool enableValidationLayers = true;
+#endif
+
 static void framebufferResizeCallback(GLFWwindow *window, int width, int height)
 {
     auto app = reinterpret_cast<Renderer *>(glfwGetWindowUserPointer(window));
@@ -80,113 +86,90 @@ void Renderer::initVulkan()
     int width, height;
     glfwGetFramebufferSize(pWindow, &width, &height);
 
-    VkExtent2D extent {width, height};
+    VkExtent2D swapChainExtent {width, height};
 
-    createSwapChain(device,
-                    surface,
-                    extent,
-                    this->swapChain);
+    swapChain.create(device, surface, swapChainExtent);
 
-    this->renderPass          = createRenderPass(device, swapChain.imageFormat);
+    renderPass          = createRenderPass(device, swapChain.imageFormat);
 
-    this->descriptorSetLayout = createDescriptorSetLayout(device.handle);
+    descriptorSetLayout = createDescriptorSetLayout(device.handle);
 
-    this->pipelineLayout      = createPipelineLayout(device.handle, descriptorSetLayout);
+    pipelineLayout      = createPipelineLayout(device.handle, descriptorSetLayout);
 
-    createGraphicsPipeline(logicalDevice,
-                           swapChainExtent,
-                           renderPass,
-                           pipelineLayout,
-                           graphicsPipeline,
-                           descriptorSetLayout);
+    graphicsPipeline    = createGraphicsPipeline(device,
+                                                 swapChain.extent,
+                                                 renderPass,
+                                                 vertexShader,
+                                                 fragmentShader,
+                                                 descriptorSetLayout,
+                                                 pipelineLayout);
 
-    createCommandPool(physicalDevice,
-                      logicalDevice,
-                      surface,
-                      commandPool);
+    commandPool.setDevice(&this->device);
+    commandPool.create();
 
-    createDepthResources(physicalDevice,
-                         logicalDevice,
-                         commandPool,
-                         graphicsQueue,
-                         swapChainExtent,
+    createDepthResources(commandPool,
+                         swapChain.extent,
                          depthImage,
-                         depthImageMemory,
                          depthImageView);
 
-    createFramebuffers(logicalDevice,
-                       renderPass,
-                       swapChainExtent,
-                       swapChainImageViews,
-                       swapChainFramebuffers,
-                       depthImageView);
+    swapChain.createFrameBuffers(renderPass, depthImageView);
 
-    createTextureImage(physicalDevice,
-                       logicalDevice,
+    VkExtent3D textureExtent {
+        model.texture.getWidth(),
+        model.texture.getHeight(),
+        1
+    };
+
+    createTextureImage(model.texture.getRaw(),
+                       model.texture.getChannels(),
+                       textureExtent,
                        commandPool,
-                       graphicsQueue,
-                       textureImage,
-                       textureImageMemory);
+                       textureImage);
 
-    createTextureImageView(logicalDevice,
-                           textureImage,
-                           textureImageView);
+    createTextureImageView(device, textureImage, textureImageView);
 
-    createTextureSampler(physicalDevice,
-                         logicalDevice,
-                         textureSampler);
+    createTextureSampler(device, textureSampler);
 
-    createVertexBuffer(physicalDevice,
-                       logicalDevice,
-                       vertices,
-                       commandPool,
-                       graphicsQueue,
-                       vertexBuffer,
-                       vertexBufferMemory);
+    createVertexBuffer(commandPool,
+                       model.mesh.vertices,
+                       vertexBuffer);
 
-    createIndexBuffer(physicalDevice,
-                      logicalDevice,
-                      indices,
-                      commandPool,
-                      graphicsQueue,
-                      indexBuffer,
-                      indexBufferMemory);
+    createIndexBuffer(commandPool,
+                      model.mesh.indices,
+                      indexBuffer);
 
-    createUniformBuffers(physicalDevice,
-                         logicalDevice,
+    createUniformBuffers(device,
                          uniformBuffers,
-                         uniformBuffersMemory,
-                         swapChainImages.size());
+                         swapChain.images.size());
 
-    createDescriptorPool(logicalDevice, 
-                         swapChainImages,
-                         descriptorPool);
+    createDescriptorPool(device, swapChain.images.size());
 
-    createDescriptorSets(logicalDevice, 
-                         swapChainImages,
+    createDescriptorSets(device, 
                          descriptorPool,
                          descriptorSetLayout,
                          descriptorSets,
                          uniformBuffers,
                          textureImageView,
-                         textureSampler);
+                         textureSampler,
+                         swapChain.images.size());
 
-    createCommandBuffers(logicalDevice,
-                         swapChainExtent,
-                         swapChainFramebuffers,
-                         graphicsPipeline,
-                         renderPass,
-                         vertexBuffer,
-                         indexBuffer,
-                         commandPool,
-                         commandBuffers,
-                         descriptorSets,
-                         pipelineLayout,
-                         static_cast<uint32_t>(indices.size()));
+    commandPool.allocateCommandBuffers(static_cast<uint32_t>(model.mesh.indices.size()),
+                                       commandBuffers.data());
 
-    createSyncObjects(logicalDevice,
+    writeCommandBuffersForDrawing(commandPool,
+                                  swapChain,
+                                  renderPass,
+                                  graphicsPipeline,
+                                  pipelineLayout,
+                                  vertexBuffer.handle,
+                                  indexBuffer.handle,
+                                  model.mesh.indices.size(),
+                                  descriptorSets,
+                                  commandBuffers);
+
+    createSyncObjects(device,
                       MAX_FRAMES_IN_FLIGHT,
-                      swapChainImages,
+                      swapChain,
                       imageAvailableSemaphores,
                       renderFinishedSemaphores,
                       inFlightFences,
@@ -203,7 +186,7 @@ void Renderer::mainLoop()
 
     // прежде чем выйти из главного цикла мы ждем чтобы видеокарта закончила выполнения последнего
     // командного буфера 
-    vkDeviceWaitIdle(logicalDevice);
+    vkDeviceWaitIdle(device.handle);
 }
 
 void Renderer::recreateSwapChain()
@@ -226,18 +209,13 @@ void Renderer::recreateSwapChain()
     }
     
 
-    vkDeviceWaitIdle(logicalDevice);
+    vkDeviceWaitIdle(device.handle);
 
     cleanupSwapChain();
 
-    createSwapChain(pWindow,
-                    physicalDevice,
-                    logicalDevice,
-                    surface,
-                    swapChain,
-                    swapChainImages,
-                    swapChainImageFormat,
-                    swapChainExtent);
+    VkExtent2D swapChainExtent = {width, height};
+    swapChain.destroy();
+    swapChain.create(device, surface, swapChainExtent);
 
     createImageViews(logicalDevice,
                      swapChainImageFormat,
@@ -441,65 +419,50 @@ void Renderer::drawFrame()
 
 void Renderer::cleanupSwapChain()
 {
-    vkDestroyImageView(logicalDevice, depthImageView, nullptr);
-    vkDestroyImage(logicalDevice, depthImage, nullptr);
-    vkFreeMemory(logicalDevice, depthImageMemory, nullptr);
+    vkDestroyImageView(device.handle, depthImageView, nullptr);
 
-    for(auto framebuffer : swapChainFramebuffers)
-        vkDestroyFramebuffer(logicalDevice, framebuffer, nullptr);
+    depthImage.destroy();
 
     // вместо того чтобы создавать новый командный пул и выделять буферы в нем
     // мы можем освободить текущий и выделить новые командные буферы в нем
-    vkFreeCommandBuffers(logicalDevice, 
-                         commandPool, 
-                         static_cast<uint32_t>(commandBuffers.size()), 
-                         commandBuffers.data());
 
-    vkDestroyPipeline(logicalDevice, graphicsPipeline, nullptr);
-    vkDestroyPipelineLayout(logicalDevice, pipelineLayout, nullptr);
-    vkDestroyRenderPass(logicalDevice, renderPass, nullptr);
+    commandPool.freeCommandBuffers(commandBuffers.size(),
+                                   commandBuffers.data());
 
-    for(auto imageView : swapChainImageViews)
-        vkDestroyImageView(logicalDevice, imageView, nullptr);
+    vkDestroyPipeline(device.handle, graphicsPipeline, nullptr);
+    vkDestroyPipelineLayout(device.handle, pipelineLayout, nullptr);
+    vkDestroyRenderPass(device.handle, renderPass, nullptr);
 
-    vkDestroySwapchainKHR(logicalDevice, swapChain, nullptr);
+    for(size_t i = 0; i < swapChain.images.size(); i++)
+        uniformBuffers[i].destroy();
 
-    for(size_t i = 0; i < swapChainImages.size(); i++)
-    {
-        vkDestroyBuffer(logicalDevice, uniformBuffers[i], nullptr);
-        vkFreeMemory(logicalDevice, uniformBuffersMemory[i], nullptr);
-    }
+    swapChain.destroy();
 
-    vkDestroyDescriptorPool(logicalDevice, descriptorPool, nullptr);
+    vkDestroyDescriptorPool(device.handle, descriptorPool, nullptr);
 }
 
 void Renderer::cleanup()
 {
     cleanupSwapChain();
 
-    vkDestroySampler(logicalDevice, textureSampler, nullptr);
-    vkDestroyImageView(logicalDevice, textureImageView, nullptr);
+    vkDestroySampler(device.handle, textureSampler, nullptr);
+    vkDestroyImageView(device.handle, textureImageView, nullptr);
 
-    vkDestroyImage(logicalDevice, textureImage, nullptr);
-    vkFreeMemory(logicalDevice, textureImageMemory, nullptr);
+    textureImage.destroy();
 
-    vkDestroyDescriptorSetLayout(logicalDevice, descriptorSetLayout, nullptr);
+    vkDestroyDescriptorSetLayout(device.handle, descriptorSetLayout, nullptr);
 
-    vkDestroyBuffer(logicalDevice, indexBuffer, nullptr);
-    vkFreeMemory(logicalDevice, indexBufferMemory, nullptr);
-
-    vkDestroyBuffer(logicalDevice, vertexBuffer, nullptr);
-    vkFreeMemory(logicalDevice, vertexBufferMemory, nullptr);
+    indexBuffer.destroy();
+    vertexBuffer.destroy();
 
     for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
-        vkDestroySemaphore(logicalDevice, renderFinishedSemaphores[i], nullptr);
-        vkDestroySemaphore(logicalDevice, imageAvailableSemaphores[i], nullptr);
-        vkDestroyFence(logicalDevice, inFlightFences[i], nullptr);
+        vkDestroySemaphore(device.handle, renderFinishedSemaphores[i], nullptr);
+        vkDestroySemaphore(device.handle, imageAvailableSemaphores[i], nullptr);
+        vkDestroyFence    (device.handle, inFlightFences[i],           nullptr);
     }
 
-
-    vkDestroyDevice(logicalDevice, nullptr);
+    vkDestroyDevice(device.handle, nullptr);
 
     if(enableValidationLayers)
         DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);

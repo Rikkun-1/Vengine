@@ -3,15 +3,27 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-Image::Image(const LogicalDevice *device) : Buffer(device)
+Image::Image(const LogicalDevice *device = VK_NULL_HANDLE)
 {
-    this->handle = VK_NULL_HANDLE;
+    device   = device;
+    handle   = VK_NULL_HANDLE;
+    memory   = VK_NULL_HANDLE;
+
+    resetImageInfo();
 }
 
-void Image::createImage(const VkExtent3D      &extent,
-                              VkFormat              format,
-                              VkImageTiling         tiling,
-                              VkImageUsageFlags     usage)
+void Image::resetImageInfo()
+{
+    size     = 0;
+    width    = 0;
+    height   = 0;
+    channels = 0;
+}
+
+void Image::createImage(const VkExtent3D         &extent,
+                              VkFormat           format,
+                              VkImageTiling      tiling,
+                              VkImageUsageFlags  usage)
     {
         VkImageCreateInfo imageInfo{};
         imageInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -44,6 +56,21 @@ void Image::create(const VkExtent3D      &extent,
     vkGetImageMemoryRequirements(this->device->handle, this->handle, &memRequirements);
     allocateMemory(memRequirements, properties);
     vkBindImageMemory(this->device->handle, this->handle, this->memory, 0);
+}
+
+void Image::destroy()
+{
+    Buffer::destroy();
+    if(handle)
+    {
+         vkDestroyImage(device->handle, handle, nullptr);
+         vkFreeMemory(device->handle, memory, nullptr);
+
+         handle = VK_NULL_HANDLE;
+         memory = VK_NULL_HANDLE;
+
+         resetImageInfo();
+    }
 }
 
 
@@ -131,13 +158,13 @@ void copyBufferToImage(CommandPool    &commandPool,
 
 
 VkImageView createImageView(VkDevice           logicalDevice,
-                            Image              &image, 
+                            VkImage            image, 
                             VkFormat           format,
                             VkImageAspectFlags aspectFlags)
 {
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    viewInfo.image    = image.handle;
+    viewInfo.image    = image;
     viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
     viewInfo.format   = format;
     viewInfo.subresourceRange.aspectMask     = aspectFlags;
@@ -175,7 +202,7 @@ void createDepthResources(CommandPool      &commandPool,
 
 
     depthImageView = createImageView(commandPool.device->handle, 
-                                     depthImage, 
+                                     depthImage.handle, 
                                      depthFormat, 
                                      VK_IMAGE_ASPECT_DEPTH_BIT);
     

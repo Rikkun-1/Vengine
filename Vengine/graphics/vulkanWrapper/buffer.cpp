@@ -55,8 +55,16 @@ void Buffer::create(VkDeviceSize           size,
 
 void Buffer::destroy()
 {
-    vkDestroyBuffer(this->device->handle, this->handle, nullptr);
-    vkFreeMemory   (this->device->handle, this->memory, nullptr);
+    if(handle)
+    {
+        vkDestroyBuffer(device->handle, handle, nullptr);
+        handle = VK_NULL_HANDLE;
+    }
+    if(memory)
+    {
+        vkFreeMemory(device->handle, memory, nullptr);
+        memory = VK_NULL_HANDLE;
+    }
 }
 
 void Buffer::createBuffer(VkDeviceSize        size,

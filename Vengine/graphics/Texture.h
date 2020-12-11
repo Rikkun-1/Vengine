@@ -13,12 +13,13 @@ public:
     void loadFromFile(std::string path);
 
     int getWidth();
-    int getHeigt();
+    int getHeight();
+    int getChannels();
 
     void  setPixel(int x, int y, Pixel pixel);
     Pixel getPixel(int x, int y, Pixel pixel);
 
-    Pixel *getRaw();
+    void *getRaw();
 
 private:
     int width;

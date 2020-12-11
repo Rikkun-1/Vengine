@@ -70,14 +70,13 @@ void writeCommandBuffersForDrawing(CommandPool                  &commandPool,
                                    VkPipelineLayout             pipelineLayout,
                                    VkBuffer                     vertexBuffer,
                                    VkBuffer                     indexBuffer,
-                                   uint32_t                     indexBufferSize,
+                                   uint32_t                     indexCount,
                                    std::vector<VkDescriptorSet> &descriptorSets,
                                    std::vector<VkCommandBuffer> &commandBuffers)
 {
     commandBuffers.resize(swapChain.frameBuffers.size());
     commandPool.allocateCommandBuffers(commandBuffers.size(),
                                        commandBuffers.data());
-
 
     for(size_t i = 0; i < commandBuffers.size(); i++)
     {
@@ -107,7 +106,7 @@ void writeCommandBuffersForDrawing(CommandPool                  &commandPool,
                                 nullptr);
 
         vkCmdDrawIndexed(commandBuffers[i],
-                         static_cast<uint32_t>(indexBufferSize),
+                         indexCount,
                          1, 0, 0, 0);
 
         vkCmdEndRenderPass(commandBuffers[i]);
