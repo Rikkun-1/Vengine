@@ -16,12 +16,14 @@
 #include "commandBuffer.h"
 #include "device.h"
 
+
 struct UniformBufferObject
 {
     glm::mat4 model;
     glm::mat4 view;
     glm::mat4 proj;
 };
+
 
 struct Buffer
 {
@@ -32,38 +34,34 @@ struct Buffer
 
     Buffer() = default;
 
-    Buffer(const LogicalDevice &logicalDevice);
+    Buffer(const LogicalDevice *logicalDevice);
 
     void create(VkDeviceSize          size, 
                 VkBufferUsageFlags    usage, 
                 VkMemoryPropertyFlags properties);
     
     void mapMemory(VkDeviceSize dataSize, const void *data);
-
+    
     void destroy();
 
-private:
+protected:
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage);
-    void allocateMemory(VkMemoryPropertyFlags properties);
+
+    void allocateMemory(const VkMemoryRequirements &memRequirements,
+                        VkMemoryPropertyFlags       properties);
 };
 
-
-void copyBuffer(const LogicalDevice  &device,
-                VkCommandPool        commandPool,
-                Buffer               srcBuffer,
-                Buffer               dstBuffer,
-                VkDeviceSize         size);
+void createStagingBuffer(VkDeviceSize  bufferSize,
+                         Buffer        &buffer);
 
 
-void createVertexBuffer(const LogicalDevice       &device,
+void createVertexBuffer(CommandPool               &commandPool,
                         const std::vector<Vertex> &vertices,
-                        VkCommandPool             commandPool,
                         Buffer                    &vertexBuffer);
 
 
-void createIndexBuffer(const LogicalDevice         &device,
+void createIndexBuffer(CommandPool                 &commandPool,
                        const std::vector<uint32_t> &indices,
-                       VkCommandPool               commandPool,
                        Buffer                      &indexBuffer);
 
 
@@ -76,3 +74,4 @@ void updateUniformBuffer(VkDevice                    logicalDevice,
                          uint32_t                    currentImage,
                          VkExtent2D                  swapChainExtent,
                          std::vector<Buffer>         &uniformBuffers);
+

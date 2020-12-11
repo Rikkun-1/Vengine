@@ -205,9 +205,7 @@ void setupDynamicStates(VkPipelineDynamicStateCreateInfo  &dynamicState)
     dynamicState.pDynamicStates    = dynamicStates.data();
 }
 
-void setupFixedFunctions(const ShaderModule          &vertexShader,
-                         const ShaderModule          &fragmentShader,
-                         const VkExtent2D            &swapChainExtent,
+void setupFixedFunctions(const VkExtent2D            &swapChainExtent,
                          PipelineFixedFunctions      &fixedFunctions)
 {
     setupBindingDescriptions   (fixedFunctions.vertexInput);

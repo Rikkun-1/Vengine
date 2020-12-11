@@ -78,7 +78,7 @@ static void setupAttachmentRef(uint32_t              attachmentIndex,
     attachmentRef.attachment = attachmentIndex; // индекс attachment на которое мы ссылаемся
     // для каких целей будет использоваться этот attachment непосредственно сейчас
     // VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL - оптимизорован для рисования в него
-    attachmentRef.layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    attachmentRef.layout     = layout;
 }
 
 static void setupSubpassDescription(const VkAttachmentReference &colorAttachmentRef,

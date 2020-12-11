@@ -1,6 +1,5 @@
-#include "vulkanWrapper.h"
+#include "synchronization.h"
 
-///////////////////////////////////////////////////////////
 
 void createSyncObjects(VkDevice                   logicalDevice,
                        int                        MAX_FRAMES_IN_FLIGHT,

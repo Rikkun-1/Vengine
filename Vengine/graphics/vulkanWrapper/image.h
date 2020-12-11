@@ -5,70 +5,45 @@
 #include <stdexcept>
 
 #include "buffer.h"
+#include "transitionImageLayout.h"
 
-void createImage(VkPhysicalDevice      physicalDevice,
-                 VkDevice              logicalDevice,
-                 uint32_t              width,
-                 uint32_t              height,
-                 VkFormat              format,
-                 VkImageTiling         tiling,
-                 VkImageUsageFlags     usage,
-                 VkMemoryPropertyFlags properties,
-                 VkImage               &image,
-                 VkDeviceMemory        &imageMemory);
+struct Image: public Buffer
+{
+    VkImage  handle;
+    int      width;
+    int      height;
+    int      channels;
 
-void transitionImageLayout(VkDevice      logicalDevice,
-                           VkCommandPool commandPool,
-                           VkQueue       graphicsQueue,
-                           VkImage       image,
-                           VkFormat      format,
-                           VkImageLayout oldLayout,
-                           VkImageLayout newLayout);
+    Image(const LogicalDevice *device);
 
-void copyBufferToImage(VkDevice      logicalDevice,
-                       VkCommandPool commandPool,
-                       VkQueue       graphicsQueue,
-                       VkBuffer      buffer,
-                       VkImage       image,
-                       uint32_t      width,
-                       uint32_t      height);
+    void create(const VkExtent3D      &extent,
+                VkFormat              format,
+                VkImageTiling         tiling,
+                VkImageUsageFlags     usage,
+                VkMemoryPropertyFlags properties);
+private:
+    void createImage(const VkExtent3D      &extent,
+                     VkFormat              format,
+                     VkImageTiling         tiling,
+                     VkImageUsageFlags     usage);
+};
 
-void createTextureImage(VkPhysicalDevice physicalDevice,
-                        VkDevice         logicalDevice,
-                        VkCommandPool    commandPool,
-                        VkQueue          graphicsQueue,
-                        VkImage          &textureImage,
-                        VkDeviceMemory   &textureImageMemory);
+void copyBufferToImage(CommandPool    &commandPool,
+                       VkExtent3D     &extent,
+                       Buffer         &buffer,
+                       Image          &image);
+
 
 VkImageView createImageView(VkDevice           logicalDevice,
-                            VkImage            image,
+                            Image              &image, 
                             VkFormat           format,
                             VkImageAspectFlags aspectFlags);
 
-void createTextureImageView(VkDevice    logicalDevice,
-                            VkImage     textureImage,
-                            VkImageView &textureImageView);
 
-
-void createTextureSampler(VkPhysicalDevice physicalDevice,
-                          VkDevice         logicalDevice,
-                          VkSampler        &textureSampler);
-
-
-void createDepthResources(VkPhysicalDevice physicalDevice,
-                          VkDevice         logicalDevice,
-                          VkCommandPool    commandPool,
-                          VkQueue          graphicsQueue,
-                          VkExtent2D       swapChainExtent,
-                          VkImage          &depthImage,
-                          VkDeviceMemory   &depthImageMemory,
+void createDepthResources(CommandPool      &commandPool,
+                          VkExtent2D       &swapChainExtent,
+                          Image            &depthImage,
                           VkImageView      &depthImageView);
 
-VkFormat findSupportedFormat(VkPhysicalDevice            physicalDevice,
-                             const std::vector<VkFormat> &candidates,
-                             VkImageTiling               tiling,
-                             VkFormatFeatureFlags        features);
-
-VkFormat findDepthFormat(VkPhysicalDevice physicalDevice);
 
 bool hasStencilComponent(VkFormat format);

@@ -172,6 +172,7 @@
     <None Include="shaders\shader.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="graphics\vulkanWrapper\commandPool.cpp" />
     <ClCompile Include="graphics\Renderer.cpp" />
     <ClCompile Include="graphics\vkSettings.cpp" />
     <ClCompile Include="graphics\vkTools.cpp" />
@@ -185,9 +186,11 @@
     <ClCompile Include="graphics\vulkanWrapper\pipelineLayout.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\device.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\swapChain.cpp" />
+    <ClCompile Include="graphics\vulkanWrapper\synchronization.cpp" />
+    <ClCompile Include="graphics\vulkanWrapper\texture.cpp" />
+    <ClCompile Include="graphics\vulkanWrapper\transitionImageLayout.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\validationLayers.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\Vertex.cpp" />
-    <ClCompile Include="graphics\vulkanWrapper\vulkanWrapper.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="graphics\Model.cpp" />
     <ClCompile Include="graphics\Mesh.cpp" />
@@ -211,6 +214,7 @@
     <Image Include="textures\texture.jpg" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="graphics\vulkanWrapper\commandPool.h" />
     <ClInclude Include="graphics\libraries\stb_image.h" />
     <ClInclude Include="graphics\libraries\tiny_obj_loader.h" />
     <ClInclude Include="graphics\Renderer.h" />
@@ -225,6 +229,9 @@
     <ClInclude Include="graphics\vulkanWrapper\pipeline.h" />
     <ClInclude Include="graphics\vulkanWrapper\pipelineLayout.h" />
     <ClInclude Include="graphics\vulkanWrapper\device.h" />
+    <ClInclude Include="graphics\vulkanWrapper\synchronization.h" />
+    <ClInclude Include="graphics\vulkanWrapper\texture.h" />
+    <ClInclude Include="graphics\vulkanWrapper\transitionImageLayout.h" />
     <ClInclude Include="graphics\vulkanWrapper\validationLayers.h" />
     <ClInclude Include="graphics\vulkanWrapper\swapChain.h" />
     <ClInclude Include="graphics\vulkanWrapper\Vertex.h" />

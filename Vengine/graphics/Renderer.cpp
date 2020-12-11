@@ -498,7 +498,6 @@ void Renderer::cleanup()
         vkDestroyFence(logicalDevice, inFlightFences[i], nullptr);
     }
 
-    vkDestroyCommandPool(logicalDevice, commandPool, nullptr);
 
     vkDestroyDevice(logicalDevice, nullptr);
 

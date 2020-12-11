@@ -27,12 +27,18 @@ static uint32_t findMemoryType(VkPhysicalDevice       physicalDevice,
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-Buffer::Buffer(const LogicalDevice &device)
+Buffer::Buffer()
 {
-    this->device = &device;
+    this->device = VK_NULL_HANDLE;
     this->handle = VK_NULL_HANDLE;
     this->memory = VK_NULL_HANDLE;
     this->size   = 0;
+}
+
+Buffer::Buffer(const LogicalDevice *device)
+{
+    Buffer();
+    this->device = device;
 }
 
 void Buffer::create(VkDeviceSize           size,
@@ -40,7 +46,11 @@ void Buffer::create(VkDeviceSize           size,
                     VkMemoryPropertyFlags  properties)
 {
     createBuffer(size, usage);
-    allocateMemory(properties);
+    
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(device->handle, this->handle, &memRequirements);
+    allocateMemory(memRequirements, properties);
+    vkBindBufferMemory(device->handle, this->handle, this->memory, 0);
 }
 
 void Buffer::destroy()
@@ -66,11 +76,9 @@ void Buffer::createBuffer(VkDeviceSize        size,
         throw std::runtime_error("failed to create vertex buffer!");
 }
 
-void Buffer::allocateMemory(VkMemoryPropertyFlags properties)
+void Buffer::allocateMemory(const VkMemoryRequirements &memRequirements,
+                            VkMemoryPropertyFlags       properties)
 {
-    VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(device->handle, this->handle, &memRequirements);
-
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize  = memRequirements.size;
@@ -80,10 +88,7 @@ void Buffer::allocateMemory(VkMemoryPropertyFlags properties)
 
     if(vkAllocateMemory(device->handle, &allocInfo, nullptr, &this->memory) != VK_SUCCESS)
         throw std::runtime_error("failed to allocate vertex buffer memory!");
-
-    vkBindBufferMemory(device->handle, this->handle, this->memory, 0);
 }
-
 
 void Buffer::mapMemory(VkDeviceSize  dataSize,
                        const void   *data)
@@ -94,6 +99,24 @@ void Buffer::mapMemory(VkDeviceSize  dataSize,
     vkUnmapMemory(this->device->handle, this->memory);
 }
 
+
+static void copyBuffer(CommandPool          &commandPool,
+                       Buffer               srcBuffer,
+                       Buffer               dstBuffer,
+                       VkDeviceSize         size)
+{
+    VkCommandBuffer commandBuffer;
+    commandBuffer = beginSingleTimeCommands(commandPool);
+
+    VkBufferCopy copyRegion{};
+    copyRegion.size = size;
+    vkCmdCopyBuffer(commandBuffer, 
+                    srcBuffer.handle, 
+                    dstBuffer.handle, 
+                    1, &copyRegion);
+
+    endSingleTimeCommands(commandPool, commandBuffer);
+}
 
 static void setupAsStagingBuffer(VkDeviceSize bufferSize,
                                  Buffer       &buffer)
@@ -114,28 +137,7 @@ static void setupAsUniformBuffer(VkDeviceSize bufferSize,
 }
 
 
-void copyBuffer(const LogicalDevice  &device,
-                VkCommandPool        commandPool,
-                Buffer               srcBuffer,
-                Buffer               dstBuffer,
-                VkDeviceSize         size)
-{
-    VkCommandBuffer commandBuffer;
-    commandBuffer = beginSingleTimeCommands(device.handle, commandPool);
-
-    VkBufferCopy copyRegion{};
-    copyRegion.size = size;
-    vkCmdCopyBuffer(commandBuffer, 
-                    srcBuffer.handle, 
-                    dstBuffer.handle, 
-                    1, &copyRegion);
-
-    endSingleTimeCommands(device, commandBuffer, commandPool);
-}
-
-
-static void transferBufferToGPU(const LogicalDevice &device,
-                                VkCommandPool       commandPool,
+static void transferBufferToGPU(CommandPool         &commandPool,
                                 Buffer              &srcBuffer,
                                 Buffer              &gpuBuffer)
 {
@@ -144,56 +146,56 @@ static void transferBufferToGPU(const LogicalDevice &device,
                      VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-
-    copyBuffer(device, 
-               commandPool, 
+    copyBuffer(commandPool, 
                srcBuffer, 
                gpuBuffer, 
                srcBuffer.size);
 }
 
 
-static void transferDataToGPU(const LogicalDevice &device,
-                              VkCommandPool        commandPool,
+static void transferDataToGPU(CommandPool         &commandPool,
                               VkDeviceSize         dataSize,
                               const void          *data,
                               Buffer              &bufferOnGpu)
 {
-    Buffer stagingBuffer(device);
+    Buffer stagingBuffer(commandPool.device);
     setupAsStagingBuffer(dataSize, stagingBuffer);
 
     stagingBuffer.mapMemory(dataSize, data);
 
-    transferBufferToGPU(device, commandPool, stagingBuffer, bufferOnGpu);
+    transferBufferToGPU(commandPool, stagingBuffer, bufferOnGpu);
 
     stagingBuffer.destroy();
 }
 
 
-void createVertexBuffer(const LogicalDevice       &device,
+void createStagingBuffer(VkDeviceSize bufferSize,
+                         Buffer       &buffer)
+{
+    setupAsStagingBuffer(bufferSize, buffer);
+}
+
+
+void createVertexBuffer(CommandPool               &commandPool,
                         const std::vector<Vertex> &vertices,
-                        VkCommandPool             commandPool,
                         Buffer                    &vertexBuffer)
 {
     VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
-    transferDataToGPU(device, 
-                      commandPool,
+    transferDataToGPU(commandPool,
                       bufferSize,
                       vertices.data(),
                       vertexBuffer);
 }
 
 
-void createIndexBuffer(const LogicalDevice         &device,
+void createIndexBuffer(CommandPool                 &commandPool,
                        const std::vector<uint32_t> &indices,
-                       VkCommandPool               commandPool,
                        Buffer                      &indexBuffer)
 {
     VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
-    transferDataToGPU(device, 
-                      commandPool,
+    transferDataToGPU(commandPool,
                       bufferSize,
                       indices.data(),
                       indexBuffer);

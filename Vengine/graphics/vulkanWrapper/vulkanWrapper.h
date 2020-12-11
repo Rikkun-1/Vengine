@@ -3,34 +3,29 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#include <stdexcept>
 #include <vector>
-#include <iostream>
-#include <fstream>
 
-#include "setupValidationLayers.h"
-#include "extensionsCheck.h"
+#include "instance.h"
+#include "validationLayers"
+#include "device.h"
 
-#include "setupPhysicalDevice.h"
-#include "LogicalDevice.h"
-
-#include "SwapChain.h"
-#include "setupRenderPass.h"
-
-#include "buffer.h"
-#include "commandBuffer.h"
-#include "image.h"
+#include "swapChain.h"
+#include "renderPass.h"
 #include "shaderModule.h"
-#include "descriptorSetLayout.h"
+#include "pipeline.h"
 #include "pipelineLayout.h"
 
-///////////////////////////////////////////////////////////
+#include "commandPool.h"
+#include "commandBuffer.h"
 
-void createSyncObjects(VkDevice                   logicalDevice,
-                       int                        MAX_FRAMES_IN_FLIGHT,
-                       const std::vector<VkImage> &swapChainImages,
-                       std::vector<VkSemaphore>   &imageAvailableSemaphores,
-                       std::vector<VkSemaphore>   &renderFinishedSemaphores,
-                       std::vector<VkFence>       &inFlightFences,
-                       std::vector<VkFence>       &imagesInFlight);
+#include "buffer.h"
+#include "image.h"
 
+#include "descriptorSetLayout.h"
+#include "descriptorSets.h"
+#include "transitionI.h"
+
+
+#include "transitionImageLayout.h"
+#include "texture.h"
+#include "vertex.h"

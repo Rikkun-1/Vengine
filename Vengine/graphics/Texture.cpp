@@ -27,7 +27,7 @@ void Texture::setPixel(int x, int y, Pixel pixel)
     pixels[y * height + x] = pixel;
 }
 
-Pixel Texture::getPixel(int x, int y, Pixel pixel)
+Pixel Texture::getPixel(int x, int y)
 {
     return pixels[y * height + x];
 }

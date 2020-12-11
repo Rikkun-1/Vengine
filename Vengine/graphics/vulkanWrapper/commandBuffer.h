@@ -4,30 +4,24 @@
 
 #include <vector>
 
-#include "device.h"
+#include "CommandPool.h"
 #include "swapChain.h"
 
-void createCommandBuffers(VkDevice                     logicalDevice,
-                          SwapChain                    &swapChain,
-                          VkRenderPass                 renderPass,
-                          VkPipeline                   graphicsPipeline,
-                          VkPipelineLayout             pipelineLayout,
-                          VkBuffer                     vertexBuffer,
-                          VkBuffer                     indexBuffer,
-                          std::vector<VkDescriptorSet> &descriptorSets,
-                          int                          indexBufferSize,
-                          VkCommandPool                commandPool,
-                          std::vector<VkCommandBuffer> &commandBuffers);
+
+void writeCommandBuffersForDrawing(CommandPool                  &commandPool,
+                                   SwapChain                    &swapChain,
+                                   VkRenderPass                 renderPass,
+                                   VkPipeline                   graphicsPipeline,
+                                   VkPipelineLayout             pipelineLayout,
+                                   VkBuffer                     vertexBuffer,
+                                   VkBuffer                     indexBuffer,
+                                   uint32_t                     indexBufferSize,
+                                   std::vector<VkDescriptorSet> &descriptorSets,
+                                   std::vector<VkCommandBuffer> &commandBuffers);
 
 
-VkCommandBuffer beginSingleTimeCommands(VkDevice      logicalDevice,
-                                        VkCommandPool commandPool);
+VkCommandBuffer beginSingleTimeCommands(CommandPool  &commandPool);
 
 
-void endSingleTimeCommands(const LogicalDevice  &device,
-                           VkCommandBuffer      commandBuffer,
-                           VkCommandPool        commandPool);
-
-
-VkCommandPool createCommandPool(const LogicalDevice  &device,
-                                VkSurfaceKHR         surface);
+void endSingleTimeCommands(const CommandPool   &commandPool,
+                           VkCommandBuffer     commandBuffer);

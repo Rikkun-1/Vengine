@@ -5,29 +5,6 @@
 
 #include "buffer.h"
 
-static void allocateCommandBuffers(VkDevice         logicalDevice,
-                                   VkCommandPool    commandPool,
-                                   uint32_t         amount,
-                                   VkCommandBuffer  *commandBuffers)
-{
-    VkCommandBufferAllocateInfo allocInfo{};
-    allocInfo.sType       = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = commandPool;
-
-    // Этот буфер является первичным или вторичным
-    // VK_COMMAND_BUFFER_LEVEL_PRIMARY - буфер является первичным.
-    // его можно отправить в очередь для исполнения, но его нельзя вызывать из других буферов
-    // VK_COMMAND_BUFFER_LEVEL_SECONDARY - буфер является вторичным. Не может быть
-    // отправлен в очередь напрямую, но может быть вызван из первичных буферов
-    // во вторичном буфере можно описать частоиспользуемые команды чтобы вызывать их 
-    // из главного буфера в нужные моменты
-    allocInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = amount;
-
-    if(vkAllocateCommandBuffers(logicalDevice, &allocInfo, commandBuffers) != VK_SUCCESS)
-        throw std::runtime_error("failed to allocate command buffers!");
-}
-
 static void beginCommandBuffer(VkCommandBuffer            commandBuffer,
                                VkCommandBufferUsageFlags  flags = 0) // optional
 {
@@ -51,6 +28,7 @@ static void beginCommandBuffer(VkCommandBuffer            commandBuffer,
     if(vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
         throw std::runtime_error("failed to begin recording command buffer!");
 }
+
 
 static void beginRenderPass(VkRenderPass        renderPass,
                             VkCommandBuffer     commandBuffer,
@@ -84,23 +62,21 @@ static void beginRenderPass(VkRenderPass        renderPass,
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-void createCommandBuffers(VkDevice                     logicalDevice,
-                          SwapChain                    &swapChain,
-                          VkRenderPass                 renderPass,
-                          VkPipeline                   graphicsPipeline,
-                          VkPipelineLayout             pipelineLayout,
-                          VkBuffer                     vertexBuffer,
-                          VkBuffer                     indexBuffer,
-                          std::vector<VkDescriptorSet> &descriptorSets,
-                          int                          indexBufferSize,
-                          VkCommandPool                commandPool,
-                          std::vector<VkCommandBuffer> &commandBuffers)
+
+void writeCommandBuffersForDrawing(CommandPool                  &commandPool,
+                                   SwapChain                    &swapChain,
+                                   VkRenderPass                 renderPass,
+                                   VkPipeline                   graphicsPipeline,
+                                   VkPipelineLayout             pipelineLayout,
+                                   VkBuffer                     vertexBuffer,
+                                   VkBuffer                     indexBuffer,
+                                   uint32_t                     indexBufferSize,
+                                   std::vector<VkDescriptorSet> &descriptorSets,
+                                   std::vector<VkCommandBuffer> &commandBuffers)
 {
     commandBuffers.resize(swapChain.frameBuffers.size());
-    allocateCommandBuffers(logicalDevice, 
-                           commandPool, 
-                           commandBuffers.size(),
-                           commandBuffers.data());
+    commandPool.allocateCommandBuffers(commandBuffers.size(),
+                                       commandBuffers.data());
 
 
     for(size_t i = 0; i < commandBuffers.size(); i++)
@@ -142,14 +118,10 @@ void createCommandBuffers(VkDevice                     logicalDevice,
 }
 
 
-VkCommandBuffer beginSingleTimeCommands(VkDevice      logicalDevice,
-                                        VkCommandPool commandPool)
+VkCommandBuffer beginSingleTimeCommands(CommandPool &commandPool)
 {
     VkCommandBuffer commandBuffer;
-    allocateCommandBuffers(logicalDevice, 
-                           commandPool, 
-                           1,
-                           &commandBuffer);
+    commandPool.allocateCommandBuffers(1, &commandBuffer);
 
     beginCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
@@ -157,43 +129,19 @@ VkCommandBuffer beginSingleTimeCommands(VkDevice      logicalDevice,
 }
 
 
-void endSingleTimeCommands(const LogicalDevice  &device,
-                           VkCommandBuffer      commandBuffer,
-                           VkCommandPool        commandPool)
+void endSingleTimeCommands(const CommandPool   &commandPool,
+                           VkCommandBuffer     commandBuffer)
 {
     vkEndCommandBuffer(commandBuffer);
 
     VkSubmitInfo submitInfo{};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers    = &commandBuffer;
 
-    vkQueueSubmit(device.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-    vkQueueWaitIdle(device.graphicsQueue);
+    vkQueueSubmit(commandPool.device->graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+    vkQueueWaitIdle(commandPool.device->graphicsQueue);
 
-    vkFreeCommandBuffers(device.handle, commandPool, 1, &commandBuffer);
+    vkFreeCommandBuffers(commandPool.device->handle, commandPool.handle, 1, &commandBuffer);
 }
 
-
-VkCommandPool createCommandPool(const LogicalDevice  &device,
-                                VkSurfaceKHR         surface)
-{
-    VkCommandPoolCreateInfo poolInfo{};
-    poolInfo.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-
-    // исполнение командных буферов происходит когда мы отправляем их в одно из семейств очередей
-    poolInfo.queueFamilyIndex = device.familyIndices.graphicsFamily.value();
-
-    // Возможные флаги:
-    // VK_COMMAND_POOL_CREATE_TRANSIENT_BIT - мы говорим что этот буфер будет очень часто перезаписан
-    // (вулкан может поменять свое поведение касательно выделения памяти)
-    // VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT - позволяет нам перезаписывать только 
-    // нужные нам буферы. Без него все буфеы будут очищаться одновременно
-    poolInfo.flags = 0; // Optional
-
-    VkCommandPool commandPool;
-    if(vkCreateCommandPool(device.handle, &poolInfo, nullptr, &commandPool) != VK_SUCCESS)
-        throw std::runtime_error("failed to create command pool!");
-
-    return commandPool;
-}
