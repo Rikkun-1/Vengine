@@ -5,6 +5,7 @@
 
 #include "vulkanWrapper/Vertex.h"
 
+#include "vkTools.h"
 
 class Mesh
 {
@@ -13,7 +14,6 @@ public:
     std::vector<uint32_t> indices;
 
     Mesh() = default;
-
     Mesh(std::string path);
 
     void loadFromFile(std::string path);

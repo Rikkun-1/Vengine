@@ -1,10 +1,11 @@
 #pragma once
 
 #include "image.h"
+#include "transitionImageLayout.h"
 
 #include "texture.h"
 
-static void setupSamplerCreateInfo(LogicalDevice        &device,
+static void setupSamplerCreateInfo(const LogicalDevice        &device,
                                    VkSamplerCreateInfo  &samplerInfo);
 
 
@@ -15,10 +16,10 @@ void createTextureImage(void               *pixels,
                         Image              &textureImage);
 
 
-void createTextureImageView(LogicalDevice  &device,
+void createTextureImageView(const LogicalDevice  &device,
                             Image          &textureImage,
                             VkImageView    &textureImageView);
 
 
-void createTextureSampler(LogicalDevice    &device,
+void createTextureSampler(const LogicalDevice    &device,
                           VkSampler        &textureSampler);

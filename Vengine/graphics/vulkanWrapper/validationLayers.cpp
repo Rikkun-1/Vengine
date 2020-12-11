@@ -1,5 +1,11 @@
 #include "validationLayers.h"
 
+#ifdef USE_VALIDATION_LAYERS
+    const bool enableValidationLayers = false;
+#else
+    const bool enableValidationLayers = true;
+#endif
+
 bool checkValidationLayerSupport(const std::vector<const char *> &requiredLayers)
 {
     uint32_t layerCount;
@@ -99,4 +105,19 @@ void DestroyDebugUtilsMessengerEXT(VkInstance                  instance,
     auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
     if(func != nullptr)
         func(instance, debugMessenger, pAllocator);
+}
+
+
+VkDebugUtilsMessengerEXT setupDebugMessenger(VkInstance instance)
+{
+    if(!enableValidationLayers) return VK_NULL_HANDLE;
+
+    VkDebugUtilsMessengerCreateInfoEXT createInfo{};
+    populateDebugMessengerCreateInfo(createInfo);
+    
+    VkDebugUtilsMessengerEXT debugMessenger;
+    if(CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS)
+        throw std::runtime_error("failed to set up debug messenger!");
+
+    return debugMessenger;
 }

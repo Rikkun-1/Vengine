@@ -1,8 +1,8 @@
 #include "descriptorPool.h"
 
-#include <array>
+#include <stdexcept>
 
-VkDescriptorPool createDescriptorPool(LogicalDevice  &device,
+VkDescriptorPool createDescriptorPool(const LogicalDevice  &device,
                                       int             size)
 {
     std::array<VkDescriptorPoolSize, 2> poolSizes{};

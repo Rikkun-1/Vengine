@@ -2,6 +2,13 @@
 
 #include "vkTools.h"
 
+Texture::Texture()
+{
+    int width    = 0;
+    int height   = 0;
+    int channels = 0;
+}
+
 Texture::Texture(std::string path)
 {
     loadFromFile(path);

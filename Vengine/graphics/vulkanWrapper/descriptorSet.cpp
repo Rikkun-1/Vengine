@@ -1,10 +1,5 @@
 #include "descriptorSet.h"
 
-#include <stdexcept>
-#include <array>
-
-#include "buffer.h"
-
 static void allocateDescriptorSets(VkDevice                      logicalDevice,
                                    VkDescriptorPool              descriptorPool,
                                    VkDescriptorSetLayout        &descriptorSetLayout,

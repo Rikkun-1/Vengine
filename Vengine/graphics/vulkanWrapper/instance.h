@@ -8,5 +8,3 @@
 
 VkInstance createInstance(const std::vector<const char *> &validationLayers,
                           const std::vector<const char *> &instanceExtensions);
-
-VkDebugUtilsMessengerEXT setupDebugMessenger(VkInstance instance)

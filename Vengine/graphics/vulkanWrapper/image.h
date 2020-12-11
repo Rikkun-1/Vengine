@@ -2,10 +2,9 @@
 
 #include <vulkan/vulkan.h>
 
-#include <stdexcept>
-
+#include "device.h"
 #include "buffer.h"
-#include "transitionImageLayout.h"
+#include "commandPool.h"
 
 struct Image: public Buffer
 {
@@ -16,6 +15,7 @@ struct Image: public Buffer
     int                    height;
     int                    channels;
 
+    Image();
     Image(const LogicalDevice *device);
 
     void create(const VkExtent3D      &extent,
@@ -23,6 +23,8 @@ struct Image: public Buffer
                 VkImageTiling         tiling,
                 VkImageUsageFlags     usage,
                 VkMemoryPropertyFlags properties);
+
+    void setDevice(const LogicalDevice *device);
 
     void destroy();
 
@@ -34,6 +36,9 @@ private:
 
     void resetImageInfo();
 };
+
+VkFormat findDepthFormat(VkPhysicalDevice physicalDevice);
+
 
 void copyBufferToImage(CommandPool    &commandPool,
                        VkExtent3D     &extent,

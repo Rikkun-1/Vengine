@@ -1,19 +1,21 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
+
 #include "device.h"
 
 struct CommandPool
-{
-    VkCommandPool        handle;
+{   
+    VkCommandPool         handle;
     
-    LogicalDevice       *device;
+    const LogicalDevice  *device;
 
-    CommandPool(LogicalDevice  *device);
+    CommandPool();
+    CommandPool(const LogicalDevice *device);
 
     void create();
 
-    void setDevice(LogicalDevice  *device);
+    void setDevice(const LogicalDevice *device);
 
     void allocateCommandBuffers(int              amount,
                                 VkCommandBuffer *commandBuffers);

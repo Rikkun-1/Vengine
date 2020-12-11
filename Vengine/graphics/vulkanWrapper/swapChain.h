@@ -7,8 +7,12 @@
 
 #include "device.h"
 
+#include "image.h"
+#include "framebuffer.h"
+
 struct SwapChain
 {
+public:
     LogicalDevice              *device;
     VkSwapchainKHR              handle;
     std::vector<VkImage>        images;
@@ -18,7 +22,7 @@ struct SwapChain
     VkExtent2D                  extent;
 
     void create(const LogicalDevice &device,
-                VkSurfaceKHR        surface,
+                VkSurfaceKHR         surface,
                 VkExtent2D          &requiredExtent);
 
     void destroy();
@@ -28,18 +32,6 @@ struct SwapChain
 private:
     void createImageViews();
 };
-
-
-struct SwapChainSupportDetails
-{
-    VkSurfaceCapabilitiesKHR        capabilities;
-    std::vector<VkSurfaceFormatKHR> formats;
-    std::vector<VkPresentModeKHR>   presentModes;
-};
-
-
-SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice physicalDevice,
-                                              VkSurfaceKHR     surface);
 
 
 

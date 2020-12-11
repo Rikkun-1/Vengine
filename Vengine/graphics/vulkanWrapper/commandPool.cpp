@@ -1,5 +1,7 @@
 #include "CommandPool.h"
 
+#include <stdexcept>
+
 void CommandPool::freeCommandBuffers(int              amount,
                                      VkCommandBuffer *commandBuffers)
 {
@@ -30,10 +32,16 @@ void CommandPool::allocateCommandBuffers(int              amount,
         throw std::runtime_error("failed to allocate command buffers!");
 }
 
-
-CommandPool::CommandPool(LogicalDevice *device = VK_NULL_HANDLE)
+CommandPool::CommandPool()
 {
-    handle           = VK_NULL_HANDLE;;
+    handle = VK_NULL_HANDLE;
+    device = VK_NULL_HANDLE;
+}
+
+
+CommandPool::CommandPool(const LogicalDevice *device)
+{
+    handle           = VK_NULL_HANDLE;
     device           = device;
     queueFamilyIndex = device->familyIndices.graphicsFamily.value();
 }
@@ -57,7 +65,7 @@ void CommandPool::create()
         throw std::runtime_error("failed to create command pool!");
 }
 
-void CommandPool::setDevice(LogicalDevice *device)
+void CommandPool::setDevice(const LogicalDevice *device)
 {
     this->device           = device;
     this->queueFamilyIndex = device->familyIndices.graphicsFamily.value();

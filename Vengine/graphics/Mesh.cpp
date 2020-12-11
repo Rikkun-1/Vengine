@@ -1,7 +1,5 @@
 #include "Mesh.h"
 
-#include "vkTools.h"
-
 Mesh::Mesh(std::string path)
 {
     loadFromFile(path);

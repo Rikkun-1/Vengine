@@ -5,11 +5,11 @@
 
 #include <iostream>
 
-#include "Vertex.h"
+#include "vertex.h"
 #include "shaderModule.h"
 #include "device.h"
 
-VkPipeline createGraphicsPipeline(LogicalDevice               &device,
+VkPipeline createGraphicsPipeline(const LogicalDevice               &device,
                                   VkExtent2D                  &swapChainExtent,
                                   VkRenderPass                renderPass,
                                   const ShaderModule          &vertexShader,

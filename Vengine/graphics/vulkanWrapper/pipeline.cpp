@@ -221,7 +221,7 @@ void setupFixedFunctions(const VkExtent2D            &swapChainExtent,
     setupDynamicStates         (fixedFunctions.dynamicState);
 }
 
-VkPipeline createGraphicsPipeline(LogicalDevice               &device,
+VkPipeline createGraphicsPipeline(const LogicalDevice               &device,
                                   VkExtent2D                  &swapChainExtent,
                                   VkRenderPass                renderPass,
                                   const ShaderModule          &vertexShader,

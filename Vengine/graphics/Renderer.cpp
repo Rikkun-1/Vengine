@@ -1,6 +1,6 @@
 #include "Renderer.h"
 
-#ifdef NDEBUG
+#ifdef USE_VALIDATION_LAYERS
     const bool enableValidationLayers = false;
 #else
     const bool enableValidationLayers = true;
@@ -12,11 +12,13 @@ static void framebufferResizeCallback(GLFWwindow *window, int width, int height)
     app->framebufferResized = true;
 }
 
+Renderer::Renderer() {};
+
 void Renderer::loadShader(Shader shader) 
 {
     if(shader.stage == ShaderStages::VERTEX_STAGE)
     {
-        ShaderModule shaderModule(device.handle,
+        ShaderModule shaderModule(device,
                                   shader.binaryCode,
                                   VK_SHADER_STAGE_VERTEX_BIT,
                                   shader.entry);
@@ -26,10 +28,10 @@ void Renderer::loadShader(Shader shader)
 
     if(shader.stage == ShaderStages::VERTEX_STAGE)
     {
-         ShaderModule shaderModule(device.handle,
-                                  shader.binaryCode,
-                                  VK_SHADER_STAGE_FRAGMENT_BIT,
-                                  shader.entry);
+         ShaderModule shaderModule(device,
+                                   shader.binaryCode,
+                                   VK_SHADER_STAGE_FRAGMENT_BIT,
+                                   shader.entry);
 
         this->fragmentShader = shaderModule;
     }
@@ -191,8 +193,6 @@ void Renderer::mainLoop()
 
 void Renderer::recreateSwapChain()
 {
-
-    
     int width  = 0, 
         height = 0;
     glfwGetFramebufferSize(pWindow, &width, &height);
@@ -207,7 +207,6 @@ void Renderer::recreateSwapChain()
         glfwGetFramebufferSize(pWindow, &width, &height);
         glfwWaitEvents();
     }
-    
 
     vkDeviceWaitIdle(device.handle);
 
@@ -217,70 +216,47 @@ void Renderer::recreateSwapChain()
     swapChain.destroy();
     swapChain.create(device, surface, swapChainExtent);
 
-    createImageViews(logicalDevice,
-                     swapChainImageFormat,
-                     swapChainImages,
-                     swapChainImageViews);
+    renderPass          = createRenderPass(device, swapChain.imageFormat);
+    graphicsPipeline    = createGraphicsPipeline(device,
+                                                 swapChain.extent,
+                                                 renderPass,
+                                                 vertexShader,
+                                                 fragmentShader,
+                                                 descriptorSetLayout,
+                                                 pipelineLayout);
 
-    createRenderPass(physicalDevice,
-                     logicalDevice,
-                     swapChainImageFormat,
-                     renderPass);
-
-    createGraphicsPipeline(logicalDevice,
-                           swapChainExtent,
-                           renderPass,
-                           pipelineLayout,
-                           graphicsPipeline,
-                           descriptorSetLayout);
-
-    createDepthResources(physicalDevice,
-                         logicalDevice,
-                         commandPool,
-                         graphicsQueue,
-                         swapChainExtent,
+    createDepthResources(commandPool,
+                         swapChain.extent,
                          depthImage,
-                         depthImageMemory,
                          depthImageView);
 
-    createFramebuffers(logicalDevice,
-                       renderPass,
-                       swapChainExtent,
-                       swapChainImageViews,
-                       swapChainFramebuffers,
-                       depthImageView);
+    swapChain.createFrameBuffers(renderPass, depthImageView);
 
-    createUniformBuffers(physicalDevice,
-                         logicalDevice,
+    createUniformBuffers(device,
                          uniformBuffers,
-                         uniformBuffersMemory,
-                         uniformBuffers.size());
+                         swapChain.images.size());
 
-    createDescriptorPool(logicalDevice,
-                         swapChainImages,
-                         descriptorPool);
+     createDescriptorPool(device, swapChain.images.size());
 
-    createDescriptorSets(logicalDevice,
-                         swapChainImages,
+    createDescriptorSets(device, 
                          descriptorPool,
                          descriptorSetLayout,
                          descriptorSets,
                          uniformBuffers,
                          textureImageView,
-                         textureSampler);
+                         textureSampler,
+                         swapChain.images.size());
 
-    createCommandBuffers(logicalDevice,
-                         swapChainExtent,
-                         swapChainFramebuffers,
-                         graphicsPipeline,
-                         renderPass,
-                         vertexBuffer,
-                         indexBuffer,
-                         commandPool,
-                         commandBuffers,
-                         descriptorSets,
-                         pipelineLayout,
-                         static_cast<uint32_t>(indices.size()));
+    writeCommandBuffersForDrawing(commandPool,
+                                  swapChain,
+                                  renderPass,
+                                  graphicsPipeline,
+                                  pipelineLayout,
+                                  vertexBuffer.handle,
+                                  indexBuffer.handle,
+                                  model.mesh.indices.size(),
+                                  descriptorSets,
+                                  commandBuffers);
 }
 
 void Renderer::drawFrame()
@@ -292,13 +268,13 @@ void Renderer::drawFrame()
     // функция завершится не дожидаясь заборов если время выйдет. В этом случае она вернет VK_TIMEOUT
     // иначе VK_SUCCESS
     // значение UINT64_MAX означает что ограничения по времени нет
-    vkWaitForFences(logicalDevice, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+    vkWaitForFences(device.handle, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
     // индекс, указывающий какое изображение в swapChainImages 
     // стало доступным
     uint32_t imageIndex;
-    VkResult result = vkAcquireNextImageKHR(logicalDevice,
-                                            swapChain,
+    VkResult result = vkAcquireNextImageKHR(device.handle,
+                                            swapChain.handle,
                                             // время в наносекундах, данное изображению
                                             // чтобы стать доступным. значение UINT64_MAX - отключает счетчик
                                             UINT64_MAX,
@@ -331,16 +307,16 @@ void Renderer::drawFrame()
     // если предыдущий кадр все еще использует это изображение, то мы ждем до тех пор пока 
     // оно не освободится
     if(imagesInFlight[imageIndex] != VK_NULL_HANDLE)
-        vkWaitForFences(logicalDevice, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+        vkWaitForFences(device.handle, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
     
     // связываем изображение, полученное из цепочки показа с забором, который станет
     // сигнальным когда рисование в это изображение будет окончено
     imagesInFlight[imageIndex] = inFlightFences[currentFrame];
 
-    updateUniformBuffer(logicalDevice,
+    updateUniformBuffer(device.handle,
                         imageIndex,
-                        swapChainExtent,
-                        uniformBuffersMemory);
+                        swapChain.extent,
+                        uniformBuffers);
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -370,12 +346,12 @@ void Renderer::drawFrame()
 
     // сбрасываем забор в несигнальное состояние для этого кадра
     // vkQueueSubmit сделает его вновь сигнальным когда закончит выполнение команд
-    vkResetFences(logicalDevice, 1, &inFlightFences[currentFrame]);
+    vkResetFences(device.handle, 1, &inFlightFences[currentFrame]);
     // в очерень можно отправить сразу несколько submitInfo, последовательность которых
     // настроена благодаря светофорам 
     // последний параметр это забор, который нужно сделать сигнальным когда выполнение 
     // всех буферов будет закончено
-    if(vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS)
+    if(vkQueueSubmit(device.graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS)
         throw std::runtime_error("failed to submit draw command buffer!");
 
     // эта структура необходима для того чтобы описать когда и какое изображение мы хотим вернуть
@@ -389,7 +365,7 @@ void Renderer::drawFrame()
 
     // здесь описываются цепочки показа и индекс изображения, которое мы возвращаем в цепочку для каждой из них
     // обычно цепочка показа лишь одна
-    VkSwapchainKHR swapChains[] = {swapChain};
+    VkSwapchainKHR swapChains[] = {swapChain.handle};
     presentInfo.swapchainCount  = 1;
     presentInfo.pSwapchains     = swapChains;
     presentInfo.pImageIndices   = &imageIndex;
@@ -401,7 +377,7 @@ void Renderer::drawFrame()
     // показать изображение
     presentInfo.pResults = nullptr; 
 
-    result = vkQueuePresentKHR(presentationQueue, &presentInfo);
+    result = vkQueuePresentKHR(device.presentQueue, &presentInfo);
 
     // если в момент между рендером и показом изображения поверхность для показа изменила размер,
     // то vkQueuePresentKHR не сможет показать изображение так как цепочка показа более

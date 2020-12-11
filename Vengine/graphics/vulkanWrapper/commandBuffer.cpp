@@ -1,9 +1,7 @@
 #include "commandBuffer.h"
 
-#include <array>
 #include <stdexcept>
 
-#include "buffer.h"
 
 static void beginCommandBuffer(VkCommandBuffer            commandBuffer,
                                VkCommandBufferUsageFlags  flags = 0) // optional

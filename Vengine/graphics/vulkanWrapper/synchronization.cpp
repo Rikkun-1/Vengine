@@ -1,5 +1,6 @@
 #include "synchronization.h"
 
+#include <stdexcept>
 
 void createSyncObjects(const LogicalDevice        &device,
                        int                        MAX_FRAMES_IN_FLIGHT,

@@ -48,3 +48,5 @@ void DestroyDebugUtilsMessengerEXT(VkInstance                  instance,
                                    VkDebugUtilsMessengerEXT    debugMessenger,
                                    const VkAllocationCallbacks *pAllocator);
 
+
+VkDebugUtilsMessengerEXT setupDebugMessenger(VkInstance instance);

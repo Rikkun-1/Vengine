@@ -2,8 +2,6 @@
 
 #include <vulkan/vulkan.h>
 
-#include <stdexcept>
-
 void setupPipelineLayoutInfo(const VkDescriptorSetLayout       &descriptorSetLayout,
                                    VkPipelineLayoutCreateInfo  &pipelineLayoutInfo);
 

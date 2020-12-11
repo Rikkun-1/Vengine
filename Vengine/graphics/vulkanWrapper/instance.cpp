@@ -7,7 +7,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#ifdef NDEBUG
+#ifdef USE_VALIDATION_LAYERS
     const bool enableValidationLayers = false;
 #else
     const bool enableValidationLayers = true;
@@ -134,18 +134,4 @@ VkInstance createInstance(const std::vector<const char *> &validationLayers,
         throw std::runtime_error("failed to create instance!");
 
     return instance;
-}
-
-VkDebugUtilsMessengerEXT setupDebugMessenger(VkInstance instance)
-{
-    if(!enableValidationLayers) return;
-
-    VkDebugUtilsMessengerCreateInfoEXT createInfo{};
-    populateDebugMessengerCreateInfo(createInfo);
-    
-    VkDebugUtilsMessengerEXT debugMessenger;
-    if(CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS)
-        throw std::runtime_error("failed to set up debug messenger!");
-
-    return debugMessenger;
 }

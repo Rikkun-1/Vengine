@@ -1,35 +1,6 @@
 #include "swapChain.h"
 
-#include "image.h"
-#include "framebuffer.h"
-
-SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice physicalDevice,
-                                              VkSurfaceKHR     surface)
-{
-    SwapChainSupportDetails details;
-
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &details.capabilities);
-
-    uint32_t formatCount;
-    vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr);
-
-    if(formatCount != 0)
-    {
-        details.formats.resize(formatCount);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, details.formats.data());
-    }
-
-    uint32_t presentModeCount;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr);
-
-    if(presentModeCount != 0)
-    {
-        details.presentModes.resize(presentModeCount);
-        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, details.presentModes.data());
-    }
-
-    return details;
-}
+#include <stdexcept>
 
 static VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats)
 {
@@ -108,6 +79,8 @@ static uint32_t getMinImageCount(SwapChainSupportDetails &swapChainSupport)
     {
         imageCount = swapChainSupport.capabilities.maxImageCount;
     }
+
+    return imageCount;
 }
 
 
@@ -130,7 +103,7 @@ void SwapChain::createFrameBuffers(VkRenderPass         renderPass,
 {
     frameBuffers.resize(imageViews.size());
 
-    VkExtent3D extent {
+    VkExtent3D frameBufferExtent {
         extent.width,
         extent.height,
         1
@@ -147,7 +120,7 @@ void SwapChain::createFrameBuffers(VkRenderPass         renderPass,
 
         frameBuffers[i] = createFrameBuffer(*device,
                                             renderPass,
-                                            extent,
+                                            frameBufferExtent,
                                             attachments);
     }
 }

@@ -1,14 +1,23 @@
 #include "image.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#include <stdexcept>
 
-Image::Image(const LogicalDevice *device = VK_NULL_HANDLE)
+#include "commandBuffer.h"
+#include "transitionImageLayout.h"
+
+Image::Image()
+{
+    device   = VK_NULL_HANDLE;
+    handle   = VK_NULL_HANDLE;
+    memory   = VK_NULL_HANDLE;
+    resetImageInfo();
+}
+
+Image::Image(const LogicalDevice *device)
 {
     device   = device;
     handle   = VK_NULL_HANDLE;
     memory   = VK_NULL_HANDLE;
-
     resetImageInfo();
 }
 
@@ -18,6 +27,11 @@ void Image::resetImageInfo()
     width    = 0;
     height   = 0;
     channels = 0;
+}
+
+void Image::setDevice(const LogicalDevice *device)
+{
+     this->device = device;
 }
 
 void Image::createImage(const VkExtent3D         &extent,
@@ -120,7 +134,7 @@ static VkFormat findSupportedFormat(VkPhysicalDevice            physicalDevice,
 }
 
 
-static VkFormat findDepthFormat(VkPhysicalDevice physicalDevice)
+VkFormat findDepthFormat(VkPhysicalDevice physicalDevice)
 {
     return findSupportedFormat(physicalDevice,
                                {
@@ -153,7 +167,7 @@ void copyBufferToImage(CommandPool    &commandPool,
     );
 
     endSingleTimeCommands(commandPool,
-                            commandBuffer);
+                          commandBuffer);
 }
 
 

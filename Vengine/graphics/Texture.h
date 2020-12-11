@@ -8,6 +8,7 @@
 class Texture
 {
 public:
+    Texture();
     Texture(std::string path);
 
     void loadFromFile(std::string path);
@@ -17,7 +18,7 @@ public:
     int getChannels();
 
     void  setPixel(int x, int y, Pixel pixel);
-    Pixel getPixel(int x, int y, Pixel pixel);
+    Pixel getPixel(int x, int y);
 
     void *getRaw();
 

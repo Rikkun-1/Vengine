@@ -5,17 +5,20 @@
 #include <string>
 #include <vector>
 
+#include "device.h"
+
 struct ShaderModule
 {
-    VkShaderModule             handle = VK_NULL_HANDLE;
-    std::string                entry  = "main";
-    VkDevice                   logicalDevice;
-    enum VkShaderStageFlagBits stage;
+    VkShaderModule              handle;
+    const LogicalDevice               *device;
+    std::string                 entry;
+    enum VkShaderStageFlagBits  stage;
 
-    ShaderModule(VkDevice                   logicalDevice,
+    ShaderModule();
+    ShaderModule(const LogicalDevice              &device,
                  const std::vector<char>    &code,
                  enum VkShaderStageFlagBits stage,
-                 std::string                entry);
+                 const std::string          &entry);
 
     ~ShaderModule();
 };

@@ -14,6 +14,8 @@ public:
     vkSettings settings;
     bool framebufferResized = false;
 
+    Renderer();
+
     void run();
 
     void changeModel(Model model);

@@ -6,16 +6,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <chrono>
-
 #include <vulkan/vulkan.h>
 
 #include <vector>
-
-#include "Vertex.h"
-#include "commandBuffer.h"
 #include "device.h"
-
+#include "commandPool.h"
+#include "vertex.h"
 
 struct UniformBufferObject
 {
@@ -32,7 +28,7 @@ struct Buffer
     VkDeviceSize          size;
     const LogicalDevice   *device;
 
-    Buffer() = default;
+    Buffer();
 
     Buffer(const LogicalDevice *logicalDevice);
 

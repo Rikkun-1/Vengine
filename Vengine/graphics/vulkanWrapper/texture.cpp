@@ -1,6 +1,8 @@
 #include "texture.h"
 
-static void setupSamplerCreateInfo(LogicalDevice        &device,
+#include <stdexcept>
+
+static void setupSamplerCreateInfo(const LogicalDevice        &device,
                                    VkSamplerCreateInfo  &samplerInfo)
 {
     samplerInfo.sType     = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -54,7 +56,7 @@ void createTextureImage(void               *pixels,
 
 
     transitionImageLayout(commandPool,
-                          textureImage.handle,
+                          textureImage,
                           VK_FORMAT_R8G8B8A8_SRGB,
                           VK_IMAGE_LAYOUT_UNDEFINED,
                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
@@ -67,14 +69,14 @@ void createTextureImage(void               *pixels,
 
 
     transitionImageLayout(commandPool,
-                          textureImage.handle,
+                          textureImage,
                           VK_FORMAT_R8G8B8A8_SRGB,
                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
 
-void createTextureImageView(LogicalDevice  &device,
+void createTextureImageView(const LogicalDevice  &device,
                             Image          &textureImage,
                             VkImageView    &textureImageView)
 {
@@ -84,7 +86,7 @@ void createTextureImageView(LogicalDevice  &device,
                                        VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
-void createTextureSampler(LogicalDevice    &device,
+void createTextureSampler(const LogicalDevice    &device,
                           VkSampler        &textureSampler)
 {
     VkSamplerCreateInfo samplerInfo{};

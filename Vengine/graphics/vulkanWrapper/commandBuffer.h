@@ -2,11 +2,8 @@
 
 #include <vulkan/vulkan.h>
 
-#include <vector>
-
-#include "CommandPool.h"
+#include "commandPool.h"
 #include "swapChain.h"
-
 
 void writeCommandBuffersForDrawing(CommandPool                  &commandPool,
                                    SwapChain                    &swapChain,

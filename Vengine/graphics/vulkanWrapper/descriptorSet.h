@@ -2,8 +2,12 @@
 
 #include <vulkan/vulkan.h>
 
+#include <stdexcept>
+#include <array>
 #include <vector>
 
+#include "device.h"
+#include "buffer.h"
 
 void createDescriptorSets(const LogicalDevice          &device,
                           VkDescriptorPool             descriptorPool,

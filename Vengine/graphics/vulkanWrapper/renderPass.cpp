@@ -1,6 +1,9 @@
 #include "renderPass.h"
 
+#include <stdexcept>
+
 #include "image.h"
+
 
 static void fillColorAttachmentDescription(VkAttachmentDescription &colorAttachment)
 {

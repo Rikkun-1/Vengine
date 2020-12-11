@@ -1,6 +1,6 @@
 #include "frameBuffer.h"
 
-#include <array>
+#include <stdexcept>
 
 VkFramebuffer createFrameBuffer(const LogicalDevice              &device,
                                 VkRenderPass                      renderPass,

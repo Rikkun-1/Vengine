@@ -1,9 +1,8 @@
 #include "transitionImageLayout.h"
 
-#include "commandBuffer.h"
-#include "image.h"
+#include <stdexcept>
 
-static enum class TransitionType
+enum class TransitionType
 {
     WRITE_OPTIMAL         = 0,
     SHADER_READ_OPTIMAL   = 1,
@@ -11,7 +10,7 @@ static enum class TransitionType
 };
 
 
-static struct ImageTransitionInfo
+struct ImageTransitionInfo
 {
     VkImageMemoryBarrier barrier{};
 
@@ -43,9 +42,6 @@ void ImageTransitionInfo::setupForTransition(TransitionType transitionType,
         case TransitionType::DEPTH_STENCIL_OPTIMAL:
 
             setupForDepthStencil(imageFormat); break;
-
-        default:
-            throw std::invalid_argument("unsupported layout transition!");
     }
 }
 
@@ -100,7 +96,8 @@ static TransitionType getTransitionType(VkImageLayout  oldLayout,
             newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
     {
         return TransitionType::DEPTH_STENCIL_OPTIMAL;
-    }
+    } else
+         throw std::invalid_argument("unsupported layout transition!");
 }
 
 

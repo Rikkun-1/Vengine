@@ -3,8 +3,14 @@
 #include <vulkan/vulkan.h>
 
 #include <vector>
-#include <iostream>
 #include <optional>
+
+struct SwapChainSupportDetails
+{
+    VkSurfaceCapabilitiesKHR        capabilities;
+    std::vector<VkSurfaceFormatKHR> formats;
+    std::vector<VkPresentModeKHR>   presentModes;
+};
 
 struct QueueFamilyIndices
 {
@@ -16,17 +22,20 @@ struct QueueFamilyIndices
     }
 };
 
-
 struct LogicalDevice
 {
-    VkDevice         handle;
-    VkPhysicalDevice physicalDevice;
+    VkDevice           handle;
+    VkPhysicalDevice   physicalDevice;
     
     QueueFamilyIndices familyIndices;
 
     VkQueue graphicsQueue;
     VkQueue presentQueue;
 };
+
+
+SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice physicalDevice,
+                                              VkSurfaceKHR     surface);
 
 
 QueueFamilyIndices findQueueFamilies(VkPhysicalDevice  physicalDevice,
