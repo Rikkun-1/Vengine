@@ -9,6 +9,7 @@ class Texture
 {
 public:
     Texture();
+    ~Texture();
     Texture(std::string path);
 
     void loadFromFile(std::string path);
@@ -27,6 +28,6 @@ private:
     int height;
     int channels;
 
-    Pixel *pixels;
+    std::vector<Pixel> pixels;
 };
 

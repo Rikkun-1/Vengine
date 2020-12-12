@@ -9,6 +9,8 @@ Texture::Texture()
     int channels = 0;
 }
 
+Texture::~Texture() {}
+
 Texture::Texture(std::string path)
 {
     loadFromFile(path);
@@ -20,7 +22,7 @@ int Texture::getChannels() { return channels; }
 
 void Texture::loadFromFile(std::string path)
 {
-    pixels = reinterpret_cast<Pixel *>(vkTools::loadImage(path, width, height, channels));
+    vkTools::loadImage(path, width, height, channels, pixels);
 }
 
 void Texture::setPixel(int x, int y, Pixel pixel)
@@ -35,5 +37,5 @@ Pixel Texture::getPixel(int x, int y)
 
 void *Texture::getRaw()
 {
-    return static_cast<void *>(pixels);
+    return static_cast<void *>(pixels.data());
 }

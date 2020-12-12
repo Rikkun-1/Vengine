@@ -18,8 +18,12 @@ public:
 
     void run();
 
-    void changeModel(Model model);
-    void changeTexture(Texture texture);
+    void setModel(Model model);
+    void setMesh(Mesh mesh);
+    void setTexture(Texture texture);
+    void pushModel();
+    void pushMesh   (bool rewriteCommandBuffers = true);
+    void pushTexture(bool rewriteCommandBuffers = true);
 
     void loadShader(Shader shader);
 
@@ -69,7 +73,6 @@ private:
     size_t currentFrame      = 0;
 
     Model   model;
-    Texture texture;
 
     Shader vertexShader;
     Shader fragmentShader;
@@ -81,6 +84,7 @@ private:
     void initVulkan();
     void mainLoop();
     void drawFrame();
+    void writeCommandsForDrawing();
     void recreateSwapChain();
     void cleanupSwapChain();
     void cleanup();

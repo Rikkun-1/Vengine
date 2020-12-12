@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 VkDescriptorPool createDescriptorPool(const LogicalDevice  &device,
-                                      int             size)
+                                      int                   size)
 {
     std::array<VkDescriptorPoolSize, 2> poolSizes{};
 
@@ -19,6 +19,7 @@ VkDescriptorPool createDescriptorPool(const LogicalDevice  &device,
     poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes    = poolSizes.data();
     poolInfo.maxSets       = static_cast<uint32_t>(size);
+    poolInfo.flags         = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
     VkDescriptorPool descriptorPool;
     if(vkCreateDescriptorPool(device.handle, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)

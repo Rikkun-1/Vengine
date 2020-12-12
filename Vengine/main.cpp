@@ -12,6 +12,8 @@
 #include "graphics/Renderer.h"
 #include "graphics/Shader.h"
 
+#include "graphics/vkTools.h"
+
 int main() 
 {
     Mesh    mesh("models/viking_room.obj");
@@ -19,17 +21,16 @@ int main()
 
     Model model(mesh, texture);
 
-    Shader vertexShader  ("shaders/bin/vert.spv", ShaderStages::VERTEX_STAGE);
+    Shader vertexShader("shaders/bin/vert.spv", ShaderStages::VERTEX_STAGE);
     Shader fragmentShader("shaders/bin/frag.spv", ShaderStages::FRAGMENT_STAGE);
-
+        
     for(int x = 0; x < 1000; x++)
         texture.setPixel(x, x, Pixel{255, 255, 255});
 
     Renderer app;
-    app.changeModel(model);
-    app.changeTexture(texture);
     app.loadShader(vertexShader);
     app.loadShader(fragmentShader);
+    app.setModel(model);
 
     try 
     {
@@ -40,6 +41,6 @@ int main()
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
-
+    
     return EXIT_SUCCESS;
 }

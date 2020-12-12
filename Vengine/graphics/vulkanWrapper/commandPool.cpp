@@ -40,9 +40,8 @@ CommandPool::CommandPool()
 
 CommandPool::CommandPool(const LogicalDevice *device)
 {
-    handle           = VK_NULL_HANDLE;
-    device           = device;
-    queueFamilyIndex = device->familyIndices.graphicsFamily.value();
+    handle = VK_NULL_HANDLE;
+    setDevice(device);
 }
 
 void CommandPool::create() 

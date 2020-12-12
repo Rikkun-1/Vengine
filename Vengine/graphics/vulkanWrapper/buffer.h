@@ -25,11 +25,11 @@ struct UniformBufferObject
 struct Buffer
 {
     VkBuffer              handle;
-    VkDeviceMemory        memory;
     VkDeviceSize          size;
-    const LogicalDevice   *device;
+    const LogicalDevice  *device;
 
     Buffer();
+    ~Buffer();
 
     Buffer(const LogicalDevice *logicalDevice);
 
@@ -44,6 +44,9 @@ struct Buffer
     void destroy();
 
 protected:
+    bool            alive;    
+    VkDeviceMemory  memory;
+
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage);
 
     void allocateMemory(const VkMemoryRequirements &memRequirements,

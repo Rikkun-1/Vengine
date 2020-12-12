@@ -31,14 +31,91 @@ void Renderer::loadShader(Shader shader)
     }
 }
 
-void Renderer::changeModel(Model model) 
+void Renderer::setModel(Model model) 
 {
     this->model = model;
 }
 
-void Renderer::changeTexture(Texture texture) 
+void Renderer::setMesh(Mesh mesh) 
 {
-    this->texture = texture;
+    this->model.mesh = mesh;
+}
+
+void Renderer::setTexture(Texture texture) 
+{
+    this->model.texture = texture;
+}
+
+void Renderer::pushModel() 
+{
+    pushMesh(false);
+    pushTexture();
+}
+
+void Renderer::pushMesh(bool rewriteCommandBuffers) 
+{      
+    vkDeviceWaitIdle(device.handle);
+
+    if(!vertexBuffer.device)
+        vertexBuffer.setDevice(&device);
+
+    if(!indexBuffer.device)
+        indexBuffer.setDevice(&device);
+
+    vertexBuffer.destroy();
+    indexBuffer.destroy();
+
+    createVertexBuffer(commandPool,
+                       model.mesh.vertices,
+                       vertexBuffer);
+            
+    createIndexBuffer(commandPool,
+                      model.mesh.indices,
+                      indexBuffer);
+
+    if(rewriteCommandBuffers)
+        writeCommandsForDrawing();
+}
+
+void Renderer::pushTexture(bool rewriteCommandBuffers) 
+{
+    VkExtent3D textureExtent {
+        model.texture.getWidth(),
+        model.texture.getHeight(),
+        1
+    };
+    vkDeviceWaitIdle(device.handle);
+
+    if(!textureImage.device)
+        textureImage.setDevice(&device);
+    
+    vkDestroyImageView(device.handle, textureImageView, nullptr);
+    textureImage.destroy();
+    createTextureImage(model.texture.getRaw(),
+                        model.texture.getChannels(),
+                        textureExtent,
+                        commandPool,
+                        textureImage);
+    createTextureImageView(device, textureImage, textureImageView);
+    
+    if(descriptorSets.data())
+        vkFreeDescriptorSets(device.handle,
+                             descriptorPool,
+                             descriptorSets.size(),
+                             descriptorSets.data());
+   
+    
+    createDescriptorSets(device,
+                         descriptorPool,
+                         descriptorSetLayout,
+                         descriptorSets,
+                         uniformBuffers,
+                         textureImageView,
+                         textureSampler,
+                         swapChain.images.size());
+
+    if(rewriteCommandBuffers)
+        writeCommandsForDrawing();
 }
 
 void Renderer::run()
@@ -94,10 +171,6 @@ void Renderer::initVulkan()
 
     renderPass          = createRenderPass(device, swapChain.imageFormat);
 
-    descriptorSetLayout = createDescriptorSetLayout(device.handle);
-
-    pipelineLayout      = createPipelineLayout(device.handle, descriptorSetLayout);
-
     vertexShaderModule.setDevice(device);
     fragmentShaderModule.setDevice(device);
 
@@ -108,6 +181,9 @@ void Renderer::initVulkan()
     fragmentShaderModule.create(fragmentShader.binaryCode,
                                 VK_SHADER_STAGE_FRAGMENT_BIT,
                                 fragmentShader.entry);
+    
+    descriptorSetLayout = createDescriptorSetLayout(device.handle);
+    pipelineLayout      = createPipelineLayout(device.handle, descriptorSetLayout);
 
     graphicsPipeline    = createGraphicsPipeline(device,
                                                  swapChain.extent,
@@ -127,60 +203,24 @@ void Renderer::initVulkan()
 
     swapChain.createFrameBuffers(renderPass, depthImageView);
 
-    VkExtent3D textureExtent {
-        model.texture.getWidth(),
-        model.texture.getHeight(),
-        1
-    };
-
-    createTextureImage(model.texture.getRaw(),
-                       model.texture.getChannels(),
-                       textureExtent,
-                       commandPool,
-                       textureImage);
-
-    createTextureImageView(device, textureImage, textureImageView);
-
-    createTextureSampler(device, textureSampler);
-
-    createVertexBuffer(commandPool,
-                       model.mesh.vertices,
-                       vertexBuffer);
-
-    createIndexBuffer(commandPool,
-                      model.mesh.indices,
-                      indexBuffer);
-
     createUniformBuffers(device,
                          uniformBuffers,
                          swapChain.images.size());
 
     descriptorPool = createDescriptorPool(device, swapChain.images.size());
 
-    createDescriptorSets(device, 
-                         descriptorPool,
-                         descriptorSetLayout,
-                         descriptorSets,
-                         uniformBuffers,
-                         textureImageView,
-                         textureSampler,
-                         swapChain.images.size());
-
     commandBuffers.resize(swapChain.images.size());
     commandPool.allocateCommandBuffers(commandBuffers.size(),
                                        commandBuffers.data());
     
-    writeCommandBuffersForDrawing(commandPool,
-                                  swapChain,
-                                  renderPass,
-                                  graphicsPipeline,
-                                  pipelineLayout,
-                                  vertexBuffer.handle,
-                                  indexBuffer.handle,
-                                  model.mesh.indices.size(),
-                                  descriptorSets,
-                                  commandBuffers);
-                                  
+    createTextureSampler(device, textureSampler);
+    
+    if(!model.mesh.vertices.empty())
+        pushMesh(false);
+
+    if(model.texture.getRaw())
+        pushTexture();
+
     createSyncObjects(device,
                       MAX_FRAMES_IN_FLIGHT,
                       swapChain,
@@ -190,14 +230,30 @@ void Renderer::initVulkan()
                       imagesInFlight);
 }
 
+size_t frame = 0;
+
 void Renderer::mainLoop()
-{
-    static auto startTime = std::chrono::high_resolution_clock::now();
+{   
+    std::vector<Model> models;
+    models.push_back(Model(Mesh("models/viking_room.obj"), Texture("textures/viking_room.png")));
+    models.push_back(Model(Mesh("models/viking_room.obj"), Texture("textures/Car Texture.png")));
+    models.push_back(Model(Mesh("models/viking_room.obj"), Texture("textures/concrete.jpg")));
+    models.push_back(Model(Mesh("models/viking_room.obj"), Texture("textures/shapes.jpg")));
+    models.push_back(Model(Mesh("models/viking_room.obj"), Texture("textures/steel.jpg")));
+    models.push_back(Model(Mesh("models/viking_room.obj"), Texture("textures/wood.jpg")));
     
-    bool modelChanged   = false;
-    bool textureChanged = false;
+    models.push_back(Model(Mesh("models/LowPolyCars.obj"), Texture("textures/viking_room.png")));
+    models.push_back(Model(Mesh("models/LowPolyCars.obj"), Texture("textures/Car Texture.png")));
+    models.push_back(Model(Mesh("models/LowPolyCars.obj"), Texture("textures/concrete.jpg")));
+    models.push_back(Model(Mesh("models/LowPolyCars.obj"), Texture("textures/shapes.jpg")));
+    models.push_back(Model(Mesh("models/LowPolyCars.obj"), Texture("textures/steel.jpg")));
+    models.push_back(Model(Mesh("models/LowPolyCars.obj"), Texture("textures/wood.jpg")));
+    
+    int tick = 0;
+    static float lastTime = 0;
     while(!glfwWindowShouldClose(pWindow))
     {
+        static auto startTime = std::chrono::high_resolution_clock::now();
         auto currentTime = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
         model.rotation.z = time * 5;
@@ -205,91 +261,21 @@ void Renderer::mainLoop()
         //model.scale.z   = time / 4;
         //model.scale.x   = time / 4;
         glfwPollEvents();
+
         drawFrame();
         
-        if(time > 2 && !modelChanged)
+        if(tick > 1)
+            tick = 0;
+
+        if(time - lastTime > 0.7)
         {
-            modelChanged = true;
-            Mesh    mesh("models/LowPolyCars.obj");
-            //Texture texture("textures/viking_room.png");
-
-            model = Model(mesh, model.texture);
-            changeModel(model);
-            
-            vkDeviceWaitIdle(device.handle);
-
-            vertexBuffer.destroy();
-            createVertexBuffer(commandPool,
-                               model.mesh.vertices,
-                               vertexBuffer);
-            
-            indexBuffer.destroy();
-            createIndexBuffer(commandPool,
-                              model.mesh.indices,
-                              indexBuffer);
-
-            writeCommandBuffersForDrawing(commandPool,
-                                          swapChain,
-                                          renderPass,
-                                          graphicsPipeline,
-                                          pipelineLayout,
-                                          vertexBuffer.handle,
-                                          indexBuffer.handle,
-                                          model.mesh.indices.size(),
-                                          descriptorSets,
-                                          commandBuffers);
-        }
-        if(time > 4 && !textureChanged)
-        {
-            textureChanged = true;
-            
-            Texture texture("textures/shapes.jpg");
-
-            VkExtent3D textureExtent {
-                texture.getWidth(),
-                texture.getHeight(),
-                1
-            };
-            vkDeviceWaitIdle(device.handle);
-
-            model = Model(model.mesh, texture);
-            changeModel(model);
-
-            textureImage.destroy();
-
-            createTextureImage(model.texture.getRaw(),
-                               model.texture.getChannels(),
-                               textureExtent,
-                               commandPool,
-                               textureImage);
-
-            createTextureImageView(device, textureImage, textureImageView);
-            
-            vkDestroyDescriptorPool(device.handle, descriptorPool, nullptr);
-            descriptorPool = createDescriptorPool(device, swapChain.images.size());
-
-            createDescriptorSets(device, 
-                                 descriptorPool,
-                                 descriptorSetLayout,
-                                 descriptorSets,
-                                 uniformBuffers,
-                                 textureImageView,
-                                 textureSampler,
-                                 swapChain.images.size());
-
-            writeCommandBuffersForDrawing(commandPool,
-                                        swapChain,
-                                        renderPass,
-                                        graphicsPipeline,
-                                        pipelineLayout,
-                                        vertexBuffer.handle,
-                                        indexBuffer.handle,
-                                        model.mesh.indices.size(),
-                                        descriptorSets,
-                                        commandBuffers);
+            lastTime = time;
+            setModel(models[tick]);
+            pushModel();
+            tick++;
         }
     }
-
+    
     // прежде чем выйти из главного цикла мы ждем чтобы видеокарта закончила выполнения последнего
     // командного буфера 
     vkDeviceWaitIdle(device.handle);
@@ -499,6 +485,20 @@ void Renderer::drawFrame()
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
+void Renderer::writeCommandsForDrawing()
+{
+    writeCommandBuffersForDrawing(commandPool,
+                                  swapChain,
+                                  renderPass,
+                                  graphicsPipeline,
+                                  pipelineLayout,
+                                  vertexBuffer.handle,
+                                  indexBuffer.handle,
+                                  model.mesh.indices.size(),
+                                  descriptorSets,
+                                  commandBuffers);
+}
+
 void Renderer::cleanupSwapChain()
 {
     vkDestroyImageView(device.handle, depthImageView, nullptr);
@@ -528,10 +528,9 @@ void Renderer::cleanup()
 
     vkDestroySampler(device.handle, textureSampler, nullptr);
     vkDestroyImageView(device.handle, textureImageView, nullptr);
+    textureImage.destroy();
 
     vkDestroyDescriptorSetLayout(device.handle, descriptorSetLayout, nullptr);
-    
-    textureImage.destroy();
 
     indexBuffer.destroy();
     vertexBuffer.destroy();

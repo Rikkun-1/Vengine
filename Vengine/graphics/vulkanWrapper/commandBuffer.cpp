@@ -73,6 +73,7 @@ void writeCommandBuffersForDrawing(CommandPool                  &commandPool,
                                    std::vector<VkCommandBuffer> &commandBuffers)
 {
     commandBuffers.resize(swapChain.frameBuffers.size());
+    commandPool.freeCommandBuffers(commandBuffers.size(), commandBuffers.data());
     commandPool.allocateCommandBuffers(commandBuffers.size(),
                                        commandBuffers.data());
 

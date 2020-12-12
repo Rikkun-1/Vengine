@@ -13,11 +13,8 @@ Image::Image()
     resetImageInfo();
 }
 
-Image::Image(const LogicalDevice *device)
+Image::Image(const LogicalDevice *device) : Buffer(device)
 {
-    device   = device;
-    handle   = VK_NULL_HANDLE;
-    memory   = VK_NULL_HANDLE;
     resetImageInfo();
 }
 
@@ -51,7 +48,6 @@ void Image::createImage(const VkExtent3D         &extent,
     if(vkCreateImage(this->device->handle, &imageInfo, nullptr, &this->handle) != VK_SUCCESS)
         throw std::runtime_error("failed to create image!");
 }
-
 void Image::create(const VkExtent3D      &extent,
                    VkFormat              format,
                    VkImageTiling         tiling,
@@ -60,9 +56,9 @@ void Image::create(const VkExtent3D      &extent,
 {
     width    = extent.width;
     height   = extent.height;
+    alive    = true;
 
     createImage(extent, format, tiling, usage);
-    
     VkMemoryRequirements memRequirements;
     vkGetImageMemoryRequirements(this->device->handle, this->handle, &memRequirements);
     allocateMemory(memRequirements, properties);
@@ -71,16 +67,13 @@ void Image::create(const VkExtent3D      &extent,
 
 void Image::destroy()
 {
-    Buffer::destroy();
-    if(handle)
+    if(alive)
     {
          vkDestroyImage(device->handle, handle, nullptr);
-         vkFreeMemory(device->handle, memory, nullptr);
-
-         handle = VK_NULL_HANDLE;
-         memory = VK_NULL_HANDLE;
+         Buffer::destroy();
 
          resetImageInfo();
+         alive = false;
     }
 }
 

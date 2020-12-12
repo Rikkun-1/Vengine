@@ -38,11 +38,17 @@ Buffer::Buffer()
     this->size   = 0;
 }
 
-Buffer::Buffer(const LogicalDevice *device)
+Buffer::Buffer(const LogicalDevice *device) : Buffer()
 {
-    Buffer();
-    this->device = device;
+    setDevice(device);
 }
+
+Buffer::~Buffer()
+{
+    destroy();
+}
+
+
 
 void Buffer::setDevice(const LogicalDevice *device)
 {
@@ -59,20 +65,22 @@ void Buffer::create(VkDeviceSize           size,
     vkGetBufferMemoryRequirements(device->handle, this->handle, &memRequirements);
     allocateMemory(memRequirements, properties);
     vkBindBufferMemory(device->handle, this->handle, this->memory, 0);
+
+    alive = true;
 }
 
 void Buffer::destroy()
 {
-    if(handle)
+    if(alive)
     {
         vkDestroyBuffer(device->handle, handle, nullptr);
-        handle = VK_NULL_HANDLE;
     }
-    if(memory)
+    if(alive)
     {
         vkFreeMemory(device->handle, memory, nullptr);
-        memory = VK_NULL_HANDLE;
     }
+    alive = false;
+    size = 0;
 }
 
 void Buffer::createBuffer(VkDeviceSize        size,
@@ -89,7 +97,7 @@ void Buffer::createBuffer(VkDeviceSize        size,
     bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
     if(vkCreateBuffer(device->handle, &bufferInfo, nullptr, &this->handle) != VK_SUCCESS)
-        throw std::runtime_error("failed to create vertex buffer!");
+        throw std::runtime_error("failed to create buffer!");
 }
 
 void Buffer::allocateMemory(const VkMemoryRequirements &memRequirements,
@@ -117,8 +125,8 @@ void Buffer::mapMemory(VkDeviceSize  dataSize,
 
 
 static void copyBuffer(CommandPool          &commandPool,
-                       Buffer               srcBuffer,
-                       Buffer               dstBuffer,
+                       Buffer               &srcBuffer,
+                       Buffer               &dstBuffer,
                        VkDeviceSize         size)
 {
     VkCommandBuffer commandBuffer;
@@ -183,8 +191,6 @@ static void transferDataToGPU(CommandPool            &commandPool,
     stagingBuffer.mapMemory(dataSize, data);
 
     transferBufferToGPU(commandPool, usage, stagingBuffer, bufferOnGpu);
-
-    stagingBuffer.destroy();
 }
 
 
@@ -238,7 +244,6 @@ void createUniformBuffers(const LogicalDevice         &device,
     }
 }
 
-#include <iostream>
 void updateUniformBuffer(VkDevice                    logicalDevice,
                          uint32_t                    currentImage,
                          VkExtent2D                  swapChainExtent,
@@ -251,7 +256,6 @@ void updateUniformBuffer(VkDevice                    logicalDevice,
 
     ubo.model = glm::mat4(1.0f);
     rotation  = glm::radians(rotation);
-
 
     ubo.model = glm::translate(ubo.model, position);
 

@@ -25,10 +25,14 @@ static std::vector<char> loadFile(const std::string &filename)
         return buffer;
 }
 
+#include <iostream>
+
 namespace vkTools
 {
-    void loadMesh(std::string           path,
-                  std::vector<Vertex> &vertices,
+    size_t allVertices = 0;
+
+    void loadMesh(std::string            path,
+                  std::vector<Vertex>   &vertices,
                   std::vector<uint32_t> &indices)
     {
         tinyobj::attrib_t attrib;
@@ -62,26 +66,35 @@ namespace vkTools
                 indices.push_back(indices.size());
             }
         }
+        allVertices += vertices.size();
+        std::cout << allVertices << std::endl;
     }
 
 
-    unsigned char *loadImage(const std::string  path,
-                             int                &loadedWidth,
-                             int                &loadedHeight,
-                             int                &loadedChannels)
+    void loadImage(const std::string  path,
+                   int                &loadedWidth,
+                   int                &loadedHeight,
+                   int                &loadedChannels,
+                   std::vector<Pixel> &pixels)
     {
-        stbi_uc *pixels = stbi_load(path.c_str(),
+        stbi_uc *rawPixels = stbi_load(path.c_str(),
                                     &loadedWidth,
                                     &loadedHeight,
                                     &loadedChannels,
                                     STBI_rgb_alpha);
+        
         loadedChannels = 4; // STBI_rgb_alpha имеет 4 канала
-        if(!pixels)
+
+        if(!rawPixels)
             throw std::runtime_error("failed to load texture image! " + path);
 
-        return pixels;
-    }
+        size_t rawPixelsByteSize = loadedWidth * loadedHeight * loadedChannels;
 
+        pixels.resize(loadedWidth * loadedHeight);
+
+        memcpy(pixels.data(), rawPixels, rawPixelsByteSize);
+        stbi_image_free(rawPixels);
+    }
 
     std::vector<char> loadShader(const std::string &filename)
     {
