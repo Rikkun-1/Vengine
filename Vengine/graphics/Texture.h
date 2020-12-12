@@ -27,6 +27,6 @@ private:
     int height;
     int channels;
 
-    std::vector<Pixel> pixels;
+    Pixel *pixels;
 };
 

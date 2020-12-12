@@ -60,7 +60,7 @@ static void beginRenderPass(VkRenderPass        renderPass,
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-/*
+
 void writeCommandBuffersForDrawing(CommandPool                  &commandPool,
                                    SwapChain                    &swapChain,
                                    VkRenderPass                 renderPass,
@@ -113,7 +113,7 @@ void writeCommandBuffersForDrawing(CommandPool                  &commandPool,
             throw std::runtime_error("failed to record command buffer!");
     }
 }
-*/
+
 
 VkCommandBuffer beginSingleTimeCommands(CommandPool &commandPool)
 {

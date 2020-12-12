@@ -103,8 +103,8 @@ static void setupSubpassDescription(const VkAttachmentReference &colorAttachment
 VkRenderPass createRenderPass(const LogicalDevice &device,
                               VkFormat            swapChainImageFormat)
 {
-    VkAttachmentDescription colorAttachment;
-    VkAttachmentDescription depthAttachment;
+    VkAttachmentDescription colorAttachment{};
+    VkAttachmentDescription depthAttachment{};
 
     fillColorAttachmentDescription(colorAttachment);
     fillDepthAttachmentDescription(depthAttachment);

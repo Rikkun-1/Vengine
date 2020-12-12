@@ -4,6 +4,8 @@ struct PipelineFixedFunctions
 {
     VkPipelineVertexInputStateCreateInfo         vertexInput;
     VkPipelineInputAssemblyStateCreateInfo       inputAssembly;
+    VkViewport                                   viewport;       
+    VkRect2D                                     scissor;
     VkPipelineViewportStateCreateInfo            viewportState;
     VkPipelineRasterizationStateCreateInfo       rasterizer;
     VkPipelineMultisampleStateCreateInfo         multisampling;
@@ -11,10 +13,13 @@ struct PipelineFixedFunctions
     VkPipelineColorBlendAttachmentState          colorBlendAttachment;
     VkPipelineColorBlendStateCreateInfo          colorBlending;
     VkPipelineDynamicStateCreateInfo             dynamicState;
+
+
+
 };
 
-void setupShaderStageInfo(const ShaderModule               &shader,
-                          VkPipelineShaderStageCreateInfo  &shaderStage)
+static void setupShaderStageInfo(const ShaderModule               &shader,
+                                 VkPipelineShaderStageCreateInfo  &shaderStage)
 {
     shaderStage.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     shaderStage.stage  = shader.stage;
@@ -26,9 +31,9 @@ void setupShaderStageInfo(const ShaderModule               &shader,
     shaderStage.pSpecializationInfo = nullptr;
 }
 
-void setupMultipleShaderStages(const ShaderModule          &vertexShader,
-                               const ShaderModule          &fragmentShader,
-                               std::vector<VkPipelineShaderStageCreateInfo> &shaderStages) 
+static void setupMultipleShaderStages(const ShaderModule          &vertexShader,
+                                      const ShaderModule          &fragmentShader,
+                                      std::vector<VkPipelineShaderStageCreateInfo> &shaderStages) 
 {
     VkPipelineShaderStageCreateInfo  vertexStageInfo{};
     VkPipelineShaderStageCreateInfo  fragmentStageInfo{};
@@ -40,17 +45,17 @@ void setupMultipleShaderStages(const ShaderModule          &vertexShader,
     shaderStages.push_back(fragmentStageInfo);
 }
 
-void setupAssemblyStateInfo(VkPipelineInputAssemblyStateCreateInfo &inputAssembly)
+static void setupAssemblyStateInfo(VkPipelineInputAssemblyStateCreateInfo &inputAssembly)
 {
     inputAssembly.sType    = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     inputAssembly.primitiveRestartEnable = VK_FALSE;
 }
 
-void setupBindingDescriptions(VkPipelineVertexInputStateCreateInfo &vertexInput)
+static void setupVertexInputDescriptions(VkPipelineVertexInputStateCreateInfo &vertexInput)
 {
-    auto bindingDescription    = Vertex::getBindingDescription();
-    auto attributeDescriptions = Vertex::getAttributeDescriptions();
+    static auto bindingDescription    = Vertex::getBindingDescription();
+    static auto attributeDescriptions = Vertex::getAttributeDescriptions();
 
     vertexInput.sType                           = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertexInput.vertexBindingDescriptionCount   = 1;
@@ -59,21 +64,25 @@ void setupBindingDescriptions(VkPipelineVertexInputStateCreateInfo &vertexInput)
     vertexInput.pVertexAttributeDescriptions    = attributeDescriptions.data();
 }
 
-void setupViewPortStateInfo(const VkExtent2D                   &swapChainExtent,
-                            VkPipelineViewportStateCreateInfo  &viewportState)
+static void setupViewPortAndScissor(const VkExtent2D  &swapChainExtent,
+                                    VkViewport        &viewport, 
+                                    VkRect2D          &scissor)
+    {
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width  = (float) swapChainExtent.width;
+        viewport.height = (float) swapChainExtent.height;
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+
+        scissor.offset = {0, 0};
+        scissor.extent = swapChainExtent;
+    }
+
+static void setupViewPortStateInfo(VkViewport                         &viewport, 
+                                   VkRect2D                           &scissor,
+                                   VkPipelineViewportStateCreateInfo  &viewportState)
 {
-    VkViewport viewport{};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width  = (float) swapChainExtent.width;
-    viewport.height = (float) swapChainExtent.height;
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-
-    VkRect2D scissor{};
-    scissor.offset = {0, 0};
-    scissor.extent = swapChainExtent;
-
     viewportState.sType         = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     viewportState.viewportCount = 1;
     viewportState.pViewports    = &viewport;
@@ -82,7 +91,7 @@ void setupViewPortStateInfo(const VkExtent2D                   &swapChainExtent,
     //наличие несколких viewport или scissors требует раширение
 }
 
-void setupRasterizerStateInfo(VkPipelineRasterizationStateCreateInfo  &rasterizer)
+static void setupRasterizerStateInfo(VkPipelineRasterizationStateCreateInfo  &rasterizer)
 {
     rasterizer.sType            = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizer.depthClampEnable = VK_FALSE; // VK_TRUE требует расширени€
@@ -117,7 +126,7 @@ void setupRasterizerStateInfo(VkPipelineRasterizationStateCreateInfo  &rasterize
     rasterizer.depthBiasSlopeFactor    = 0.0f; // Optional
 }
 
-void setupMultisamplingStateInfo(VkPipelineMultisampleStateCreateInfo &multisampling)
+static void setupMultisamplingStateInfo(VkPipelineMultisampleStateCreateInfo &multisampling)
 {
     multisampling.sType                 = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     multisampling.sampleShadingEnable   = VK_FALSE; 
@@ -128,7 +137,7 @@ void setupMultisamplingStateInfo(VkPipelineMultisampleStateCreateInfo &multisamp
     multisampling.alphaToOneEnable      = VK_FALSE; // Optional
 }
 
-void setupDepthStencilStateInfo(VkPipelineDepthStencilStateCreateInfo &depthStencil)
+static void setupDepthStencilStateInfo(VkPipelineDepthStencilStateCreateInfo  &depthStencil)
 {
     depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
     depthStencil.depthTestEnable       = VK_TRUE;
@@ -138,15 +147,15 @@ void setupDepthStencilStateInfo(VkPipelineDepthStencilStateCreateInfo &depthSten
 
     // позвол€ет определить окно в рамки которого глубина фрагмента должна попадать чтобы пройти тест
     depthStencil.depthBoundsTestEnable = VK_FALSE;
-    depthStencil.minDepthBounds        = 0.0f; // Optional
-    depthStencil.maxDepthBounds        = 1.0f; // Optional
+    //depthStencil.minDepthBounds        = 0.0f; // Optional
+    //depthStencil.maxDepthBounds        = 1.0f; // Optional
 
     depthStencil.stencilTestEnable = VK_FALSE;
-    depthStencil.front             = {}; // Optional
-    depthStencil.back              = {}; // Optional
+    //depthStencil.front             = {}; // Optional
+    //depthStencil.back              = {}; // Optional
 }
-
-void setupColorAttachmentState(VkPipelineColorBlendAttachmentState    &colorBlendAttachment)
+        
+static void setupColorAttachmentState(VkPipelineColorBlendAttachmentState    &colorBlendAttachment)
 {
     colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | 
                                           VK_COLOR_COMPONENT_G_BIT | 
@@ -154,23 +163,23 @@ void setupColorAttachmentState(VkPipelineColorBlendAttachmentState    &colorBlen
                                           VK_COLOR_COMPONENT_A_BIT;
 
     // здесь очень много параметров с которыми можно поигратьс€ чтобы настроить смешение цветов
-    colorBlendAttachment.blendEnable = VK_TRUE;
+    colorBlendAttachment.blendEnable = false;
 
     // мы просто складываем два цвета, опира€сь на прозрачность
-    colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-    colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-    colorBlendAttachment.colorBlendOp        = VK_BLEND_OP_ADD;
+    //colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    //colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    //colorBlendAttachment.colorBlendOp        = VK_BLEND_OP_ADD;
 
-    colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-    colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-    colorBlendAttachment.alphaBlendOp        = VK_BLEND_OP_ADD;
+    //colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    //colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    //colorBlendAttachment.alphaBlendOp        = VK_BLEND_OP_ADD;
 
     // finalColor.rgb = newAlpha * newColor + (1 - newAlpha) * oldColor;
     // finalColor.a = newAlpha.a;
 }
 
-void setupColorBlendStateInfo(VkPipelineColorBlendStateCreateInfo        &colorBlending,
-                              const VkPipelineColorBlendAttachmentState  &colorBlendAttachment) 
+static void setupColorBlendStateInfo(VkPipelineColorBlendStateCreateInfo        &colorBlending,
+                                     const VkPipelineColorBlendAttachmentState  &colorBlendAttachment) 
 {
     colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 
@@ -191,7 +200,7 @@ void setupColorBlendStateInfo(VkPipelineColorBlendStateCreateInfo        &colorB
     colorBlending.blendConstants[3] = 0.0f; // Optional
 }
 
-void setupDynamicStates(VkPipelineDynamicStateCreateInfo  &dynamicState) 
+static void setupDynamicStates(VkPipelineDynamicStateCreateInfo  &dynamicState) 
 {   
     // Ќекоторые настройки pipeline, такие как размер viewport, толщина линий и blendConstants 
     // можно настраивать на ходу, не пересоздава€ весь pipeline
@@ -205,23 +214,28 @@ void setupDynamicStates(VkPipelineDynamicStateCreateInfo  &dynamicState)
     dynamicState.pDynamicStates    = dynamicStates.data();
 }
 
-void setupFixedFunctions(const VkExtent2D            &swapChainExtent,
-                         PipelineFixedFunctions      &fixedFunctions)
+static void setupFixedFunctions(const VkExtent2D            &swapChainExtent,
+                                PipelineFixedFunctions      &fixedFunctions)
 {
-    setupBindingDescriptions   (fixedFunctions.vertexInput);
-    setupAssemblyStateInfo     (fixedFunctions.inputAssembly);
-    setupViewPortStateInfo     (swapChainExtent, 
-                                fixedFunctions.viewportState);
-    setupRasterizerStateInfo   (fixedFunctions.rasterizer);
-    setupMultisamplingStateInfo(fixedFunctions.multisampling);
-    setupDepthStencilStateInfo (fixedFunctions.depthStencil);
-    setupColorAttachmentState  (fixedFunctions.colorBlendAttachment);
-    setupColorBlendStateInfo   (fixedFunctions.colorBlending, 
-                                fixedFunctions.colorBlendAttachment);
-    setupDynamicStates         (fixedFunctions.dynamicState);
+    setupVertexInputDescriptions(fixedFunctions.vertexInput);
+    setupAssemblyStateInfo      (fixedFunctions.inputAssembly);
+    setupViewPortAndScissor     (swapChainExtent,
+                                 fixedFunctions.viewport, 
+                                 fixedFunctions.scissor);
+    setupViewPortStateInfo      (fixedFunctions.viewport, 
+                                 fixedFunctions.scissor,
+                                 fixedFunctions.viewportState);
+    setupRasterizerStateInfo    (fixedFunctions.rasterizer);
+    setupMultisamplingStateInfo (fixedFunctions.multisampling);
+    setupDepthStencilStateInfo  (fixedFunctions.depthStencil);
+    setupColorAttachmentState   (fixedFunctions.colorBlendAttachment);
+    setupColorBlendStateInfo    (fixedFunctions.colorBlending, 
+                                 fixedFunctions.colorBlendAttachment);
+
+    //setupDynamicStates          (fixedFunctions.dynamicState);
 }
 
-VkPipeline createGraphicsPipeline(const LogicalDevice               &device,
+VkPipeline createGraphicsPipeline(const LogicalDevice         &device,
                                   VkExtent2D                  &swapChainExtent,
                                   VkRenderPass                renderPass,
                                   const ShaderModule          &vertexShader,
@@ -229,8 +243,47 @@ VkPipeline createGraphicsPipeline(const LogicalDevice               &device,
                                   const VkDescriptorSetLayout &descriptorSetLayout,
                                   const VkPipelineLayout      &pipelineLayout)
 {
-    std::vector<VkPipelineShaderStageCreateInfo> shaderStages = {};
-    setupMultipleShaderStages  (vertexShader, fragmentShader, shaderStages);
+    VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+    VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+    
+    setupShaderStageInfo(vertexShader, vertShaderStageInfo);
+    setupShaderStageInfo(fragmentShader, fragShaderStageInfo);
+
+    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
+    
+    PipelineFixedFunctions fixedFunctions{};
+    setupFixedFunctions(swapChainExtent, fixedFunctions);
+
+    VkGraphicsPipelineCreateInfo pipelineInfo{};
+    pipelineInfo.sType               = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipelineInfo.stageCount          = 2;
+    pipelineInfo.pStages             = shaderStages;
+    pipelineInfo.pVertexInputState   = &fixedFunctions.vertexInput;
+    pipelineInfo.pInputAssemblyState = &fixedFunctions.inputAssembly;
+    pipelineInfo.pViewportState      = &fixedFunctions.viewportState;
+    pipelineInfo.pRasterizationState = &fixedFunctions.rasterizer;
+    pipelineInfo.pMultisampleState   = &fixedFunctions.multisampling;
+    pipelineInfo.pDepthStencilState  = &fixedFunctions.depthStencil;
+    pipelineInfo.pColorBlendState    = &fixedFunctions.colorBlending;
+    pipelineInfo.layout              = pipelineLayout;
+    pipelineInfo.renderPass          = renderPass;
+    pipelineInfo.subpass             = 0;
+    pipelineInfo.basePipelineHandle  = VK_NULL_HANDLE;
+
+    VkPipeline graphicsPipeline;
+    if (vkCreateGraphicsPipelines(device.handle, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create graphics pipeline!");
+    }
+
+    return graphicsPipeline;
+}
+
+/*
+
+*/
+/*
+*   std::vector<VkPipelineShaderStageCreateInfo> shaderStages = {};
+    setupMultipleShaderStages(vertexShader, fragmentShader, shaderStages);
   
     PipelineFixedFunctions fixedFunctions{};
     setupFixedFunctions(swapChainExtent,
@@ -252,7 +305,7 @@ VkPipeline createGraphicsPipeline(const LogicalDevice               &device,
     pipelineInfo.pMultisampleState   = &fixedFunctions.multisampling;
     pipelineInfo.pDepthStencilState  = &fixedFunctions.depthStencil;
     pipelineInfo.pColorBlendState    = &fixedFunctions.colorBlending;
-    pipelineInfo.pDynamicState       = &fixedFunctions.dynamicState; 
+    //pipelineInfo.pDynamicState       = &fixedFunctions.dynamicState; 
 
     pipelineInfo.layout     = pipelineLayout;
     pipelineInfo.renderPass = renderPass;
@@ -268,6 +321,4 @@ VkPipeline createGraphicsPipeline(const LogicalDevice               &device,
     // это позвол€ет создавать много pipeline за один вызов
     if(vkCreateGraphicsPipelines(device.handle, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
         throw std::runtime_error("failed to setup graphics pipeline!");
-
-    return graphicsPipeline;
-}
+*/

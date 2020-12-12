@@ -38,7 +38,6 @@ CommandPool::CommandPool()
     device = VK_NULL_HANDLE;
 }
 
-
 CommandPool::CommandPool(const LogicalDevice *device)
 {
     handle           = VK_NULL_HANDLE;
@@ -48,7 +47,7 @@ CommandPool::CommandPool(const LogicalDevice *device)
 
 void CommandPool::create() 
 {
-    VkCommandPoolCreateInfo poolInfo;
+    VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 
     // исполнение командных буферов происходит когда мы отправл€ем их в одно из семейств очередей

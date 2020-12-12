@@ -45,6 +45,11 @@ Buffer::Buffer(const LogicalDevice *device)
     this->device = device;
 }
 
+void Buffer::setDevice(const LogicalDevice *device)
+{
+     this->device = device;
+}
+
 void Buffer::create(VkDeviceSize           size,
                     VkBufferUsageFlags     usage,
                     VkMemoryPropertyFlags  properties)
@@ -153,9 +158,10 @@ static void transferBufferToGPU(CommandPool         &commandPool,
                                 Buffer              &srcBuffer,
                                 Buffer              &gpuBuffer)
 {
+    gpuBuffer.setDevice(commandPool.device);
     gpuBuffer.create(srcBuffer.size,
                      VK_BUFFER_USAGE_TRANSFER_DST_BIT | 
-                     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
                      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     copyBuffer(commandPool, 

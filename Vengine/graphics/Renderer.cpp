@@ -12,33 +12,31 @@ static void framebufferResizeCallback(GLFWwindow *window, int width, int height)
     app->framebufferResized = true;
 }
 
-Renderer::Renderer() {};
+Renderer::Renderer() 
+{
+
+}
 
 void Renderer::loadShader(Shader shader) 
 {
     if(shader.stage == ShaderStages::VERTEX_STAGE)
     {
-        ShaderModule shaderModule(device,
-                                  shader.binaryCode,
-                                  VK_SHADER_STAGE_VERTEX_BIT,
-                                  shader.entry);
-
-        this->vertexShader = shaderModule;
-    }
-
-    if(shader.stage == ShaderStages::VERTEX_STAGE)
+        this->vertexShader = shader;
+    } 
+    else if(shader.stage == ShaderStages::FRAGMENT_STAGE)
     {
-         ShaderModule shaderModule(device,
-                                   shader.binaryCode,
-                                   VK_SHADER_STAGE_FRAGMENT_BIT,
-                                   shader.entry);
-
-        this->fragmentShader = shaderModule;
+        this->fragmentShader = shader;
     }
 }
 
 void Renderer::changeModel(Model model) 
 {
+    this->model = model;
+}
+
+void Renderer::changeTexture(Texture texture) 
+{
+    this->texture = texture;
 }
 
 void Renderer::run()
@@ -98,11 +96,23 @@ void Renderer::initVulkan()
 
     pipelineLayout      = createPipelineLayout(device.handle, descriptorSetLayout);
 
+    vertexShaderModule.setDevice(device);
+    fragmentShaderModule.setDevice(device);
+
+    
+    vertexShaderModule.create(vertexShader.binaryCode,
+                              VK_SHADER_STAGE_VERTEX_BIT,
+                              vertexShader.entry);
+
+    fragmentShaderModule.create(fragmentShader.binaryCode,
+                                VK_SHADER_STAGE_FRAGMENT_BIT,
+                                fragmentShader.entry);
+
     graphicsPipeline    = createGraphicsPipeline(device,
                                                  swapChain.extent,
                                                  renderPass,
-                                                 vertexShader,
-                                                 fragmentShader,
+                                                 vertexShaderModule,
+                                                 fragmentShaderModule,
                                                  descriptorSetLayout,
                                                  pipelineLayout);
 
@@ -144,7 +154,7 @@ void Renderer::initVulkan()
                          uniformBuffers,
                          swapChain.images.size());
 
-    createDescriptorPool(device, swapChain.images.size());
+    descriptorPool = createDescriptorPool(device, swapChain.images.size());
 
     createDescriptorSets(device, 
                          descriptorPool,
@@ -155,9 +165,10 @@ void Renderer::initVulkan()
                          textureSampler,
                          swapChain.images.size());
 
-    commandPool.allocateCommandBuffers(static_cast<uint32_t>(model.mesh.indices.size()),
+    commandBuffers.resize(swapChain.images.size());
+    commandPool.allocateCommandBuffers(commandBuffers.size(),
                                        commandBuffers.data());
-    /*
+    
     writeCommandBuffersForDrawing(commandPool,
                                   swapChain,
                                   renderPass,
@@ -168,7 +179,7 @@ void Renderer::initVulkan()
                                   model.mesh.indices.size(),
                                   descriptorSets,
                                   commandBuffers);
-                                  */
+                                  
     createSyncObjects(device,
                       MAX_FRAMES_IN_FLIGHT,
                       swapChain,
@@ -220,8 +231,8 @@ void Renderer::recreateSwapChain()
     graphicsPipeline    = createGraphicsPipeline(device,
                                                  swapChain.extent,
                                                  renderPass,
-                                                 vertexShader,
-                                                 fragmentShader,
+                                                 vertexShaderModule,
+                                                 fragmentShaderModule,
                                                  descriptorSetLayout,
                                                  pipelineLayout);
 
@@ -236,7 +247,7 @@ void Renderer::recreateSwapChain()
                          uniformBuffers,
                          swapChain.images.size());
 
-     createDescriptorPool(device, swapChain.images.size());
+    createDescriptorPool(device, swapChain.images.size());
 
     createDescriptorSets(device, 
                          descriptorPool,
@@ -246,7 +257,7 @@ void Renderer::recreateSwapChain()
                          textureImageView,
                          textureSampler,
                          swapChain.images.size());
-    /*
+    
     writeCommandBuffersForDrawing(commandPool,
                                   swapChain,
                                   renderPass,
@@ -256,7 +267,7 @@ void Renderer::recreateSwapChain()
                                   indexBuffer.handle,
                                   model.mesh.indices.size(),
                                   descriptorSets,
-                                  commandBuffers);*/
+                                  commandBuffers);
 }
 
 void Renderer::drawFrame()
@@ -424,12 +435,16 @@ void Renderer::cleanup()
     vkDestroySampler(device.handle, textureSampler, nullptr);
     vkDestroyImageView(device.handle, textureImageView, nullptr);
 
-    textureImage.destroy();
 
     vkDestroyDescriptorSetLayout(device.handle, descriptorSetLayout, nullptr);
+    
+    textureImage.destroy();
 
     indexBuffer.destroy();
     vertexBuffer.destroy();
+
+    vertexShaderModule.destroy();
+    fragmentShaderModule.destroy();
 
     for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {

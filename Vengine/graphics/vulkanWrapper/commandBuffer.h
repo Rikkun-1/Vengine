@@ -3,8 +3,8 @@
 #include <vulkan/vulkan.h>
 
 #include "commandPool.h"
-//#include "swapChain.h"
-/*
+#include "swapChain.h"
+
 void writeCommandBuffersForDrawing(CommandPool                  &commandPool,
                                    SwapChain                    &swapChain,
                                    VkRenderPass                 renderPass,
@@ -15,7 +15,7 @@ void writeCommandBuffersForDrawing(CommandPool                  &commandPool,
                                    uint32_t                     indicesCount,
                                    std::vector<VkDescriptorSet> &descriptorSets,
                                    std::vector<VkCommandBuffer> &commandBuffers);
-                                   */
+                                   
 
 VkCommandBuffer beginSingleTimeCommands(CommandPool  &commandPool);
 

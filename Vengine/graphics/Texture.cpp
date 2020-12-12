@@ -16,24 +16,24 @@ Texture::Texture(std::string path)
 
 int Texture::getWidth()    { return width;  }
 int Texture::getHeight()   { return height; }
-int Texture::getChannels() { return height; }
+int Texture::getChannels() { return channels; }
 
 void Texture::loadFromFile(std::string path)
 {
-    vkTools::loadImage(path, width, height, channels);
+    pixels = reinterpret_cast<Pixel *>(vkTools::loadImage(path, width, height, channels));
 }
 
 void Texture::setPixel(int x, int y, Pixel pixel)
 {
-    pixels[y * height + x] = pixel;
+    pixels[(y * height + x) * channels] = pixel;
 }
 
 Pixel Texture::getPixel(int x, int y)
 {
-    return pixels[y * height + x];
+    return pixels[(y * height + x) * channels];
 }
 
 void *Texture::getRaw()
 {
-    return static_cast<void *>(pixels.data());
+    return static_cast<void *>(pixels);
 }

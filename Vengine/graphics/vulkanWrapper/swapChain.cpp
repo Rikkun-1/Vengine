@@ -125,15 +125,20 @@ void SwapChain::createFrameBuffers(VkRenderPass         renderPass,
     }
 }
 
-void SwapChain::create(const LogicalDevice &device,
-                       VkSurfaceKHR        surface,
-                       VkExtent2D          &requiredExtent)
+void SwapChain::create(LogicalDevice  &device,
+                       VkSurfaceKHR    surface,
+                       VkExtent2D     &requiredExtent)
 {
+    this->device = &device;
+
     SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device.physicalDevice, surface);
     VkSurfaceFormatKHR      surfaceFormat    = chooseSwapSurfaceFormat(swapChainSupport.formats);
     VkPresentModeKHR        presentMode      = chooseSwapPresentMode(swapChainSupport.presentModes);
     VkExtent2D              actualExtent     = chooseSwapExtent(requiredExtent, swapChainSupport.capabilities);
     uint32_t                imageCount       = getMinImageCount(swapChainSupport);
+    
+    imageFormat = surfaceFormat.format;
+    extent      = actualExtent;
 
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType            = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -167,9 +172,6 @@ void SwapChain::create(const LogicalDevice &device,
     vkGetSwapchainImagesKHR(device.handle, handle, &imageCount, images.data());
 
     createImageViews();
-
-    imageFormat = surfaceFormat.format;
-    extent      = actualExtent;
 }
 
 void SwapChain::destroy()

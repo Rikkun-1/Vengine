@@ -19,6 +19,7 @@ public:
     void run();
 
     void changeModel(Model model);
+    void changeTexture(Texture texture);
 
     void loadShader(Shader shader);
 
@@ -53,12 +54,12 @@ private:
     Buffer                      indexBuffer;
     std::vector<Buffer>         uniformBuffers;
         
-    Image          textureImage;
-    VkImageView    textureImageView;
-    VkSampler      textureSampler;
+    Image                       textureImage;
+    VkImageView                 textureImageView;
+    VkSampler                   textureSampler;
 
-    Image          depthImage;
-    VkImageView    depthImageView;
+    Image                       depthImage;
+    VkImageView                 depthImageView;
 
     VkDescriptorPool             descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
@@ -67,10 +68,14 @@ private:
     int MAX_FRAMES_IN_FLIGHT = 2;
     size_t currentFrame      = 0;
 
-    Model model;
+    Model   model;
+    Texture texture;
 
-    ShaderModule vertexShader;
-    ShaderModule fragmentShader;
+    Shader vertexShader;
+    Shader fragmentShader;
+
+    ShaderModule vertexShaderModule;
+    ShaderModule fragmentShaderModule;
 
     void initWindow();
     void initVulkan();

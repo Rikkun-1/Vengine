@@ -106,7 +106,7 @@ static void setupImageMemoryBarrier(VkImageLayout          oldLayout,
                                     VkImage                image,
                                     VkImageMemoryBarrier  &barrier)
 {
-    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.sType     = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     barrier.oldLayout = oldLayout;
     barrier.newLayout = newLayout;
 
@@ -134,12 +134,13 @@ void transitionImageLayout(CommandPool    &commandPool,
     VkCommandBuffer commandBuffer;
     commandBuffer = beginSingleTimeCommands(commandPool);
     
-    TransitionType transitionType = getTransitionType(oldLayout, newLayout);
 
     ImageTransitionInfo  transitionInfo{};
+    setupImageMemoryBarrier(oldLayout, newLayout, image.handle, transitionInfo.barrier);
+    
+    TransitionType transitionType = getTransitionType(oldLayout, newLayout);
     transitionInfo.setupForTransition(transitionType, format);
     
-    setupImageMemoryBarrier(oldLayout, newLayout, image.handle, transitionInfo.barrier);
 
     vkCmdPipelineBarrier(
         commandBuffer,

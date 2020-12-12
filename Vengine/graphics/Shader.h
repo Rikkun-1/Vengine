@@ -17,6 +17,7 @@ public:
     std::string       entry = "main";
     std::vector<char> binaryCode;
 
+    Shader() = default;
     Shader(const std::string &filename, ShaderStages stage);
 };
 

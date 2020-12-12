@@ -15,7 +15,7 @@ namespace vkTools
     unsigned char *loadImage(std::string  path,
                              int          &loadedWidth,
                              int          &loadedHeight,
-                             int          &loadedChanels);  
+                             int          &loadedChannels);  
 
     std::vector<char> loadShader(const std::string &filename);
 }

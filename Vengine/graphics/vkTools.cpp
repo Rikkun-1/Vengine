@@ -68,14 +68,14 @@ namespace vkTools
     unsigned char *loadImage(const std::string  path,
                              int                &loadedWidth,
                              int                &loadedHeight,
-                             int                &loadedChanels)
+                             int                &loadedChannels)
     {
         stbi_uc *pixels = stbi_load(path.c_str(),
                                     &loadedWidth,
                                     &loadedHeight,
-                                    &loadedChanels,
+                                    &loadedChannels,
                                     STBI_rgb_alpha);
-
+        loadedChannels = 4; // STBI_rgb_alpha имеет 4 канала
         if(!pixels)
             throw std::runtime_error("failed to load texture image! " + path);
 

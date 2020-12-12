@@ -26,37 +26,31 @@ void Image::resetImageInfo()
     size     = 0;
     width    = 0;
     height   = 0;
-    channels = 0;
-}
-
-void Image::setDevice(const LogicalDevice *device)
-{
-     this->device = device;
 }
 
 void Image::createImage(const VkExtent3D         &extent,
                               VkFormat           format,
                               VkImageTiling      tiling,
                               VkImageUsageFlags  usage)
-    {
-        VkImageCreateInfo imageInfo{};
-        imageInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        imageInfo.imageType     = VK_IMAGE_TYPE_2D;
-        imageInfo.extent.width  = extent.width;
-        imageInfo.extent.height = extent.height;
-        imageInfo.extent.depth  = extent.depth;
-        imageInfo.mipLevels     = 1;
-        imageInfo.arrayLayers   = 1;
-        imageInfo.format        = format;
-        imageInfo.tiling        = tiling;
-        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageInfo.usage         = usage;
-        imageInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
-        imageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
+{
+    VkImageCreateInfo imageInfo{};
+    imageInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType     = VK_IMAGE_TYPE_2D;
+    imageInfo.extent.width  = extent.width;
+    imageInfo.extent.height = extent.height;
+    imageInfo.extent.depth  = extent.depth;
+    imageInfo.mipLevels     = 1;
+    imageInfo.arrayLayers   = 1;
+    imageInfo.format        = format;
+    imageInfo.tiling        = tiling;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageInfo.usage         = usage;
+    imageInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
 
-        if(vkCreateImage(this->device->handle, &imageInfo, nullptr, &this->handle) != VK_SUCCESS)
-            throw std::runtime_error("failed to create image!");
-    }
+    if(vkCreateImage(this->device->handle, &imageInfo, nullptr, &this->handle) != VK_SUCCESS)
+        throw std::runtime_error("failed to create image!");
+}
 
 void Image::create(const VkExtent3D      &extent,
                    VkFormat              format,
@@ -64,6 +58,9 @@ void Image::create(const VkExtent3D      &extent,
                    VkImageUsageFlags     usage,
                    VkMemoryPropertyFlags properties)
 {
+    width    = extent.width;
+    height   = extent.height;
+
     createImage(extent, format, tiling, usage);
     
     VkMemoryRequirements memRequirements;
@@ -208,6 +205,7 @@ void createDepthResources(CommandPool      &commandPool,
         1
     };
 
+    depthImage.setDevice(commandPool.device);
     depthImage.create(depthImageExtent,
                       depthFormat, 
                       VK_IMAGE_TILING_OPTIMAL, 

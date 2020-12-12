@@ -6,9 +6,6 @@
 #include "commandBuffer.h"
 #include "image.h"
 
-struct Image;
-struct CommandPool;
-
 void transitionImageLayout(CommandPool    &commandPool,
                            Image          &image,
                            VkFormat       format,

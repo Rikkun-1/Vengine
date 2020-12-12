@@ -15,10 +15,15 @@ struct ShaderModule
     enum VkShaderStageFlagBits  stage;
 
     ShaderModule();
-    ShaderModule(const LogicalDevice        &device,
-                 const std::vector<char>    &code,
-                 enum VkShaderStageFlagBits stage,
-                 const std::string          &entry);
+    
+    void setDevice(const LogicalDevice    &device);
+
+    void create(const std::vector<char>    &code,
+                VkShaderStageFlagBits       stage,
+                const std::string          &entry);
+
+    void destroy();
+
 
     ~ShaderModule();
 };

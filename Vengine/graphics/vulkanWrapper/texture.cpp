@@ -46,7 +46,8 @@ void createTextureImage(void               *pixels,
 
     stagingBuffer.mapMemory(textureImage.size, 
                             pixels);
-
+    
+    textureImage.setDevice(commandPool.device);
     textureImage.create(textureExtent,
                         VK_FORMAT_R8G8B8A8_SRGB,
                         VK_IMAGE_TILING_OPTIMAL,

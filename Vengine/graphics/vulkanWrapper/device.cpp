@@ -102,34 +102,34 @@ static bool checkDeviceExtensionsSupport(VkPhysicalDevice                physica
 static bool isDeviceSuitable(VkPhysicalDevice                physicalDevice,
                              VkSurfaceKHR                    surface,
                              const std::vector<const char *> &requiredExtensions)
-        {
-            QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
+{
+    QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
 
-            VkPhysicalDeviceProperties deviceProperties;
-            VkPhysicalDeviceFeatures   deviceFeatures;
+    VkPhysicalDeviceProperties deviceProperties;
+    VkPhysicalDeviceFeatures   deviceFeatures;
 
-            vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
-            vkGetPhysicalDeviceFeatures  (physicalDevice, &deviceFeatures);
+    vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
+    vkGetPhysicalDeviceFeatures  (physicalDevice, &deviceFeatures);
 
-            bool extensionsSupported = checkDeviceExtensionsSupport(physicalDevice, requiredExtensions);
+    bool extensionsSupported = checkDeviceExtensionsSupport(physicalDevice, requiredExtensions);
 
-            bool swapChainAdequate = false;
-            if(extensionsSupported)
-            {
-                SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice, surface);
-                swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
-            }
+    bool swapChainAdequate = false;
+    if(extensionsSupported)
+    {
+        SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice, surface);
+        swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+    }
 
-            VkPhysicalDeviceFeatures supportedFeatures;
-            vkGetPhysicalDeviceFeatures(physicalDevice, &supportedFeatures);
+    VkPhysicalDeviceFeatures supportedFeatures;
+    vkGetPhysicalDeviceFeatures(physicalDevice, &supportedFeatures);
 
-            return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
-                   deviceFeatures.geometryShader                                       &&
-                   extensionsSupported                                                 &&
-                   swapChainAdequate                                                   &&
-                   indices.has_value()                                                 &&
-                   supportedFeatures.samplerAnisotropy;
-        }
+    return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
+            deviceFeatures.geometryShader                                       &&
+            extensionsSupported                                                 &&
+            swapChainAdequate                                                   &&
+            indices.has_value()                                                 &&
+            supportedFeatures.samplerAnisotropy;
+}
 
 static void setupQueueFamilies(const std::set<uint32_t>             &uniqueQueueFamilies,
                                std::vector<VkDeviceQueueCreateInfo> &queueCreateInfos)
@@ -207,7 +207,8 @@ LogicalDevice createLogicalDevice(VkInstance                      instance,
     createInfo.ppEnabledExtensionNames = requiredExtensions.data();
     
     LogicalDevice device;
-    device.familyIndices = indices;
+    device.familyIndices  = indices;
+    device.physicalDevice = physicalDevice;
     if(vkCreateDevice(physicalDevice, &createInfo, nullptr, &device.handle) != VK_SUCCESS)
         throw std::runtime_error("failed to create logical device!");
 

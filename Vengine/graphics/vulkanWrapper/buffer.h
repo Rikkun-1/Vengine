@@ -37,6 +37,8 @@ struct Buffer
                 VkBufferUsageFlags    usage, 
                 VkMemoryPropertyFlags properties);
     
+    void setDevice(const LogicalDevice *device);
+
     void mapMemory(VkDeviceSize dataSize, const void *data);
     
     void destroy();

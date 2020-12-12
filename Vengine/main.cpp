@@ -24,6 +24,7 @@ int main()
 
     Renderer app;
     app.changeModel(model);
+    app.changeTexture(texture);
     app.loadShader(vertexShader);
     app.loadShader(fragmentShader);
 

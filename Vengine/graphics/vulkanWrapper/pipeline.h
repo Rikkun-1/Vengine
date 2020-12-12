@@ -9,7 +9,7 @@
 #include "shaderModule.h"
 #include "device.h"
 
-VkPipeline createGraphicsPipeline(const LogicalDevice               &device,
+VkPipeline createGraphicsPipeline(const LogicalDevice         &device,
                                   VkExtent2D                  &swapChainExtent,
                                   VkRenderPass                renderPass,
                                   const ShaderModule          &vertexShader,

@@ -21,9 +21,9 @@ public:
     VkFormat                    imageFormat;
     VkExtent2D                  extent;
 
-    void create(const LogicalDevice &device,
-                VkSurfaceKHR         surface,
-                VkExtent2D          &requiredExtent);
+    void create(LogicalDevice  &device,
+                VkSurfaceKHR    surface,
+                VkExtent2D     &requiredExtent);
 
     void destroy();
     

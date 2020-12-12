@@ -8,12 +8,10 @@
 
 struct Image: public Buffer
 {
-    const LogicalDevice   *device;
     VkImage                handle;
 
     int                    width;
     int                    height;
-    int                    channels;
 
     Image();
     Image(const LogicalDevice *device);
@@ -23,8 +21,6 @@ struct Image: public Buffer
                 VkImageTiling         tiling,
                 VkImageUsageFlags     usage,
                 VkMemoryPropertyFlags properties);
-
-    void setDevice(const LogicalDevice *device);
 
     void destroy();
 

@@ -32,7 +32,7 @@ VkDescriptorSetLayout createDescriptorSetLayout(VkDevice  logicalDevice)
                                     1, 
                                     VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
                                     VK_SHADER_STAGE_FRAGMENT_BIT,
-                                    uboLayoutBinding);
+                                    samplerLayoutBinding);
 
     std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
 
