@@ -22,6 +22,9 @@ int main()
     Shader vertexShader  ("shaders/bin/vert.spv", ShaderStages::VERTEX_STAGE);
     Shader fragmentShader("shaders/bin/frag.spv", ShaderStages::FRAGMENT_STAGE);
 
+    for(int x = 0; x < 1000; x++)
+        texture.setPixel(x, x, Pixel{255, 255, 255});
+
     Renderer app;
     app.changeModel(model);
     app.changeTexture(texture);

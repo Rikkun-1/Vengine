@@ -25,12 +25,12 @@ void Texture::loadFromFile(std::string path)
 
 void Texture::setPixel(int x, int y, Pixel pixel)
 {
-    pixels[(y * height + x) * channels] = pixel;
+    pixels[(y * width + x)] = pixel;
 }
 
 Pixel Texture::getPixel(int x, int y)
 {
-    return pixels[(y * height + x) * channels];
+    return pixels[(y * width + x)];
 }
 
 void *Texture::getRaw()

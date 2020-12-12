@@ -194,16 +194,100 @@ void Renderer::mainLoop()
 {
     static auto startTime = std::chrono::high_resolution_clock::now();
     
+    bool modelChanged   = false;
+    bool textureChanged = false;
     while(!glfwWindowShouldClose(pWindow))
     {
         auto currentTime = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
         model.rotation.z = time * 5;
         //model.position.z = time;
-        model.scale.z   = time / 4;
-        model.scale.x   = time / 4;
+        //model.scale.z   = time / 4;
+        //model.scale.x   = time / 4;
         glfwPollEvents();
         drawFrame();
+        
+        if(time > 2 && !modelChanged)
+        {
+            modelChanged = true;
+            Mesh    mesh("models/LowPolyCars.obj");
+            //Texture texture("textures/viking_room.png");
+
+            model = Model(mesh, model.texture);
+            changeModel(model);
+            
+            vkDeviceWaitIdle(device.handle);
+
+            vertexBuffer.destroy();
+            createVertexBuffer(commandPool,
+                               model.mesh.vertices,
+                               vertexBuffer);
+            
+            indexBuffer.destroy();
+            createIndexBuffer(commandPool,
+                              model.mesh.indices,
+                              indexBuffer);
+
+            writeCommandBuffersForDrawing(commandPool,
+                                          swapChain,
+                                          renderPass,
+                                          graphicsPipeline,
+                                          pipelineLayout,
+                                          vertexBuffer.handle,
+                                          indexBuffer.handle,
+                                          model.mesh.indices.size(),
+                                          descriptorSets,
+                                          commandBuffers);
+        }
+        if(time > 4 && !textureChanged)
+        {
+            textureChanged = true;
+            
+            Texture texture("textures/shapes.jpg");
+
+            VkExtent3D textureExtent {
+                texture.getWidth(),
+                texture.getHeight(),
+                1
+            };
+            vkDeviceWaitIdle(device.handle);
+
+            model = Model(model.mesh, texture);
+            changeModel(model);
+
+            textureImage.destroy();
+
+            createTextureImage(model.texture.getRaw(),
+                               model.texture.getChannels(),
+                               textureExtent,
+                               commandPool,
+                               textureImage);
+
+            createTextureImageView(device, textureImage, textureImageView);
+            
+            vkDestroyDescriptorPool(device.handle, descriptorPool, nullptr);
+            descriptorPool = createDescriptorPool(device, swapChain.images.size());
+
+            createDescriptorSets(device, 
+                                 descriptorPool,
+                                 descriptorSetLayout,
+                                 descriptorSets,
+                                 uniformBuffers,
+                                 textureImageView,
+                                 textureSampler,
+                                 swapChain.images.size());
+
+            writeCommandBuffersForDrawing(commandPool,
+                                        swapChain,
+                                        renderPass,
+                                        graphicsPipeline,
+                                        pipelineLayout,
+                                        vertexBuffer.handle,
+                                        indexBuffer.handle,
+                                        model.mesh.indices.size(),
+                                        descriptorSets,
+                                        commandBuffers);
+        }
     }
 
     // прежде чем выйти из главного цикла мы ждем чтобы видеокарта закончила выполнения последнего
@@ -244,7 +328,6 @@ void Renderer::recreateSwapChain()
                                                  fragmentShaderModule,
                                                  descriptorSetLayout,
                                                  pipelineLayout);
-
     createDepthResources(commandPool,
                          swapChain.extent,
                          depthImage,
@@ -445,7 +528,6 @@ void Renderer::cleanup()
 
     vkDestroySampler(device.handle, textureSampler, nullptr);
     vkDestroyImageView(device.handle, textureImageView, nullptr);
-
 
     vkDestroyDescriptorSetLayout(device.handle, descriptorSetLayout, nullptr);
     
