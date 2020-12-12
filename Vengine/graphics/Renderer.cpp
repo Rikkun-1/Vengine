@@ -1,5 +1,7 @@
 #include "Renderer.h"
 
+#include <chrono>
+
 #ifdef USE_VALIDATION_LAYERS
     const bool enableValidationLayers = false;
 #else
@@ -99,7 +101,6 @@ void Renderer::initVulkan()
     vertexShaderModule.setDevice(device);
     fragmentShaderModule.setDevice(device);
 
-    
     vertexShaderModule.create(vertexShader.binaryCode,
                               VK_SHADER_STAGE_VERTEX_BIT,
                               vertexShader.entry);
@@ -191,8 +192,16 @@ void Renderer::initVulkan()
 
 void Renderer::mainLoop()
 {
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    
     while(!glfwWindowShouldClose(pWindow))
     {
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+        model.rotation.z = time * 5;
+        //model.position.z = time;
+        model.scale.z   = time / 4;
+        model.scale.x   = time / 4;
         glfwPollEvents();
         drawFrame();
     }
@@ -224,10 +233,10 @@ void Renderer::recreateSwapChain()
     cleanupSwapChain();
 
     VkExtent2D swapChainExtent = {width, height};
-    swapChain.destroy();
     swapChain.create(device, surface, swapChainExtent);
 
     renderPass          = createRenderPass(device, swapChain.imageFormat);
+    pipelineLayout      = createPipelineLayout(device.handle, descriptorSetLayout);
     graphicsPipeline    = createGraphicsPipeline(device,
                                                  swapChain.extent,
                                                  renderPass,
@@ -247,7 +256,7 @@ void Renderer::recreateSwapChain()
                          uniformBuffers,
                          swapChain.images.size());
 
-    createDescriptorPool(device, swapChain.images.size());
+    descriptorPool = createDescriptorPool(device, swapChain.images.size());
 
     createDescriptorSets(device, 
                          descriptorPool,
@@ -327,6 +336,9 @@ void Renderer::drawFrame()
     updateUniformBuffer(device.handle,
                         imageIndex,
                         swapChain.extent,
+                        model.position,
+                        model.rotation,
+                        model.scale,
                         uniformBuffers);
 
     VkSubmitInfo submitInfo{};
@@ -407,7 +419,6 @@ void Renderer::drawFrame()
 void Renderer::cleanupSwapChain()
 {
     vkDestroyImageView(device.handle, depthImageView, nullptr);
-
     depthImage.destroy();
 
     // вместо того чтобы создавать новый командный пул и выделять буферы в нем

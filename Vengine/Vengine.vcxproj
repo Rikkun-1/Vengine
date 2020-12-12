@@ -223,8 +223,6 @@
   <ItemGroup>
     <ClInclude Include="graphics\vulkanWrapper\buffer.h" />
     <ClInclude Include="graphics\vulkanWrapper\commandPool.h" />
-    <ClInclude Include="graphics\libraries\stb_image.h" />
-    <ClInclude Include="graphics\libraries\tiny_obj_loader.h" />
     <ClInclude Include="graphics\Renderer.h" />
     <ClInclude Include="graphics\vkSettings.h" />
     <ClInclude Include="graphics\vkTools.h" />

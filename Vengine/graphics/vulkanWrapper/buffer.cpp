@@ -1,6 +1,5 @@
 #include "buffer.h"
 
-#include <chrono>
 #include <stdexcept>
 
 #include "commandBuffer.h"
@@ -154,14 +153,15 @@ static void setupAsUniformBuffer(VkDeviceSize bufferSize,
 }
 
 
-static void transferBufferToGPU(CommandPool         &commandPool,
-                                Buffer              &srcBuffer,
-                                Buffer              &gpuBuffer)
+static void transferBufferToGPU(CommandPool            &commandPool,
+                                VkBufferUsageFlagBits   usage,
+                                Buffer                 &srcBuffer,
+                                Buffer                 &gpuBuffer)
 {
     gpuBuffer.setDevice(commandPool.device);
     gpuBuffer.create(srcBuffer.size,
-                     VK_BUFFER_USAGE_TRANSFER_DST_BIT | 
-                     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
+                     VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+                     usage,
                      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     copyBuffer(commandPool, 
@@ -171,17 +171,18 @@ static void transferBufferToGPU(CommandPool         &commandPool,
 }
 
 
-static void transferDataToGPU(CommandPool         &commandPool,
-                              VkDeviceSize         dataSize,
-                              const void          *data,
-                              Buffer              &bufferOnGpu)
+static void transferDataToGPU(CommandPool            &commandPool,
+                              VkDeviceSize            dataSize,
+                              const void             *data,
+                              VkBufferUsageFlagBits   usage,
+                              Buffer                 &bufferOnGpu)
 {
     Buffer stagingBuffer(commandPool.device);
     setupAsStagingBuffer(dataSize, stagingBuffer);
 
     stagingBuffer.mapMemory(dataSize, data);
 
-    transferBufferToGPU(commandPool, stagingBuffer, bufferOnGpu);
+    transferBufferToGPU(commandPool, usage, stagingBuffer, bufferOnGpu);
 
     stagingBuffer.destroy();
 }
@@ -203,6 +204,7 @@ void createVertexBuffer(CommandPool               &commandPool,
     transferDataToGPU(commandPool,
                       bufferSize,
                       vertices.data(),
+                      VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                       vertexBuffer);
 }
 
@@ -216,6 +218,7 @@ void createIndexBuffer(CommandPool                 &commandPool,
     transferDataToGPU(commandPool,
                       bufferSize,
                       indices.data(),
+                      VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
                       indexBuffer);
 }
 
@@ -235,22 +238,30 @@ void createUniformBuffers(const LogicalDevice         &device,
     }
 }
 
-
+#include <iostream>
 void updateUniformBuffer(VkDevice                    logicalDevice,
                          uint32_t                    currentImage,
                          VkExtent2D                  swapChainExtent,
+                         glm::vec3                   position,
+                         glm::vec3                   rotation,
+                         glm::vec3                   scale,
                          std::vector<Buffer>         &uniformBuffers)
 {
-    static auto startTime = std::chrono::high_resolution_clock::now();
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
     UniformBufferObject ubo{};
-    ubo.model = glm::rotate(glm::mat4(1.0f),              // текущая трансформация
-                            time * glm::radians(90.0f),   // угол
-                            glm::vec3(0.0f, 1.0f, 1.0f)); // ось вращения
 
-    ubo.view = glm::lookAt(glm::vec3(1.0f, 1.0f, 1.0f), // кординаты точки зрения
+    ubo.model = glm::mat4(1.0f);
+    rotation  = glm::radians(rotation);
+
+
+    ubo.model = glm::translate(ubo.model, position);
+
+    ubo.model = glm::rotate(ubo.model, rotation.x, glm::vec3(1.0f, 0.0f, 0.0f)); 
+    ubo.model = glm::rotate(ubo.model, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f)); 
+    ubo.model = glm::rotate(ubo.model, rotation.z, glm::vec3(0.0f, 0.0f, 1.0f)); 
+
+    ubo.model = glm::scale(ubo.model, scale);
+
+    ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), // кординаты точки зрения
                            glm::vec3(0.0f, 0.0f, 0.0f), // координаты центра мира
                            glm::vec3(0.0f, 0.0f, 1.0f));// ось направленная вверх
 
@@ -262,6 +273,7 @@ void updateUniformBuffer(VkDevice                    logicalDevice,
     // GLM была изначально создана для OpenGL, где ось Y перевернута
     // простейший способ компенсировать это - инвертировать Y компоненту
     // коэффициента масштабирования
+
     ubo.proj[1][1] *= -1;
 
     uniformBuffers[currentImage].mapMemory(sizeof(ubo), &ubo);

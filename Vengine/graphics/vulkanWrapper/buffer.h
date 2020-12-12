@@ -72,5 +72,8 @@ void createUniformBuffers(const LogicalDevice         &device,
 void updateUniformBuffer(VkDevice                    logicalDevice,
                          uint32_t                    currentImage,
                          VkExtent2D                  swapChainExtent,
+                         glm::vec3                   position,
+                         glm::vec3                   rotation,
+                         glm::vec3                   scale,
                          std::vector<Buffer>         &uniformBuffers);
 

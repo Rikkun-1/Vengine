@@ -41,36 +41,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="vulkanWrapper\buffer.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="vulkanWrapper\commandBuffer.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="vulkanWrapper\extensionsCheck.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="vulkanWrapper\image.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="vulkanWrapper\queueFamilyIndices.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="vulkanWrapper\setupDevices.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="vulkanWrapper\setupSwapchain.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="vulkanWrapper\setupValidationLayers.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="vulkanWrapper\Vertex.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="vulkanWrapper\vulkanWrapper.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="graphics\Renderer.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -168,36 +138,6 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="vulkanWrapper\buffer.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="vulkanWrapper\commandBuffer.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="vulkanWrapper\extensionsCheck.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="vulkanWrapper\image.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="vulkanWrapper\queueFamilyIndices.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="vulkanWrapper\setupDevices.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="vulkanWrapper\setupSwapchain.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="vulkanWrapper\setupValidationLayers.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="vulkanWrapper\Vertex.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="vulkanWrapper\vulkanWrapper.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="graphics\Renderer.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
@@ -211,12 +151,6 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="graphics\Texture.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="graphics\libraries\stb_image.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="graphics\libraries\tiny_obj_loader.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="graphics\Model.h">
