@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+///////////////////////// STATIC BEG //////////////////////////////
+
 static VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats)
 {
     for(auto &availableFormat : availableFormats)
@@ -83,8 +85,12 @@ static uint32_t getMinImageCount(SwapChainSupportDetails &swapChainSupport)
     return imageCount;
 }
 
+///////////////////////// STATIC END //////////////////////////////
 
-void SwapChain::createImageViews()
+
+///////////////////////// SWAP CHAIN BEG //////////////////////////////
+
+void Swapchain::createImageViews()
 {
     imageViews.resize(images.size());
 
@@ -98,7 +104,7 @@ void SwapChain::createImageViews()
 }
 
 
-void SwapChain::createFrameBuffers(VkRenderPass         renderPass,
+void Swapchain::createFrameBuffers(VkRenderPass         renderPass,
                                    VkImageView          depthImageView)
 {
     frameBuffers.resize(imageViews.size());
@@ -125,7 +131,7 @@ void SwapChain::createFrameBuffers(VkRenderPass         renderPass,
     }
 }
 
-void SwapChain::create(LogicalDevice  &device,
+void Swapchain::create(LogicalDevice  &device,
                        VkSurfaceKHR    surface,
                        VkExtent2D     &requiredExtent)
 {
@@ -174,7 +180,7 @@ void SwapChain::create(LogicalDevice  &device,
     createImageViews();
 }
 
-void SwapChain::destroy()
+void Swapchain::destroy()
 {
     for(auto framebuffer : frameBuffers)
         vkDestroyFramebuffer(device->handle, framebuffer, nullptr);
@@ -188,3 +194,5 @@ void SwapChain::destroy()
     extent      = VkExtent2D{};
     images.clear();
 }
+
+///////////////////////// SWAP SHAIN END //////////////////////////////

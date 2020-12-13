@@ -13,6 +13,9 @@
     const bool enableValidationLayers = true;
 #endif
 
+    
+///////////////////////// PUBLIC BEG //////////////////////////////
+
 /*
 * Проверяет что все требуемые расширения поддеживаются 
 * Выводит в консоль поддерживаемые расширения
@@ -20,7 +23,7 @@
 * Выводит в консоль те расширения которые требуются, но не поддерживаются
 * Возвращает true если все требуемые расширения поддерживаются и false в ином случае
 */
-static bool checkExtensionsSupport(const std::vector<const char *> &requiredExtensions)
+bool checkExtensionsSupport(const std::vector<const char *> &requiredExtensions)
 {
     uint32_t supportedExtensionCount = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &supportedExtensionCount, nullptr);
@@ -62,7 +65,7 @@ static bool checkExtensionsSupport(const std::vector<const char *> &requiredExte
 /*
 * Возвращает список расширений, требуемых для glfw и слоев валидации, если они включены
 */
-static std::vector<const char *> getRequiredExtensions(bool enableValidationLayers)
+std::vector<const char *> getRequiredExtensions(bool enableValidationLayers)
 {
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtensions;
@@ -135,3 +138,5 @@ VkInstance createInstance(const std::vector<const char *> &validationLayers,
 
     return instance;
 }
+
+///////////////////////// PUBLIC END //////////////////////////////

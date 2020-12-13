@@ -1,5 +1,7 @@
 #include "Model.h"
 
+///////////////////////// MODEL BEG //////////////////////////////
+
 Model::Model(Mesh mesh, Texture texture)
 {
     position = glm::vec3(0, 0, 0);
@@ -9,3 +11,5 @@ Model::Model(Mesh mesh, Texture texture)
     this->mesh    = mesh;
     this->texture = texture;
 }
+
+///////////////////////// MODEL END //////////////////////////////

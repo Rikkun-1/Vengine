@@ -4,68 +4,7 @@
 #include <stdexcept>
 #include <set>
 
-SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice  physicalDevice,
-                                              VkSurfaceKHR      surface)
-{
-    SwapChainSupportDetails details;
-
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &details.capabilities);
-
-    uint32_t formatCount;
-    vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr);
-
-    if(formatCount != 0)
-    {
-        details.formats.resize(formatCount);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, details.formats.data());
-    }
-
-    uint32_t presentModeCount;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr);
-
-    if(presentModeCount != 0)
-    {
-        details.presentModes.resize(presentModeCount);
-        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, details.presentModes.data());
-    }
-
-    return details;
-}
-
-/*
-* Возвращает семейства очередей этого физического устройства, 
-* которые удовлетворяет всем требованиям
-*/
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physicalDevice,
-                                      VkSurfaceKHR     surface)
-{
-    QueueFamilyIndices indices;
-
-    uint32_t queueFamilyCount = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
-
-    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies.data());
-
-    int i = 0;
-    for(auto &queueFamily : queueFamilies)
-    {
-        if(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-            indices.graphicsFamily = i;
-
-        VkBool32 presentSupport = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &presentSupport);
-
-        if(presentSupport)
-            indices.presentFamily = i;
-
-        if(indices.has_value())
-            break;
-
-        i++;
-    }
-    return indices;
-}
+///////////////////////// STATIC BEG //////////////////////////////
 
 static bool checkDeviceExtensionsSupport(VkPhysicalDevice                physicalDevice,
                                          const std::vector<const char *> &requiredExtensions)
@@ -106,10 +45,10 @@ static bool isDeviceSuitable(VkPhysicalDevice                physicalDevice,
     QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
 
     VkPhysicalDeviceProperties deviceProperties;
-    VkPhysicalDeviceFeatures   deviceFeatures;
+    VkPhysicalDeviceFeatures   supportedFeatures;
 
     vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
-    vkGetPhysicalDeviceFeatures  (physicalDevice, &deviceFeatures);
+    vkGetPhysicalDeviceFeatures  (physicalDevice, &supportedFeatures);
 
     bool extensionsSupported = checkDeviceExtensionsSupport(physicalDevice, requiredExtensions);
 
@@ -120,15 +59,13 @@ static bool isDeviceSuitable(VkPhysicalDevice                physicalDevice,
         swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     }
 
-    VkPhysicalDeviceFeatures supportedFeatures;
-    vkGetPhysicalDeviceFeatures(physicalDevice, &supportedFeatures);
-
     return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
-            deviceFeatures.geometryShader                                       &&
-            extensionsSupported                                                 &&
-            swapChainAdequate                                                   &&
-            indices.has_value()                                                 &&
-            supportedFeatures.samplerAnisotropy;
+            supportedFeatures.geometryShader                                   &&
+            supportedFeatures.fillModeNonSolid                                 && 
+            supportedFeatures.samplerAnisotropy                                &&
+            extensionsSupported                                                &&
+            swapChainAdequate                                                  &&
+            indices.has_value();
 }
 
 static void setupQueueFamilies(const std::set<uint32_t>             &uniqueQueueFamilies,
@@ -148,10 +85,82 @@ static void setupQueueFamilies(const std::set<uint32_t>             &uniqueQueue
     }
 }
 
-static void setupDeviceFetures(VkPhysicalDeviceFeatures  &deviceFeatures)
+static void setupDeviceFeatures(VkPhysicalDeviceFeatures  &deviceFeatures)
 {
+    deviceFeatures.geometryShader    = VK_TRUE;
+    deviceFeatures.fillModeNonSolid  = VK_TRUE;
     deviceFeatures.samplerAnisotropy = VK_TRUE;
 }
+
+///////////////////////// STATIC END //////////////////////////////
+
+
+///////////////////////// PUBLIC BEG //////////////////////////////
+
+SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice  physicalDevice,
+                                              VkSurfaceKHR      surface)
+{
+    SwapChainSupportDetails details;
+
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &details.capabilities);
+
+    uint32_t formatCount;
+    vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr);
+
+    if(formatCount != 0)
+    {
+        details.formats.resize(formatCount);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, details.formats.data());
+    }
+
+    uint32_t presentModeCount;
+    vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr);
+
+    if(presentModeCount != 0)
+    {
+        details.presentModes.resize(presentModeCount);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, details.presentModes.data());
+    }
+
+    return details;
+}
+
+/*
+* Возвращает семейства очередей этого физического устройства, 
+* которые удовлетворяет всем требованиям
+*/
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice  physicalDevice,
+                                      VkSurfaceKHR     surface)
+{
+    QueueFamilyIndices indices;
+
+    uint32_t queueFamilyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
+
+    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies.data());
+
+    int i = 0;
+    for(auto &queueFamily : queueFamilies)
+    {
+        if(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+            indices.graphicsFamily = i;
+
+        VkBool32 presentSupport = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &presentSupport);
+
+        if(presentSupport)
+            indices.presentFamily = i;
+
+        if(indices.has_value())
+            break;
+
+        i++;
+    }
+    return indices;
+}
+
+
 
 VkPhysicalDevice pickPhysicalDevice(VkInstance                      instance,
                                     VkSurfaceKHR                    surface,
@@ -192,8 +201,7 @@ LogicalDevice createLogicalDevice(VkInstance                      instance,
                        queueCreateInfos);
     
     VkPhysicalDeviceFeatures deviceFeatures{};
-    setupDeviceFetures(deviceFeatures);
-
+    setupDeviceFeatures(deviceFeatures);
 
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -217,3 +225,5 @@ LogicalDevice createLogicalDevice(VkInstance                      instance,
 
     return device;
 }
+
+///////////////////////// PUBLIC END //////////////////////////////

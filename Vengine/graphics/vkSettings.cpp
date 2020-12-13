@@ -1,5 +1,7 @@
 #include "vkSettings.h"
 
+///////////////////////// VK SETTINGS BEG //////////////////////////////
+
 vkSettings::vkSettings()
 {
     windowWidth  = 800;
@@ -23,3 +25,5 @@ vkSettings::vkSettings()
     model_path = "models/viking_room.obj";
     texture_path = "textures/viking_room.png";
 };
+
+///////////////////////// VK SETTINGS END //////////////////////////////

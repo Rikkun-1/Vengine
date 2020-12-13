@@ -2,6 +2,8 @@
 
 #include "vkTools.h"
 
+///////////////////////// TEXTURE BEG //////////////////////////////
+
 Texture::Texture()
 {
     int width    = 0;
@@ -35,7 +37,4 @@ Pixel Texture::getPixel(int x, int y)
     return pixels[(y * width + x)];
 }
 
-void *Texture::getRaw()
-{
-    return static_cast<void *>(pixels.data());
-}
+///////////////////////// TEXTURE END //////////////////////////////

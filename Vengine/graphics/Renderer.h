@@ -11,8 +11,10 @@
 class Renderer
 {
 public:
-    vkSettings settings;
     bool framebufferResized = false;
+
+    vkSettings settings;
+    PipelineFixedFunctions pipelineFixedFunctions;
 
     Renderer();
 
@@ -36,15 +38,13 @@ private:
     VkSurfaceKHR             surface;
 
     LogicalDevice            device;
-    SwapChain                swapChain;
+    Swapchain                swapChain;
     
     VkRenderPass               renderPass;
     VkDescriptorSetLayout      descriptorSetLayout;
     VkPipelineLayout           pipelineLayout;
 
     VkPipeline                 graphicsPipeline;
-
-    std::vector<VkFramebuffer> swapChainFramebuffers;
 
     CommandPool                   commandPool;
     std::vector<VkCommandBuffer>  commandBuffers;
@@ -58,12 +58,12 @@ private:
     Buffer                      indexBuffer;
     std::vector<Buffer>         uniformBuffers;
         
-    Image                       textureImage;
-    VkImageView                 textureImageView;
-    VkSampler                   textureSampler;
+    Image                        textureImage;
+    VkImageView                  textureImageView;
+    VkSampler                    textureSampler;
 
-    Image                       depthImage;
-    VkImageView                 depthImageView;
+    Image                        depthImage;
+    VkImageView                  depthImageView;
 
     VkDescriptorPool             descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
@@ -84,6 +84,11 @@ private:
     void initVulkan();
     void mainLoop();
     void drawFrame();
+    void setupShaderModules();
+    void setupLogicalDevice();
+    void setupSwapchain();
+    void setupCommandPool();
+    void setupPipeline();
     void writeCommandsForDrawing();
     void recreateSwapChain();
     void cleanupSwapChain();

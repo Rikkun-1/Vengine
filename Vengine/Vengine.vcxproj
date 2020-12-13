@@ -201,7 +201,6 @@
     <ClCompile Include="graphics\vulkanWrapper\pipelineLayout.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\device.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\swapChain.cpp" />
-    <ClCompile Include="graphics\vulkanWrapper\swapChainSupportDetails.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\synchronization.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\texture.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\transitionImageLayout.cpp" />
@@ -236,7 +235,6 @@
     <ClInclude Include="graphics\vulkanWrapper\pipeline.h" />
     <ClInclude Include="graphics\vulkanWrapper\pipelineLayout.h" />
     <ClInclude Include="graphics\vulkanWrapper\device.h" />
-    <ClInclude Include="graphics\vulkanWrapper\swapChainSupportDetails.h" />
     <ClInclude Include="graphics\vulkanWrapper\synchronization.h" />
     <ClInclude Include="graphics\vulkanWrapper\texture.h" />
     <ClInclude Include="graphics\vulkanWrapper\transitionImageLayout.h" />

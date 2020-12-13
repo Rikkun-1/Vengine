@@ -20,14 +20,13 @@ public:
 
     void  setPixel(int x, int y, Pixel pixel);
     Pixel getPixel(int x, int y);
-
-    void *getRaw();
-
-private:
+    
+    std::vector<Pixel> pixels;
+    
     int width;
     int height;
     int channels;
 
-    std::vector<Pixel> pixels;
+private:
 };
 

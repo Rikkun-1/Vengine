@@ -4,6 +4,7 @@
 
 #include "image.h"
 
+///////////////////////// STATIC BEG //////////////////////////////
 
 static void fillColorAttachmentDescription(VkAttachmentDescription &colorAttachment)
 {
@@ -86,7 +87,7 @@ static void setupAttachmentRef(uint32_t              attachmentIndex,
 
 static void setupSubpassDescription(const VkAttachmentReference &colorAttachmentRef,
                                     const VkAttachmentReference &depthAttachmentRef,
-                                    VkSubpassDescription        &subpass)
+                                          VkSubpassDescription        &subpass)
 {
     // чем является данный проход
     // VK_PIPELINE_BIND_POINT_GRAPHICS - данный проход работает с графикой
@@ -99,9 +100,13 @@ static void setupSubpassDescription(const VkAttachmentReference &colorAttachment
     subpass.pDepthStencilAttachment = &depthAttachmentRef;
 }
 
+///////////////////////// STATIC END //////////////////////////////
+
+
+///////////////////////// PUBLIC BEG //////////////////////////////
 
 VkRenderPass createRenderPass(const LogicalDevice &device,
-                              VkFormat            swapChainImageFormat)
+                                    VkFormat       swapChainImageFormat)
 {
     VkAttachmentDescription colorAttachment{};
     VkAttachmentDescription depthAttachment{};
@@ -152,3 +157,5 @@ VkRenderPass createRenderPass(const LogicalDevice &device,
 
     return renderPass;
 }
+
+///////////////////////// PUBLIC END //////////////////////////////

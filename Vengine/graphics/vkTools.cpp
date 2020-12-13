@@ -6,6 +6,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include <iostream>
+
+///////////////////////// STATIC BEG /////////////////////////////
+
 static std::vector<char> loadFile(const std::string &filename)
 {
         std::ifstream file(filename, std::ios::ate | std::ios::binary);
@@ -25,7 +29,11 @@ static std::vector<char> loadFile(const std::string &filename)
         return buffer;
 }
 
-#include <iostream>
+///////////////////////// STATIC END //////////////////////////////
+
+
+
+///////////////////////// VK TOOLS BEG //////////////////////////////
 
 namespace vkTools
 {
@@ -78,10 +86,10 @@ namespace vkTools
                    std::vector<Pixel> &pixels)
     {
         stbi_uc *rawPixels = stbi_load(path.c_str(),
-                                    &loadedWidth,
-                                    &loadedHeight,
-                                    &loadedChannels,
-                                    STBI_rgb_alpha);
+                                       &loadedWidth,
+                                       &loadedHeight,
+                                       &loadedChannels,
+                                       STBI_rgb_alpha);
         
         loadedChannels = 4; // STBI_rgb_alpha имеет 4 канала
 
@@ -101,4 +109,6 @@ namespace vkTools
         return loadFile(filename);
     }
 }
+
+///////////////////////// VK TOOLS END //////////////////////////////
 

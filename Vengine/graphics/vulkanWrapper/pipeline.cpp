@@ -1,22 +1,6 @@
 #include "pipeline.h"
 
-struct PipelineFixedFunctions
-{
-    VkPipelineVertexInputStateCreateInfo         vertexInput;
-    VkPipelineInputAssemblyStateCreateInfo       inputAssembly;
-    VkViewport                                   viewport;       
-    VkRect2D                                     scissor;
-    VkPipelineViewportStateCreateInfo            viewportState;
-    VkPipelineRasterizationStateCreateInfo       rasterizer;
-    VkPipelineMultisampleStateCreateInfo         multisampling;
-    VkPipelineDepthStencilStateCreateInfo        depthStencil;
-    VkPipelineColorBlendAttachmentState          colorBlendAttachment;
-    VkPipelineColorBlendStateCreateInfo          colorBlending;
-    VkPipelineDynamicStateCreateInfo             dynamicState;
-
-
-
-};
+///////////////////////// STATIC BEG //////////////////////////////
 
 static void setupShaderStageInfo(const ShaderModule               &shader,
                                  VkPipelineShaderStageCreateInfo  &shaderStage)
@@ -45,14 +29,34 @@ static void setupMultipleShaderStages(const ShaderModule          &vertexShader,
     shaderStages.push_back(fragmentStageInfo);
 }
 
-static void setupAssemblyStateInfo(VkPipelineInputAssemblyStateCreateInfo &inputAssembly)
+///////////////////////// STATIC END //////////////////////////////
+
+
+///////////////////////// PIPELINE FIXED FUNCTIONS BEG //////////////////////////////
+
+void PipelineFixedFunctions::setup(const VkExtent2D &swapChainExtent)
+{
+    setupVertexInputDescriptions();
+    setupAssemblyStateInfo      ();
+    setupViewPortAndScissor     (swapChainExtent);
+    setupViewPortStateInfo      ();
+    setupRasterizerStateInfo    ();
+    setupMultisamplingStateInfo ();
+    setupDepthStencilStateInfo  ();
+    setupColorAttachmentState   ();
+    setupColorBlendStateInfo    ();
+    
+    //setupDynamicStates         ();
+}
+
+void PipelineFixedFunctions:: setupAssemblyStateInfo()
 {
     inputAssembly.sType    = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
     inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     inputAssembly.primitiveRestartEnable = VK_FALSE;
 }
 
-static void setupVertexInputDescriptions(VkPipelineVertexInputStateCreateInfo &vertexInput)
+void PipelineFixedFunctions:: setupVertexInputDescriptions()
 {
     static auto bindingDescription    = Vertex::getBindingDescription();
     static auto attributeDescriptions = Vertex::getAttributeDescriptions();
@@ -64,9 +68,7 @@ static void setupVertexInputDescriptions(VkPipelineVertexInputStateCreateInfo &v
     vertexInput.pVertexAttributeDescriptions    = attributeDescriptions.data();
 }
 
-static void setupViewPortAndScissor(const VkExtent2D  &swapChainExtent,
-                                    VkViewport        &viewport, 
-                                    VkRect2D          &scissor)
+void PipelineFixedFunctions:: setupViewPortAndScissor(const VkExtent2D  &swapChainExtent)
     {
         viewport.x = 0.0f;
         viewport.y = 0.0f;
@@ -79,9 +81,7 @@ static void setupViewPortAndScissor(const VkExtent2D  &swapChainExtent,
         scissor.extent = swapChainExtent;
     }
 
-static void setupViewPortStateInfo(VkViewport                         &viewport, 
-                                   VkRect2D                           &scissor,
-                                   VkPipelineViewportStateCreateInfo  &viewportState)
+void PipelineFixedFunctions:: setupViewPortStateInfo()
 {
     viewportState.sType         = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     viewportState.viewportCount = 1;
@@ -91,7 +91,7 @@ static void setupViewPortStateInfo(VkViewport                         &viewport,
     //наличие несколких viewport или scissors требует раширение
 }
 
-static void setupRasterizerStateInfo(VkPipelineRasterizationStateCreateInfo  &rasterizer)
+void PipelineFixedFunctions:: setupRasterizerStateInfo()
 {
     rasterizer.sType            = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizer.depthClampEnable = VK_FALSE; // VK_TRUE требует расширения
@@ -104,7 +104,6 @@ static void setupRasterizerStateInfo(VkPipelineRasterizationStateCreateInfo  &ra
     // в нашем случае мы заполняем его целиком
     // VK_POLYGON_MODE_LINE  - будут рисоваться только линии
     // VK_POLYGON_MODE_POINT - будут рисоваться только точки
-    // VK_POLYGON_MODE_LINE и VK_POLYGON_MODE_POINT требует включение расширения
     rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 
     // определяет толщину линий, которыми связваются точки.
@@ -126,7 +125,7 @@ static void setupRasterizerStateInfo(VkPipelineRasterizationStateCreateInfo  &ra
     rasterizer.depthBiasSlopeFactor    = 0.0f; // Optional
 }
 
-static void setupMultisamplingStateInfo(VkPipelineMultisampleStateCreateInfo &multisampling)
+void PipelineFixedFunctions:: setupMultisamplingStateInfo()
 {
     multisampling.sType                 = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     multisampling.sampleShadingEnable   = VK_FALSE; 
@@ -137,13 +136,13 @@ static void setupMultisamplingStateInfo(VkPipelineMultisampleStateCreateInfo &mu
     multisampling.alphaToOneEnable      = VK_FALSE; // Optional
 }
 
-static void setupDepthStencilStateInfo(VkPipelineDepthStencilStateCreateInfo  &depthStencil)
+void PipelineFixedFunctions:: setupDepthStencilStateInfo()
 {
     depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    depthStencil.depthTestEnable       = VK_TRUE;
+    depthStencil.depthTestEnable  = VK_TRUE;
     // должен ли фрагмент, который прошел тест глубины записаться как самый ближний
-    depthStencil.depthWriteEnable      = VK_TRUE;
-    depthStencil.depthCompareOp        = VK_COMPARE_OP_LESS;
+    depthStencil.depthWriteEnable = VK_TRUE;
+    depthStencil.depthCompareOp   = VK_COMPARE_OP_LESS;
 
     // позволяет определить окно в рамки которого глубина фрагмента должна попадать чтобы пройти тест
     depthStencil.depthBoundsTestEnable = VK_FALSE;
@@ -155,7 +154,7 @@ static void setupDepthStencilStateInfo(VkPipelineDepthStencilStateCreateInfo  &d
     //depthStencil.back              = {}; // Optional
 }
         
-static void setupColorAttachmentState(VkPipelineColorBlendAttachmentState    &colorBlendAttachment)
+void PipelineFixedFunctions:: setupColorAttachmentState()
 {
     colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | 
                                           VK_COLOR_COMPONENT_G_BIT | 
@@ -178,8 +177,7 @@ static void setupColorAttachmentState(VkPipelineColorBlendAttachmentState    &co
     // finalColor.a = newAlpha.a;
 }
 
-static void setupColorBlendStateInfo(VkPipelineColorBlendStateCreateInfo        &colorBlending,
-                                     const VkPipelineColorBlendAttachmentState  &colorBlendAttachment) 
+void PipelineFixedFunctions:: setupColorBlendStateInfo() 
 {
     colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 
@@ -200,7 +198,7 @@ static void setupColorBlendStateInfo(VkPipelineColorBlendStateCreateInfo        
     colorBlending.blendConstants[3] = 0.0f; // Optional
 }
 
-static void setupDynamicStates(VkPipelineDynamicStateCreateInfo  &dynamicState) 
+void PipelineFixedFunctions:: setupDynamicStates() 
 {   
     // Некоторые настройки pipeline, такие как размер viewport, толщина линий и blendConstants 
     // можно настраивать на ходу, не пересоздавая весь pipeline
@@ -214,29 +212,15 @@ static void setupDynamicStates(VkPipelineDynamicStateCreateInfo  &dynamicState)
     dynamicState.pDynamicStates    = dynamicStates.data();
 }
 
-static void setupFixedFunctions(const VkExtent2D            &swapChainExtent,
-                                PipelineFixedFunctions      &fixedFunctions)
-{
-    setupVertexInputDescriptions(fixedFunctions.vertexInput);
-    setupAssemblyStateInfo      (fixedFunctions.inputAssembly);
-    setupViewPortAndScissor     (swapChainExtent,
-                                 fixedFunctions.viewport, 
-                                 fixedFunctions.scissor);
-    setupViewPortStateInfo      (fixedFunctions.viewport, 
-                                 fixedFunctions.scissor,
-                                 fixedFunctions.viewportState);
-    setupRasterizerStateInfo    (fixedFunctions.rasterizer);
-    setupMultisamplingStateInfo (fixedFunctions.multisampling);
-    setupDepthStencilStateInfo  (fixedFunctions.depthStencil);
-    setupColorAttachmentState   (fixedFunctions.colorBlendAttachment);
-    setupColorBlendStateInfo    (fixedFunctions.colorBlending, 
-                                 fixedFunctions.colorBlendAttachment);
+///////////////////////// PIPELINE FIXED FUNCTIONS END //////////////////////////////
 
-    //setupDynamicStates          (fixedFunctions.dynamicState);
-}
+
+
+///////////////////////// PIBLIC END //////////////////////////////
 
 VkPipeline createGraphicsPipeline(const LogicalDevice         &device,
                                   VkExtent2D                  &swapChainExtent,
+                                  PipelineFixedFunctions      &fixedFunctions,
                                   VkRenderPass                renderPass,
                                   const ShaderModule          &vertexShader,
                                   const ShaderModule          &fragmentShader,
@@ -250,9 +234,6 @@ VkPipeline createGraphicsPipeline(const LogicalDevice         &device,
     setupShaderStageInfo(fragmentShader, fragShaderStageInfo);
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
-    
-    PipelineFixedFunctions fixedFunctions{};
-    setupFixedFunctions(swapChainExtent, fixedFunctions);
 
     VkGraphicsPipelineCreateInfo pipelineInfo{};
     pipelineInfo.sType               = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -277,3 +258,5 @@ VkPipeline createGraphicsPipeline(const LogicalDevice         &device,
 
     return graphicsPipeline;
 }
+
+///////////////////////// PUBLIC END //////////////////////////////

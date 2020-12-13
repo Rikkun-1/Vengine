@@ -1,6 +1,8 @@
 #include "descriptorSet.h"
 
-static void allocateDescriptorSets(VkDevice                      logicalDevice,
+///////////////////////// PUBLIC BEG //////////////////////////////
+
+void allocateDescriptorSets(VkDevice                      logicalDevice,
                                    VkDescriptorPool              descriptorPool,
                                    VkDescriptorSetLayout        &descriptorSetLayout,
                                    std::vector<VkDescriptorSet> &descriptorSets,
@@ -20,7 +22,7 @@ static void allocateDescriptorSets(VkDevice                      logicalDevice,
 }
 
 
-static void setupDescriptorBufferInfo(VkBuffer                 buffer,
+void setupDescriptorBufferInfo(VkBuffer                 buffer,
                                       uint32_t                 offset,
                                       uint32_t                 range,                  
                                       VkDescriptorBufferInfo  &bufferInfo)
@@ -33,7 +35,7 @@ static void setupDescriptorBufferInfo(VkBuffer                 buffer,
 }
 
 
-static void setupDescriptorImageInfo(VkImageLayout          layout,
+void setupDescriptorImageInfo(VkImageLayout          layout,
                                      VkImageView            textureImageView,
                                      VkSampler              textureSampler,
                                      VkDescriptorImageInfo  &imageInfo)
@@ -98,3 +100,5 @@ void createDescriptorSets(const LogicalDevice          &device,
                                nullptr);
     }
 }
+
+///////////////////////// PUBLIC END /////////////////////////////

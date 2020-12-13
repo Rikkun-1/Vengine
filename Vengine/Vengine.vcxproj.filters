@@ -122,9 +122,6 @@
     <ClCompile Include="graphics\vulkanWrapper\vulkanWrapper.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="graphics\vulkanWrapper\swapChainSupportDetails.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="graphics\vulkanWrapper\vertex.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -217,9 +214,6 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="graphics\vulkanWrapper\descriptorSet.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="graphics\vulkanWrapper\swapChainSupportDetails.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="graphics\vulkanWrapper\vertex.h">

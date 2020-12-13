@@ -16,9 +16,12 @@
 
 struct UniformBufferObject
 {
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 proj;
+    glm::mat4  model;
+    glm::mat4  view;
+    glm::mat4  proj;
+    alignas(16)
+    bool noTexture;
+    //glm::uint8 
 };
 
 
@@ -29,9 +32,9 @@ struct Buffer
     const LogicalDevice  *device;
 
     Buffer();
-    ~Buffer();
-
     Buffer(const LogicalDevice *logicalDevice);
+
+    ~Buffer();
 
     void create(VkDeviceSize          size, 
                 VkBufferUsageFlags    usage, 

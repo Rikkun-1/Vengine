@@ -2,6 +2,9 @@
 
 #include <stdexcept>
 
+
+///////////////////////// PUBLIC BEG //////////////////////////////
+
 VkDescriptorPool createDescriptorPool(const LogicalDevice  &device,
                                       int                   size)
 {
@@ -27,3 +30,5 @@ VkDescriptorPool createDescriptorPool(const LogicalDevice  &device,
 
     return descriptorPool;
 }
+
+///////////////////////// PUBLIC END /////////////////////////////

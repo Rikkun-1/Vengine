@@ -3,6 +3,8 @@
 #include <stdexcept>
 #include <array>
 
+///////////////////////// STATIC BEG //////////////////////////////
+
 static void beginCommandBuffer(VkCommandBuffer            commandBuffer,
                                VkCommandBufferUsageFlags  flags = 0) // optional
 {
@@ -60,9 +62,13 @@ static void beginRenderPass(VkRenderPass        renderPass,
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
+///////////////////////// STATIC END ///////////////////////////
+
+
+///////////////////////// PUBLIC BEG ////////////////////////////////
 
 void writeCommandBuffersForDrawing(CommandPool                  &commandPool,
-                                   SwapChain                    &swapChain,
+                                   Swapchain                    &swapChain,
                                    VkRenderPass                 renderPass,
                                    VkPipeline                   graphicsPipeline,
                                    VkPipelineLayout             pipelineLayout,
@@ -143,3 +149,4 @@ void endSingleTimeCommands(const CommandPool   &commandPool,
     vkFreeCommandBuffers(commandPool.device->handle, commandPool.handle, 1, &commandBuffer);
 }
 
+///////////////////////// PUBLUC END ///////////////////////////

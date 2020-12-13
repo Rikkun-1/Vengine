@@ -7,12 +7,18 @@
 #else
     const bool enableValidationLayers = true;
 #endif
+    
+///////////////////////// STATIC BEG //////////////////////////////
 
 static void framebufferResizeCallback(GLFWwindow *window, int width, int height)
 {
     auto app = reinterpret_cast<Renderer *>(glfwGetWindowUserPointer(window));
     app->framebufferResized = true;
 }
+
+///////////////////////// STATIC END //////////////////////////////
+
+///////////////////////// RENDERER BEG //////////////////////////////
 
 Renderer::Renderer() 
 {
@@ -79,41 +85,43 @@ void Renderer::pushMesh(bool rewriteCommandBuffers)
 
 void Renderer::pushTexture(bool rewriteCommandBuffers) 
 {
-    VkExtent3D textureExtent {
-        model.texture.getWidth(),
-        model.texture.getHeight(),
-        1
-    };
-    vkDeviceWaitIdle(device.handle);
+    if(!model.texture.pixels.empty())
+    {
+        VkExtent3D textureExtent{
+            model.texture.getWidth(),
+            model.texture.getHeight(),
+            1
+        };
+        vkDeviceWaitIdle(device.handle);
 
-    if(!textureImage.device)
-        textureImage.setDevice(&device);
-    
-    vkDestroyImageView(device.handle, textureImageView, nullptr);
-    textureImage.destroy();
-    createTextureImage(model.texture.getRaw(),
-                        model.texture.getChannels(),
-                        textureExtent,
-                        commandPool,
-                        textureImage);
-    createTextureImageView(device, textureImage, textureImageView);
-    
-    if(descriptorSets.data())
-        vkFreeDescriptorSets(device.handle,
+        if(!textureImage.device)
+            textureImage.setDevice(&device);
+
+        vkDestroyImageView(device.handle, textureImageView, nullptr);
+        textureImage.destroy();
+
+        createTextureImage(model.texture.pixels.data(),
+                           model.texture.getChannels(),
+                           textureExtent,
+                           commandPool,
+                           textureImage);
+        createTextureImageView(device, textureImage, textureImageView);
+
+        if(descriptorSets.data())
+            vkResetDescriptorPool(device.handle, descriptorPool, 0);
+
+        createDescriptorSets(device,
                              descriptorPool,
-                             descriptorSets.size(),
-                             descriptorSets.data());
-   
-    
-    createDescriptorSets(device,
-                         descriptorPool,
-                         descriptorSetLayout,
-                         descriptorSets,
-                         uniformBuffers,
-                         textureImageView,
-                         textureSampler,
-                         swapChain.images.size());
+                             descriptorSetLayout,
+                             descriptorSets,
+                             uniformBuffers,
+                             textureImageView,
+                             textureSampler,
+                             swapChain.images.size());
+    }
 
+    pipelineFixedFunctions.rasterizer.polygonMode = VK_POLYGON_MODE_POINT;
+    setupPipeline();
     if(rewriteCommandBuffers)
         writeCommandsForDrawing();
 }
@@ -126,12 +134,17 @@ void Renderer::run()
     cleanup();
 }
 
+
+
 void Renderer::initWindow()
 {
     glfwInit();
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+
+    //pWindow = glfwCreateWindow(settings.windowWidth, settings.windowHeight, 
+    //                          settings.windowTitle, glfwGetPrimaryMonitor(), nullptr);
 
     pWindow = glfwCreateWindow(settings.windowWidth, settings.windowHeight, 
                               settings.windowTitle, nullptr, nullptr);
@@ -148,78 +161,39 @@ void Renderer::initVulkan()
                               settings.instanceExtensions);
 
     debugMessenger = setupDebugMessenger(instance);
-
+    
     if(glfwCreateWindowSurface(instance, pWindow, nullptr, &surface) != VK_SUCCESS)
         std::runtime_error("failed to create window surface");
 
-    VkPhysicalDevice physicalDevice;
-    physicalDevice = pickPhysicalDevice(instance, 
-                                        surface, 
-                                        settings.deviceExtensions);
+    setupLogicalDevice();
 
-    device = createLogicalDevice(instance,
-                                 physicalDevice,
-                                 surface, 
-                                 settings.deviceExtensions);
+    setupSwapchain();
+    createUniformBuffers(device,
+                         uniformBuffers,
+                         swapChain.images.size());
 
-    int width, height;
-    glfwGetFramebufferSize(pWindow, &width, &height);
+    setupShaderModules();
 
-    VkExtent2D swapChainExtent {width, height};
-
-    swapChain.create(device, surface, swapChainExtent);
-
-    renderPass          = createRenderPass(device, swapChain.imageFormat);
-
-    vertexShaderModule.setDevice(device);
-    fragmentShaderModule.setDevice(device);
-
-    vertexShaderModule.create(vertexShader.binaryCode,
-                              VK_SHADER_STAGE_VERTEX_BIT,
-                              vertexShader.entry);
-
-    fragmentShaderModule.create(fragmentShader.binaryCode,
-                                VK_SHADER_STAGE_FRAGMENT_BIT,
-                                fragmentShader.entry);
-    
     descriptorSetLayout = createDescriptorSetLayout(device.handle);
     pipelineLayout      = createPipelineLayout(device.handle, descriptorSetLayout);
 
-    graphicsPipeline    = createGraphicsPipeline(device,
-                                                 swapChain.extent,
-                                                 renderPass,
-                                                 vertexShaderModule,
-                                                 fragmentShaderModule,
-                                                 descriptorSetLayout,
-                                                 pipelineLayout);
+    pipelineFixedFunctions.setup(swapChain.extent);
+    setupPipeline();
 
-    commandPool.setDevice(&this->device);
-    commandPool.create();
+    setupCommandPool();
 
     createDepthResources(commandPool,
                          swapChain.extent,
                          depthImage,
                          depthImageView);
-
-    swapChain.createFrameBuffers(renderPass, depthImageView);
-
-    createUniformBuffers(device,
-                         uniformBuffers,
-                         swapChain.images.size());
-
-    descriptorPool = createDescriptorPool(device, swapChain.images.size());
-
-    commandBuffers.resize(swapChain.images.size());
-    commandPool.allocateCommandBuffers(commandBuffers.size(),
-                                       commandBuffers.data());
     
     createTextureSampler(device, textureSampler);
-    
-    if(!model.mesh.vertices.empty())
-        pushMesh(false);
 
-    if(model.texture.getRaw())
-        pushTexture();
+    swapChain.createFrameBuffers(renderPass, depthImageView);
+    
+    descriptorPool = createDescriptorPool(device, swapChain.images.size());
+    pushMesh(false);
+    pushTexture();
 
     createSyncObjects(device,
                       MAX_FRAMES_IN_FLIGHT,
@@ -230,10 +204,9 @@ void Renderer::initVulkan()
                       imagesInFlight);
 }
 
-size_t frame = 0;
-
 void Renderer::mainLoop()
 {   
+    /*
     std::vector<Model> models;
     models.push_back(Model(Mesh("models/viking_room.obj"), Texture("textures/viking_room.png")));
     models.push_back(Model(Mesh("models/viking_room.obj"), Texture("textures/Car Texture.png")));
@@ -248,7 +221,8 @@ void Renderer::mainLoop()
     models.push_back(Model(Mesh("models/LowPolyCars.obj"), Texture("textures/shapes.jpg")));
     models.push_back(Model(Mesh("models/LowPolyCars.obj"), Texture("textures/steel.jpg")));
     models.push_back(Model(Mesh("models/LowPolyCars.obj"), Texture("textures/wood.jpg")));
-    
+    */
+     
     int tick = 0;
     static float lastTime = 0;
     while(!glfwWindowShouldClose(pWindow))
@@ -256,7 +230,7 @@ void Renderer::mainLoop()
         static auto startTime = std::chrono::high_resolution_clock::now();
         auto currentTime = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-        model.rotation.z = time * 5;
+        model.rotation.z = time * 10;
         //model.position.z = time;
         //model.scale.z   = time / 4;
         //model.scale.x   = time / 4;
@@ -264,14 +238,14 @@ void Renderer::mainLoop()
 
         drawFrame();
         
-        if(tick > 1)
-            tick = 0;
+        //if(tick > models.size() - 1)
+        //    tick = 0;
 
         if(time - lastTime > 0.7)
         {
             lastTime = time;
-            setModel(models[tick]);
-            pushModel();
+            //setModel(models[tick]);
+            //pushModel();
             tick++;
         }
     }
@@ -279,73 +253,6 @@ void Renderer::mainLoop()
     // прежде чем выйти из главного цикла мы ждем чтобы видеокарта закончила выполнения последнего
     // командного буфера 
     vkDeviceWaitIdle(device.handle);
-}
-
-void Renderer::recreateSwapChain()
-{
-    int width  = 0, 
-        height = 0;
-    glfwGetFramebufferSize(pWindow, &width, &height);
-
-    // если окно свернуто, то glfwGetFramebufferSize вернет нули
-    // вместо ширины и высоты. Поэтому мы ждем пока размер окна не примет адекватные значения
-    // это произойдет когда окно вновь будет развернуто
-    std::cout << width << "  " << height << std::endl;
-    while(width == 0 || height == 0)
-    {
-        std::cout << width << " || " << height << std::endl;
-        glfwGetFramebufferSize(pWindow, &width, &height);
-        glfwWaitEvents();
-    }
-
-    vkDeviceWaitIdle(device.handle);
-
-    cleanupSwapChain();
-
-    VkExtent2D swapChainExtent = {width, height};
-    swapChain.create(device, surface, swapChainExtent);
-
-    renderPass          = createRenderPass(device, swapChain.imageFormat);
-    pipelineLayout      = createPipelineLayout(device.handle, descriptorSetLayout);
-    graphicsPipeline    = createGraphicsPipeline(device,
-                                                 swapChain.extent,
-                                                 renderPass,
-                                                 vertexShaderModule,
-                                                 fragmentShaderModule,
-                                                 descriptorSetLayout,
-                                                 pipelineLayout);
-    createDepthResources(commandPool,
-                         swapChain.extent,
-                         depthImage,
-                         depthImageView);
-
-    swapChain.createFrameBuffers(renderPass, depthImageView);
-
-    createUniformBuffers(device,
-                         uniformBuffers,
-                         swapChain.images.size());
-
-    descriptorPool = createDescriptorPool(device, swapChain.images.size());
-
-    createDescriptorSets(device, 
-                         descriptorPool,
-                         descriptorSetLayout,
-                         descriptorSets,
-                         uniformBuffers,
-                         textureImageView,
-                         textureSampler,
-                         swapChain.images.size());
-    
-    writeCommandBuffersForDrawing(commandPool,
-                                  swapChain,
-                                  renderPass,
-                                  graphicsPipeline,
-                                  pipelineLayout,
-                                  vertexBuffer.handle,
-                                  indexBuffer.handle,
-                                  model.mesh.indices.size(),
-                                  descriptorSets,
-                                  commandBuffers);
 }
 
 void Renderer::drawFrame()
@@ -485,6 +392,84 @@ void Renderer::drawFrame()
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
+void Renderer::setupShaderModules()
+{
+    if(vertexShaderModule.handle)
+        vertexShaderModule.destroy();
+
+    if(vertexShaderModule.handle)
+        fragmentShaderModule.destroy();
+
+    if(!vertexShaderModule.device)
+        vertexShaderModule.setDevice(device);
+
+    if(!fragmentShaderModule.device)
+        fragmentShaderModule.setDevice(device);
+
+    vertexShaderModule.create(vertexShader.binaryCode,
+                              VK_SHADER_STAGE_VERTEX_BIT,
+                              vertexShader.entry);
+
+    fragmentShaderModule.create(fragmentShader.binaryCode,
+                                VK_SHADER_STAGE_FRAGMENT_BIT,
+                                fragmentShader.entry);
+}
+
+void Renderer::setupLogicalDevice()
+{
+    VkPhysicalDevice physicalDevice;
+    physicalDevice = pickPhysicalDevice(instance, 
+                                        surface, 
+                                        settings.deviceExtensions);
+
+    device = createLogicalDevice(instance,
+                                 physicalDevice,
+                                 surface, 
+                                 settings.deviceExtensions);
+}
+
+void Renderer::setupSwapchain()
+{    
+    int width, height;
+    glfwGetFramebufferSize(pWindow, &width, &height);
+
+    VkExtent2D swapChainExtent {width, height};
+
+    swapChain.create(device, surface, swapChainExtent);
+}
+
+void Renderer::setupCommandPool()
+{    
+    commandPool.setDevice(&this->device);
+    commandPool.create();
+
+    commandBuffers.resize(swapChain.images.size());
+
+    commandPool.allocateCommandBuffers(commandBuffers.size(),
+                                       commandBuffers.data());
+}
+
+void Renderer::setupPipeline()
+{    
+    if(!renderPass)
+        renderPass = createRenderPass(device, swapChain.imageFormat);
+
+    if(graphicsPipeline)
+    {
+        vkDestroyPipeline(device.handle, graphicsPipeline, nullptr);
+        graphicsPipeline = VK_NULL_HANDLE;
+    }
+
+    graphicsPipeline = createGraphicsPipeline(device,
+                                              swapChain.extent,
+                                              pipelineFixedFunctions,
+                                              renderPass,
+                                              vertexShaderModule,
+                                              fragmentShaderModule,
+                                              descriptorSetLayout,
+                                              pipelineLayout);
+}
+
 void Renderer::writeCommandsForDrawing()
 {
     writeCommandBuffersForDrawing(commandPool,
@@ -499,6 +484,55 @@ void Renderer::writeCommandsForDrawing()
                                   commandBuffers);
 }
 
+void Renderer::recreateSwapChain()
+{
+    int width  = 0, 
+        height = 0;
+    glfwGetFramebufferSize(pWindow, &width, &height);
+
+    // если окно свернуто, то glfwGetFramebufferSize вернет нули
+    // вместо ширины и высоты. Поэтому мы ждем пока размер окна не примет адекватные значения
+    // это произойдет когда окно вновь будет развернуто
+    std::cout << width << "  " << height << std::endl;
+    while(width == 0 || height == 0)
+    {
+        glfwGetFramebufferSize(pWindow, &width, &height);
+        glfwWaitEvents();
+    }
+    vkDeviceWaitIdle(device.handle);
+
+    cleanupSwapChain();
+
+    VkExtent2D swapChainExtent = {width, height};
+    swapChain.create(device, surface, swapChainExtent);
+
+    pipelineFixedFunctions.setupViewPortAndScissor(swapChain.extent);
+    setupPipeline();
+
+    createDepthResources(commandPool,
+                         swapChain.extent,
+                         depthImage,
+                         depthImageView);
+
+    swapChain.createFrameBuffers(renderPass, depthImageView);
+    
+    if(descriptorSets.data())
+        vkResetDescriptorPool(device.handle, descriptorPool, 0);
+
+    createDescriptorSets(device, 
+                         descriptorPool,
+                         descriptorSetLayout,
+                         descriptorSets,
+                         uniformBuffers,
+                         textureImageView,
+                         textureSampler,
+                         swapChain.images.size());
+
+    commandPool.allocateCommandBuffers(swapChain.images.size(),
+                                       commandBuffers.data());
+    writeCommandsForDrawing();
+}
+
 void Renderer::cleanupSwapChain()
 {
     vkDestroyImageView(device.handle, depthImageView, nullptr);
@@ -507,24 +541,23 @@ void Renderer::cleanupSwapChain()
     // вместо того чтобы создавать новый командный пул и выделять буферы в нем
     // мы можем освободить текущий и выделить новые командные буферы в нем
 
-    commandPool.freeCommandBuffers(commandBuffers.size(),
-                                   commandBuffers.data());
-
-    vkDestroyPipeline(device.handle, graphicsPipeline, nullptr);
-    vkDestroyPipelineLayout(device.handle, pipelineLayout, nullptr);
-    vkDestroyRenderPass(device.handle, renderPass, nullptr);
-
-    for(size_t i = 0; i < swapChain.images.size(); i++)
-        uniformBuffers[i].destroy();
+    vkResetCommandPool(device.handle, commandPool.handle, 0);
 
     swapChain.destroy();
-
-    vkDestroyDescriptorPool(device.handle, descriptorPool, nullptr);
 }
 
 void Renderer::cleanup()
 {
     cleanupSwapChain();
+
+    for(size_t i = 0; i < uniformBuffers.size(); i++)
+        uniformBuffers[i].destroy();
+    
+    vkDestroyPipeline(device.handle, graphicsPipeline, nullptr);
+    vkDestroyPipelineLayout(device.handle, pipelineLayout, nullptr);
+    vkDestroyRenderPass(device.handle, renderPass, nullptr);
+
+    vkDestroyDescriptorPool(device.handle, descriptorPool, nullptr);
 
     vkDestroySampler(device.handle, textureSampler, nullptr);
     vkDestroyImageView(device.handle, textureImageView, nullptr);
@@ -544,7 +577,8 @@ void Renderer::cleanup()
         vkDestroySemaphore(device.handle, imageAvailableSemaphores[i], nullptr);
         vkDestroyFence    (device.handle, inFlightFences[i],           nullptr);
     }
-
+    
+    vkDestroyCommandPool(device.handle, commandPool.handle, nullptr);
     vkDestroyDevice(device.handle, nullptr);
 
     if(enableValidationLayers)
@@ -559,3 +593,4 @@ void Renderer::cleanup()
     glfwTerminate();
 }
 
+///////////////////////// RENDERER END //////////////////////////////
