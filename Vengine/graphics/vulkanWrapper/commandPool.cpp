@@ -41,7 +41,7 @@ void CommandPool::create()
         throw std::runtime_error("failed to create command pool!");
 }
 
-void CommandPool::allocateCommandBuffers(int              amount,
+void CommandPool::allocateCommandBuffers(uint32_t          amount,
                                          VkCommandBuffer  *commandBuffers)  
 {
     VkCommandBufferAllocateInfo allocInfo{};
@@ -62,7 +62,7 @@ void CommandPool::allocateCommandBuffers(int              amount,
         throw std::runtime_error("failed to allocate command buffers!");
 }
 
-void CommandPool::freeCommandBuffers(int              amount,
+void CommandPool::freeCommandBuffers(uint32_t         amount,
                                      VkCommandBuffer *commandBuffers)
 {
      vkFreeCommandBuffers(device->handle, 

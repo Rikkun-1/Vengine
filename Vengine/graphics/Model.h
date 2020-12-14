@@ -17,7 +17,7 @@ public:
     Mesh    mesh;
     Texture texture;
 
-    Model() = default;
+    Model();
 
     Model(Mesh mesh, Texture texture);
 };

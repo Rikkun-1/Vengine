@@ -14,16 +14,14 @@
 
 #include "graphics/tools.h"
 
-#include "libraries/native_file_dialog/nfd.h"
-
 #include <chrono>
 
 
 void interfaceCallBack(int key, int action, int modificators, Renderer *renderer)
 {
-    static float onePressPosition = 0.1;
-    static float onePressRotation = 3.5;
-    static float onePressScale    = 0.1;
+    static float onePressPosition = 0.05;
+    static float onePressRotation = 2.5;
+    static float onePressScale    = 0.05;
 
     glm::vec3 &position = renderer->model.position;
     glm::vec3 &rotation = renderer->model.rotation;
@@ -44,6 +42,8 @@ void interfaceCallBack(int key, int action, int modificators, Renderer *renderer
     {
         if(key == GLFW_KEY_KP_8) rotation.x += onePressRotation;
         if(key == GLFW_KEY_KP_2) rotation.x -= onePressRotation;
+        if(key == GLFW_KEY_KP_9) rotation.y -= onePressRotation;
+        if(key == GLFW_KEY_KP_3) rotation.y += onePressRotation;
         if(key == GLFW_KEY_KP_4) rotation.z -= onePressRotation;
         if(key == GLFW_KEY_KP_6) rotation.z += onePressRotation;
     }
@@ -71,7 +71,7 @@ void interfaceCallBack(int key, int action, int modificators, Renderer *renderer
     if(key == GLFW_KEY_3) color = Pixel{ 65, 179, 247}; //
     if(key == GLFW_KEY_4) color = Pixel{222,  93, 148}; //
     if(key == GLFW_KEY_5) color = Pixel{255, 172,  78}; // 
-    if(key == GLFW_KEY_6) color = Pixel{222,  93, 96}; // 
+    if(key == GLFW_KEY_6) color = Pixel{222,  93,  96}; // 
     if(key == GLFW_KEY_7) color = Pixel{255,   0,   0}; // 
     if(key == GLFW_KEY_8) color = Pixel{  0, 255,   0}; // 
     if(key == GLFW_KEY_9) color = Pixel{  0,   0, 255}; // 
@@ -88,32 +88,32 @@ void interfaceCallBack(int key, int action, int modificators, Renderer *renderer
         renderer->setTexture(justColor);
         renderer->pushTexture();
     }
+    
+    if(key == GLFW_KEY_T)
+    {
+        std::string path;
+        system("ECHO \"Enter texture path\" & ");
+    }
+    if(key == GLFW_KEY_M) color = Pixel{255, 255, 255}; // 
 }
 
 
 int main() 
 {
-    Mesh    mesh("models/viking_room.obj");
-    Texture texture("textures/viking_room.png");
+
 
     Shader vertexShader("shaders/bin/vert.spv", ShaderStages::VERTEX_STAGE);
     Shader fragmentShader("shaders/bin/frag.spv", ShaderStages::FRAGMENT_STAGE);
-     
-    Texture texture1px;
-    //texture1px.pixels.push_back(Pixel{222, 93, 148, 255});
-    texture1px.pixels.push_back(Pixel{255, 172, 78, 255});
-    //texture1px.pixels.push_back(Pixel{222, 93, 96, 255});
-    texture1px.width = 1;
-    texture1px.height = 1;
-    texture1px.channels = 4;
-    
-    Model modelNoTexture(mesh, texture);
 
     Renderer app;
     app.loadShader(vertexShader);
     app.loadShader(fragmentShader);
 
-    app.setModel(modelNoTexture);
+    Mesh    mesh("models/viking_room.obj");
+    Texture texture("textures/viking_room.png");
+    Model   model(mesh, texture);
+
+    app.setModel(model);
 
     app.setInterfaceCallback(interfaceCallBack);
 

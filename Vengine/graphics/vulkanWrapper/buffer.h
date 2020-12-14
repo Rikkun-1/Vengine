@@ -72,7 +72,7 @@ void createIndexBuffer(CommandPool                 &commandPool,
 
 void createUniformBuffers(const LogicalDevice         &device,
                           std::vector<Buffer>         &uniformBuffers,
-                          int                         amount);
+                          uint32_t                     amount);
 
 
 void updateUniformBuffer(VkDevice                    logicalDevice,

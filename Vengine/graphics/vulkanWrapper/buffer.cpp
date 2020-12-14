@@ -240,7 +240,7 @@ void createIndexBuffer(CommandPool                 &commandPool,
 
 void createUniformBuffers(const LogicalDevice         &device,
                           std::vector<Buffer>         &uniformBuffers,
-                          int                         amount)
+                          uint32_t                     amount)
 {
     VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
@@ -271,7 +271,7 @@ void updateUniformBuffer(VkDevice                    logicalDevice,
     ubo.model = glm::translate(ubo.model, position);
     
 
-    ubo.view = glm::lookAt(glm::vec3(0.0f, 2.0f, 2.0f), // кординаты точки зрения
+    ubo.view = glm::lookAt(glm::vec3(0.0f, 1.5f, 0.0f), // кординаты точки зрения
                            glm::vec3(0.0f, 0.0f, 0.0f), // координаты центра мира
                            glm::vec3(0.0f, 0.0f, 1.0f));// ось направленная вверх
 

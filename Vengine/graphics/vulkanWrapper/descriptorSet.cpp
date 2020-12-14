@@ -2,11 +2,11 @@
 
 ///////////////////////// PUBLIC BEG //////////////////////////////
 
-void allocateDescriptorSets(VkDevice                      logicalDevice,
+static void allocateDescriptorSets(VkDevice                      logicalDevice,
                                    VkDescriptorPool              descriptorPool,
                                    VkDescriptorSetLayout        &descriptorSetLayout,
                                    std::vector<VkDescriptorSet> &descriptorSets,
-                                   int                           amount)
+                                   uint32_t                      amount)
 {
     std::vector<VkDescriptorSetLayout> layouts(amount, descriptorSetLayout);
     
@@ -22,7 +22,7 @@ void allocateDescriptorSets(VkDevice                      logicalDevice,
 }
 
 
-void setupDescriptorBufferInfo(VkBuffer                 buffer,
+static void setupDescriptorBufferInfo(VkBuffer                 buffer,
                                       uint32_t                 offset,
                                       uint32_t                 range,                  
                                       VkDescriptorBufferInfo  &bufferInfo)
@@ -35,7 +35,7 @@ void setupDescriptorBufferInfo(VkBuffer                 buffer,
 }
 
 
-void setupDescriptorImageInfo(VkImageLayout          layout,
+static void setupDescriptorImageInfo(VkImageLayout          layout,
                                      VkImageView            textureImageView,
                                      VkSampler              textureSampler,
                                      VkDescriptorImageInfo  &imageInfo)
@@ -53,7 +53,7 @@ void createDescriptorSets(const LogicalDevice          &device,
                           std::vector<Buffer>          &uniformBuffers,
                           VkImageView                  textureImageView,
                           VkSampler                    textureSampler,
-                          int                          amount)
+                          uint32_t                     amount)
 {
     allocateDescriptorSets(device.handle,
                            descriptorPool,

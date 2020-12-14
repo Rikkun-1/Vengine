@@ -4,6 +4,18 @@
     
 ///////////////////////// STATIC BEG //////////////////////////////
 
+static bool endsWith(std::string str1, std::string str2)
+{
+    size_t len1 = str1.length();
+    size_t len2 = str2.length();
+
+    if(len1 < len2) return false;
+
+    std::string str1end = str1.substr(len1 - len2, len2);
+
+    return str1end.compare(str2) == 0;
+}
+
 static void framebufferResizeCallback(GLFWwindow *window, int width, int height)
 {
     Renderer *app = reinterpret_cast<Renderer *>(glfwGetWindowUserPointer(window));
@@ -13,16 +25,38 @@ static void framebufferResizeCallback(GLFWwindow *window, int width, int height)
 static void glfwKeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
     Renderer *app = reinterpret_cast<Renderer *>(glfwGetWindowUserPointer(window));
-    app->interfaceCallback(key, action, mods, app);
+    if(app->interfaceCallback)
+        app->interfaceCallback(key, action, mods, app);
+}
+
+static void drop_callback(GLFWwindow* window, int count, const char** paths)
+{
+    Renderer *app = reinterpret_cast<Renderer *>(glfwGetWindowUserPointer(window));
+    std::string path = paths[0];
+
+    if(endsWith(path, ".obj"))
+    {
+        Mesh mesh(path);
+        app->setMesh(mesh);
+        app->pushMesh();
+    } 
+    else if(endsWith(path, ".png") ||
+            endsWith(path, ".jpg") ||
+            endsWith(path, ".bmp"))
+    {
+        Texture texture(path);
+        app->setTexture(texture);
+        app->pushTexture();
+    }
 }
 
 ///////////////////////// STATIC END //////////////////////////////
+
 
 ///////////////////////// RENDERER BEG //////////////////////////////
 
 Renderer::Renderer() 
 {
-
 }
 
 void Renderer::loadShader(Shader shader) 
@@ -68,12 +102,16 @@ void Renderer::pushMesh(bool rewriteCommandBuffers)
 {      
     if(model.mesh.vertices.empty())
     {
-        model.mesh.vertices.push_back(Vertex{{-1.0f, 0.0f, -1.0f}, {0, 0, 0}, {1, -1}});
-        model.mesh.vertices.push_back(Vertex{{+1.0f, 0.0f, +1.0f}, {0, 0, 0}, {-1, 1}});
-        model.mesh.vertices.push_back(Vertex{{-1.0f, 0.0f, -1.0f}, {0, 0, 0}, {1, 1}});
-        model.mesh.vertices.push_back(Vertex{{+1.0f, 0.0f, +1.0f}, {0, 0, 0}, {-1, -1}});
+        const std::vector<Vertex> vertices = {
+            {{1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+            {{-1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
+            {{1.0f, 0.0f, -1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 0.0f}},
+            {{-1.0f, 0.0f, -1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}}
+        };
 
-        std::vector<uint32_t> indices = {1, 2, 3, 2, 3 , 4};
+        model.mesh.vertices = vertices;
+
+        std::vector<uint32_t> indices = {2, 3, 0, 0, 3, 1};
         model.mesh.indices = indices;
     }
 
@@ -124,23 +162,23 @@ void Renderer::pushTexture(bool rewriteCommandBuffers)
     textureImage.destroy();
 
     createTextureImage(model.texture.pixels.data(),
-                        model.texture.getChannels(),
-                        textureExtent,
-                        commandPool,
-                        textureImage);
+                       model.texture.getChannels(),
+                       textureExtent,
+                       commandPool,
+                       textureImage);
     createTextureImageView(device, textureImage, textureImageView);
 
     if(descriptorSets.data())
         vkResetDescriptorPool(device.handle, descriptorPool, 0);
 
     createDescriptorSets(device,
-                            descriptorPool,
-                            descriptorSetLayout,
-                            descriptorSets,
-                            uniformBuffers,
-                            textureImageView,
-                            textureSampler,
-                            swapChain.images.size());
+                         descriptorPool,
+                         descriptorSetLayout,
+                         descriptorSets,
+                         uniformBuffers,
+                         textureImageView,
+                         textureSampler,
+                         swapChain.images.size());
 
     if(rewriteCommandBuffers)
         writeCommandsForDrawing();
@@ -175,6 +213,7 @@ void Renderer::initWindow()
     glfwSetFramebufferSizeCallback(pWindow, framebufferResizeCallback);
     
     glfwSetKeyCallback(pWindow, glfwKeyCallback);
+    glfwSetDropCallback(pWindow, drop_callback);
 }
 
 void Renderer::initVulkan()
@@ -214,8 +253,7 @@ void Renderer::initVulkan()
     swapChain.createFrameBuffers(renderPass, depthImageView);
     
     descriptorPool = createDescriptorPool(device, swapChain.images.size());
-    pushMesh(false);
-    pushTexture();
+    pushModel();
 
     createSyncObjects(device,
                       MAX_FRAMES_IN_FLIGHT,
@@ -487,7 +525,6 @@ void Renderer::recreateSwapChain()
     // если окно свернуто, то glfwGetFramebufferSize вернет нули
     // вместо ширины и высоты. Поэтому мы ждем пока размер окна не примет адекватные значения
     // это произойдет когда окно вновь будет развернуто
-    std::cout << width << "  " << height << std::endl;
     while(width == 0 || height == 0)
     {
         glfwGetFramebufferSize(pWindow, &width, &height);

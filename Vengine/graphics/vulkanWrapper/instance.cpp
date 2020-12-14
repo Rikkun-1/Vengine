@@ -76,7 +76,6 @@ std::vector<const char *> getRequiredExtensions(bool enableValidationLayers)
 VkInstance createInstance(const std::vector<const char *> &validationLayers,
                           const std::vector<const char *> &instanceExtensions)
 {
-    std::cout << enableValidationLayers;
     if(enableValidationLayers && !checkValidationLayerSupport(validationLayers))
         throw std::runtime_error("validation layers requested, but not available");
 
@@ -85,8 +84,8 @@ VkInstance createInstance(const std::vector<const char *> &validationLayers,
     appInfo.sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName   = "3D graphics engine";
     appInfo.pEngineName        = "Vengine";
-    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.engineVersion      = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.applicationVersion = VK_MAKE_VERSION(0, 1, 0);
+    appInfo.engineVersion      = VK_MAKE_VERSION(0, 1, 0);
     appInfo.apiVersion         = VK_API_VERSION_1_0;
 
 
