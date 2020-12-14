@@ -1,12 +1,10 @@
-﻿#include "vkTools.h"
+﻿#include "tools.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "libraries/tiny_obj_loader.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-
-#include <iostream>
 
 ///////////////////////// STATIC BEG /////////////////////////////
 
@@ -35,10 +33,8 @@ static std::vector<char> loadFile(const std::string &filename)
 
 ///////////////////////// VK TOOLS BEG //////////////////////////////
 
-namespace vkTools
+namespace VengineTools
 {
-    size_t allVertices = 0;
-
     void loadMesh(std::string            path,
                   std::vector<Vertex>   &vertices,
                   std::vector<uint32_t> &indices)
@@ -74,8 +70,6 @@ namespace vkTools
                 indices.push_back(indices.size());
             }
         }
-        allVertices += vertices.size();
-        std::cout << allVertices << std::endl;
     }
 
 
@@ -103,6 +97,7 @@ namespace vkTools
         memcpy(pixels.data(), rawPixels, rawPixelsByteSize);
         stbi_image_free(rawPixels);
     }
+
 
     std::vector<char> loadShader(const std::string &filename)
     {

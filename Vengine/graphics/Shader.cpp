@@ -4,7 +4,7 @@
 
 Shader::Shader(const std::string &filename, ShaderStages stage)
 {
-    this->binaryCode = vkTools::loadShader(filename);
+    this->binaryCode = VengineTools::loadShader(filename);
     this->stage      = stage;
 }
 

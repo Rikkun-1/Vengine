@@ -1,4 +1,4 @@
-#include "vkSettings.h"
+#include "settings.h"
 
 ///////////////////////// VK SETTINGS BEG //////////////////////////////
 

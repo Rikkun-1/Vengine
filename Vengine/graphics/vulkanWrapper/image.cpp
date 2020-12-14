@@ -54,6 +54,7 @@ static VkFormat findSupportedFormat(VkPhysicalDevice            physicalDevice,
 
 ///////////////////////// STATIC END //////////////////////////////
 
+
 ///////////////////////// IMAGE BEG //////////////////////////////
 
 Image::Image()
@@ -75,6 +76,7 @@ void Image::resetImageInfo()
     width    = 0;
     height   = 0;
 }
+
 
 void Image::createImage(const VkExtent3D         &extent,
                               VkFormat           format,

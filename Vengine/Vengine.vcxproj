@@ -88,7 +88,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
@@ -104,6 +104,8 @@
       <AdditionalLibraryDirectories>D:\Programms\GLFW\glfw-3.3.2.bin.WIN64\lib-vc2019;D:\Programms\Vulkan\1.2.154.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <Profile>true</Profile>
+      <PreventDllBinding>false</PreventDllBinding>
+      <EmbedManagedResourceFile>%(EmbedManagedResourceFile)</EmbedManagedResourceFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -119,6 +121,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <PrecompiledHeaderFile />
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -127,11 +130,13 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\Programms\GLFW\glfw-3.3.2.bin.WIN64\lib-vc2019;D:\Programms\Vulkan\1.2.154.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <PreventDllBinding>false</PreventDllBinding>
+      <EmbedManagedResourceFile>vulkan-1.lib;glfw3.lib;%(EmbedManagedResourceFile)</EmbedManagedResourceFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
@@ -147,6 +152,8 @@
       <AdditionalLibraryDirectories>D:\Programms\GLFW\glfw-3.3.2.bin.WIN64\lib-vc2019;D:\Programms\Vulkan\1.2.154.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <Profile>true</Profile>
+      <PreventDllBinding>false</PreventDllBinding>
+      <EmbedManagedResourceFile>%(EmbedManagedResourceFile)</EmbedManagedResourceFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -162,6 +169,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <PrecompiledHeaderFile />
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -170,6 +178,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\Programms\GLFW\glfw-3.3.2.bin.WIN64\lib-vc2019;D:\Programms\Vulkan\1.2.154.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <PreventDllBinding>false</PreventDllBinding>
+      <EmbedManagedResourceFile>vulkan-1.lib;glfw3.lib;%(EmbedManagedResourceFile)</EmbedManagedResourceFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -183,8 +193,8 @@
     <ClCompile Include="graphics\vulkanWrapper\buffer.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\commandPool.cpp" />
     <ClCompile Include="graphics\Renderer.cpp" />
-    <ClCompile Include="graphics\vkSettings.cpp" />
-    <ClCompile Include="graphics\vkTools.cpp" />
+    <ClCompile Include="graphics\settings.cpp" />
+    <ClCompile Include="graphics\tools.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\commandBuffer.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\descriptorPool.cpp" />
     <ClCompile Include="graphics\vulkanWrapper\descriptorSetLayout.cpp" />
@@ -220,11 +230,14 @@
     <Image Include="textures\texture.jpg" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="graphics\libraries\stb\stb_image.h" />
+    <ClInclude Include="graphics\libraries\stb_image.h" />
+    <ClInclude Include="graphics\libraries\tiny_obj_loader.h" />
     <ClInclude Include="graphics\vulkanWrapper\buffer.h" />
     <ClInclude Include="graphics\vulkanWrapper\commandPool.h" />
     <ClInclude Include="graphics\Renderer.h" />
-    <ClInclude Include="graphics\vkSettings.h" />
-    <ClInclude Include="graphics\vkTools.h" />
+    <ClInclude Include="graphics\settings.h" />
+    <ClInclude Include="graphics\tools.h" />
     <ClInclude Include="graphics\vulkanWrapper\commandBuffer.h" />
     <ClInclude Include="graphics\vulkanWrapper\descriptorPool.h" />
     <ClInclude Include="graphics\vulkanWrapper\descriptorSetLayout.h" />
@@ -249,6 +262,7 @@
     <ClInclude Include="graphics\vulkanWrapper\renderPass.h" />
     <ClInclude Include="graphics\Shader.h" />
     <ClInclude Include="graphics\vulkanWrapper\shaderModule.h" />
+    <ClInclude Include="graphics\libraries\tiny_obj_loader\tiny_obj_loader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

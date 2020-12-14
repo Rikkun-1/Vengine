@@ -4,7 +4,7 @@
 #include <GLFW/glfw3.h>
 
 #include "vulkanWrapper/vulkanWrapper.h"
-#include "vkSettings.h"
+#include "settings.h"
 #include "Model.h"
 #include "Shader.h"
 
@@ -16,6 +16,8 @@ public:
     vkSettings settings;
     PipelineFixedFunctions pipelineFixedFunctions;
 
+    Model   model;
+
     Renderer();
 
     void run();
@@ -23,13 +25,19 @@ public:
     void setModel(Model model);
     void setMesh(Mesh mesh);
     void setTexture(Texture texture);
+    void setInterfaceCallback(void (*interfaceCallback)(int, int, int, Renderer *));
+
     void pushModel();
     void pushMesh   (bool rewriteCommandBuffers = true);
     void pushTexture(bool rewriteCommandBuffers = true);
 
     void loadShader(Shader shader);
+    
+    void setupPipeline();
 
 private:
+    void (*interfaceCallback)(int, int, int, Renderer *);
+
     VkInstance               instance;
 
     VkDebugUtilsMessengerEXT debugMessenger;
@@ -72,8 +80,6 @@ private:
     int MAX_FRAMES_IN_FLIGHT = 2;
     size_t currentFrame      = 0;
 
-    Model   model;
-
     Shader vertexShader;
     Shader fragmentShader;
 
@@ -88,10 +94,11 @@ private:
     void setupLogicalDevice();
     void setupSwapchain();
     void setupCommandPool();
-    void setupPipeline();
     void writeCommandsForDrawing();
     void recreateSwapChain();
     void cleanupSwapChain();
     void cleanup();
+
+    friend void glfwKeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
 };
 

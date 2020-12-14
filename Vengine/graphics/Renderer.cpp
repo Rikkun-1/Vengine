@@ -1,19 +1,19 @@
 #include "Renderer.h"
 
 #include <chrono>
-
-#ifdef USE_VALIDATION_LAYERS
-    const bool enableValidationLayers = false;
-#else
-    const bool enableValidationLayers = true;
-#endif
     
 ///////////////////////// STATIC BEG //////////////////////////////
 
 static void framebufferResizeCallback(GLFWwindow *window, int width, int height)
 {
-    auto app = reinterpret_cast<Renderer *>(glfwGetWindowUserPointer(window));
+    Renderer *app = reinterpret_cast<Renderer *>(glfwGetWindowUserPointer(window));
     app->framebufferResized = true;
+}
+
+static void glfwKeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
+    Renderer *app = reinterpret_cast<Renderer *>(glfwGetWindowUserPointer(window));
+    app->interfaceCallback(key, action, mods, app);
 }
 
 ///////////////////////// STATIC END //////////////////////////////
@@ -52,6 +52,12 @@ void Renderer::setTexture(Texture texture)
     this->model.texture = texture;
 }
 
+void Renderer::setInterfaceCallback(void (*interfaceCallbackFun)(int, int, int, Renderer *))
+{
+    this->interfaceCallback = interfaceCallbackFun;
+}
+
+
 void Renderer::pushModel() 
 {
     pushMesh(false);
@@ -60,6 +66,17 @@ void Renderer::pushModel()
 
 void Renderer::pushMesh(bool rewriteCommandBuffers) 
 {      
+    if(model.mesh.vertices.empty())
+    {
+        model.mesh.vertices.push_back(Vertex{{-1.0f, 0.0f, -1.0f}, {0, 0, 0}, {1, -1}});
+        model.mesh.vertices.push_back(Vertex{{+1.0f, 0.0f, +1.0f}, {0, 0, 0}, {-1, 1}});
+        model.mesh.vertices.push_back(Vertex{{-1.0f, 0.0f, -1.0f}, {0, 0, 0}, {1, 1}});
+        model.mesh.vertices.push_back(Vertex{{+1.0f, 0.0f, +1.0f}, {0, 0, 0}, {-1, -1}});
+
+        std::vector<uint32_t> indices = {1, 2, 3, 2, 3 , 4};
+        model.mesh.indices = indices;
+    }
+
     vkDeviceWaitIdle(device.handle);
 
     if(!vertexBuffer.device)
@@ -85,43 +102,46 @@ void Renderer::pushMesh(bool rewriteCommandBuffers)
 
 void Renderer::pushTexture(bool rewriteCommandBuffers) 
 {
-    if(!model.texture.pixels.empty())
+    if(model.texture.pixels.empty())
     {
-        VkExtent3D textureExtent{
-            model.texture.getWidth(),
-            model.texture.getHeight(),
-            1
-        };
-        vkDeviceWaitIdle(device.handle);
-
-        if(!textureImage.device)
-            textureImage.setDevice(&device);
-
-        vkDestroyImageView(device.handle, textureImageView, nullptr);
-        textureImage.destroy();
-
-        createTextureImage(model.texture.pixels.data(),
-                           model.texture.getChannels(),
-                           textureExtent,
-                           commandPool,
-                           textureImage);
-        createTextureImageView(device, textureImage, textureImageView);
-
-        if(descriptorSets.data())
-            vkResetDescriptorPool(device.handle, descriptorPool, 0);
-
-        createDescriptorSets(device,
-                             descriptorPool,
-                             descriptorSetLayout,
-                             descriptorSets,
-                             uniformBuffers,
-                             textureImageView,
-                             textureSampler,
-                             swapChain.images.size());
+        model.texture.pixels.push_back(Pixel{255, 255, 255, 255});
+        model.texture.width    = 1;
+        model.texture.height   = 1;
+        model.texture.channels = 4;
     }
 
-    pipelineFixedFunctions.rasterizer.polygonMode = VK_POLYGON_MODE_POINT;
-    setupPipeline();
+    VkExtent3D textureExtent{
+        model.texture.getWidth(),
+        model.texture.getHeight(),
+        1
+    };
+    vkDeviceWaitIdle(device.handle);
+
+    if(!textureImage.device)
+        textureImage.setDevice(&device);
+
+    vkDestroyImageView(device.handle, textureImageView, nullptr);
+    textureImage.destroy();
+
+    createTextureImage(model.texture.pixels.data(),
+                        model.texture.getChannels(),
+                        textureExtent,
+                        commandPool,
+                        textureImage);
+    createTextureImageView(device, textureImage, textureImageView);
+
+    if(descriptorSets.data())
+        vkResetDescriptorPool(device.handle, descriptorPool, 0);
+
+    createDescriptorSets(device,
+                            descriptorPool,
+                            descriptorSetLayout,
+                            descriptorSets,
+                            uniformBuffers,
+                            textureImageView,
+                            textureSampler,
+                            swapChain.images.size());
+
     if(rewriteCommandBuffers)
         writeCommandsForDrawing();
 }
@@ -153,6 +173,8 @@ void Renderer::initWindow()
     // чтобы в framebufferResizeCallback иметь доступ к framebufferResized
     glfwSetWindowUserPointer(pWindow, this);
     glfwSetFramebufferSizeCallback(pWindow, framebufferResizeCallback);
+    
+    glfwSetKeyCallback(pWindow, glfwKeyCallback);
 }
 
 void Renderer::initVulkan()
@@ -205,24 +227,7 @@ void Renderer::initVulkan()
 }
 
 void Renderer::mainLoop()
-{   
-    /*
-    std::vector<Model> models;
-    models.push_back(Model(Mesh("models/viking_room.obj"), Texture("textures/viking_room.png")));
-    models.push_back(Model(Mesh("models/viking_room.obj"), Texture("textures/Car Texture.png")));
-    models.push_back(Model(Mesh("models/viking_room.obj"), Texture("textures/concrete.jpg")));
-    models.push_back(Model(Mesh("models/viking_room.obj"), Texture("textures/shapes.jpg")));
-    models.push_back(Model(Mesh("models/viking_room.obj"), Texture("textures/steel.jpg")));
-    models.push_back(Model(Mesh("models/viking_room.obj"), Texture("textures/wood.jpg")));
-    
-    models.push_back(Model(Mesh("models/LowPolyCars.obj"), Texture("textures/viking_room.png")));
-    models.push_back(Model(Mesh("models/LowPolyCars.obj"), Texture("textures/Car Texture.png")));
-    models.push_back(Model(Mesh("models/LowPolyCars.obj"), Texture("textures/concrete.jpg")));
-    models.push_back(Model(Mesh("models/LowPolyCars.obj"), Texture("textures/shapes.jpg")));
-    models.push_back(Model(Mesh("models/LowPolyCars.obj"), Texture("textures/steel.jpg")));
-    models.push_back(Model(Mesh("models/LowPolyCars.obj"), Texture("textures/wood.jpg")));
-    */
-     
+{    
     int tick = 0;
     static float lastTime = 0;
     while(!glfwWindowShouldClose(pWindow))
@@ -230,24 +235,13 @@ void Renderer::mainLoop()
         static auto startTime = std::chrono::high_resolution_clock::now();
         auto currentTime = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-        model.rotation.z = time * 10;
+        //model.rotation.z = time * 10;
         //model.position.z = time;
         //model.scale.z   = time / 4;
         //model.scale.x   = time / 4;
         glfwPollEvents();
 
         drawFrame();
-        
-        //if(tick > models.size() - 1)
-        //    tick = 0;
-
-        if(time - lastTime > 0.7)
-        {
-            lastTime = time;
-            //setModel(models[tick]);
-            //pushModel();
-            tick++;
-        }
     }
     
     // прежде чем выйти из главного цикла мы ждем чтобы видеокарта закончила выполнения последнего

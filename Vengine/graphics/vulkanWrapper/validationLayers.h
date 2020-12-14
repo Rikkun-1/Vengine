@@ -7,6 +7,12 @@
 #include <cstring>
 #include <set>
 
+#ifdef USE_VALIDATION_LAYERS
+    const bool enableValidationLayers = true;
+#else
+    const bool enableValidationLayers = false;
+#endif
+
 /*
 * ѕринимает на вход множество строк, характеризующее требуемые слои валидации и провер€ет что все 
 * требуемые слои поддерживаютс€

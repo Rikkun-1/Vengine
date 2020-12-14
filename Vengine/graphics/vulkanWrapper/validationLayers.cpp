@@ -1,10 +1,4 @@
 #include "validationLayers.h"
-
-#ifdef USE_VALIDATION_LAYERS
-    const bool enableValidationLayers = false;
-#else
-    const bool enableValidationLayers = true;
-#endif
     
 ///////////////////////// STATIC BEG //////////////////////////////
 

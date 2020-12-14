@@ -103,6 +103,7 @@ static void transferDataToGPU(CommandPool            &commandPool,
 ///////////////////////// STATIC END //////////////////////////////
 
 
+
 ///////////////////////// BUFFER BEG ///////////////////////////////////
 
 Buffer::Buffer()
@@ -196,7 +197,9 @@ void Buffer::allocateMemory(const VkMemoryRequirements &memRequirements,
         throw std::runtime_error("failed to allocate vertex buffer memory!");
 }
 
-///////////////////////// STATIC END //////////////////////////////
+///////////////////////// BUFFER END //////////////////////////////
+
+
 
 ///////////////////////// PUBLIC BEG ///////////////////////////////////
 
@@ -262,20 +265,18 @@ void updateUniformBuffer(VkDevice                    logicalDevice,
 
     ubo.model = glm::mat4(1.0f);
     rotation  = glm::radians(rotation);
-
+    
+    
+    
     ubo.model = glm::translate(ubo.model, position);
+    
 
-    ubo.model = glm::rotate(ubo.model, rotation.x, glm::vec3(1.0f, 0.0f, 0.0f)); 
-    ubo.model = glm::rotate(ubo.model, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f)); 
-    ubo.model = glm::rotate(ubo.model, rotation.z, glm::vec3(0.0f, 0.0f, 1.0f)); 
-
-    ubo.model = glm::scale(ubo.model, scale);
-
-    ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), // кординаты точки зрения
+    ubo.view = glm::lookAt(glm::vec3(0.0f, 2.0f, 2.0f), // кординаты точки зрения
                            glm::vec3(0.0f, 0.0f, 0.0f), // координаты центра мира
                            glm::vec3(0.0f, 0.0f, 1.0f));// ось направленная вверх
 
-    ubo.proj = glm::perspective(glm::radians(45.0f), // вертикальный угол обзора
+
+    ubo.proj = glm::perspective(glm::radians(90.0f), // вертикальный угол обзора
                                 // соотношение сторон
                                 swapChainExtent.width / (float) swapChainExtent.height,
                                 0.1f,   // ближайшая дистанция 
@@ -283,6 +284,13 @@ void updateUniformBuffer(VkDevice                    logicalDevice,
     // GLM была изначально создана для OpenGL, где ось Y перевернута
     // простейший способ компенсировать это - инвертировать Y компоненту
     // коэффициента масштабирования
+
+    ubo.model = glm::rotate(ubo.model, rotation.x, glm::vec3(1.0f, 0.0f, 0.0f)); 
+    ubo.model = glm::rotate(ubo.model, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f)); 
+    ubo.model = glm::rotate(ubo.model, rotation.z, glm::vec3(0.0f, 0.0f, 1.0f)); 
+    
+    ubo.model = glm::scale(ubo.model, scale);
+
 
     ubo.proj[1][1] *= -1;
 

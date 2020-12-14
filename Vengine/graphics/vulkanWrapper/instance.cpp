@@ -6,13 +6,6 @@
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-
-#ifdef USE_VALIDATION_LAYERS
-    const bool enableValidationLayers = false;
-#else
-    const bool enableValidationLayers = true;
-#endif
-
     
 ///////////////////////// PUBLIC BEG //////////////////////////////
 
@@ -79,10 +72,11 @@ std::vector<const char *> getRequiredExtensions(bool enableValidationLayers)
     return requeredExtensions;
 }
 
-
+#include <iostream>
 VkInstance createInstance(const std::vector<const char *> &validationLayers,
                           const std::vector<const char *> &instanceExtensions)
 {
+    std::cout << enableValidationLayers;
     if(enableValidationLayers && !checkValidationLayerSupport(validationLayers))
         throw std::runtime_error("validation layers requested, but not available");
 
