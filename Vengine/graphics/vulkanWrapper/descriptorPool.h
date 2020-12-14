@@ -5,4 +5,4 @@
 #include "device.h"
 
 VkDescriptorPool createDescriptorPool(const LogicalDevice  &device,
-                                      int            size);
+                                      uint32_t             size);

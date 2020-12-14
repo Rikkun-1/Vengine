@@ -5,85 +5,7 @@
 #include "commandBuffer.h"
 #include "transitionImageLayout.h"
 
-Image::Image()
-{
-    device   = VK_NULL_HANDLE;
-    handle   = VK_NULL_HANDLE;
-    memory   = VK_NULL_HANDLE;
-    resetImageInfo();
-}
-
-Image::Image(const LogicalDevice *device)
-{
-    device   = device;
-    handle   = VK_NULL_HANDLE;
-    memory   = VK_NULL_HANDLE;
-    resetImageInfo();
-}
-
-void Image::resetImageInfo()
-{
-    size     = 0;
-    width    = 0;
-    height   = 0;
-}
-
-void Image::createImage(const VkExtent3D         &extent,
-                              VkFormat           format,
-                              VkImageTiling      tiling,
-                              VkImageUsageFlags  usage)
-{
-    VkImageCreateInfo imageInfo{};
-    imageInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    imageInfo.imageType     = VK_IMAGE_TYPE_2D;
-    imageInfo.extent.width  = extent.width;
-    imageInfo.extent.height = extent.height;
-    imageInfo.extent.depth  = extent.depth;
-    imageInfo.mipLevels     = 1;
-    imageInfo.arrayLayers   = 1;
-    imageInfo.format        = format;
-    imageInfo.tiling        = tiling;
-    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    imageInfo.usage         = usage;
-    imageInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
-    imageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
-
-    if(vkCreateImage(this->device->handle, &imageInfo, nullptr, &this->handle) != VK_SUCCESS)
-        throw std::runtime_error("failed to create image!");
-}
-
-void Image::create(const VkExtent3D      &extent,
-                   VkFormat              format,
-                   VkImageTiling         tiling,
-                   VkImageUsageFlags     usage,
-                   VkMemoryPropertyFlags properties)
-{
-    width    = extent.width;
-    height   = extent.height;
-
-    createImage(extent, format, tiling, usage);
-    
-    VkMemoryRequirements memRequirements;
-    vkGetImageMemoryRequirements(this->device->handle, this->handle, &memRequirements);
-    allocateMemory(memRequirements, properties);
-    vkBindImageMemory(this->device->handle, this->handle, this->memory, 0);
-}
-
-void Image::destroy()
-{
-    Buffer::destroy();
-    if(handle)
-    {
-         vkDestroyImage(device->handle, handle, nullptr);
-         vkFreeMemory(device->handle, memory, nullptr);
-
-         handle = VK_NULL_HANDLE;
-         memory = VK_NULL_HANDLE;
-
-         resetImageInfo();
-    }
-}
-
+///////////////////////// STATIC BEG //////////////////////////////
 
 static void setupImageCopyRegion(const VkExtent3D   &extent,
                                  VkBufferImageCopy  &region)
@@ -130,6 +52,89 @@ static VkFormat findSupportedFormat(VkPhysicalDevice            physicalDevice,
     throw std::runtime_error("failed to find supported format!");
 }
 
+///////////////////////// STATIC END //////////////////////////////
+
+
+///////////////////////// IMAGE BEG //////////////////////////////
+
+Image::Image()
+{
+    device   = VK_NULL_HANDLE;
+    handle   = VK_NULL_HANDLE;
+    memory   = VK_NULL_HANDLE;
+    resetImageInfo();
+}
+
+Image::Image(const LogicalDevice *device) : Buffer(device)
+{
+    resetImageInfo();
+}
+
+void Image::resetImageInfo()
+{
+    size     = 0;
+    width    = 0;
+    height   = 0;
+}
+
+
+void Image::createImage(const VkExtent3D         &extent,
+                              VkFormat           format,
+                              VkImageTiling      tiling,
+                              VkImageUsageFlags  usage)
+{
+    VkImageCreateInfo imageInfo{};
+    imageInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType     = VK_IMAGE_TYPE_2D;
+    imageInfo.extent.width  = extent.width;
+    imageInfo.extent.height = extent.height;
+    imageInfo.extent.depth  = extent.depth;
+    imageInfo.mipLevels     = 1;
+    imageInfo.arrayLayers   = 1;
+    imageInfo.format        = format;
+    imageInfo.tiling        = tiling;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageInfo.usage         = usage;
+    imageInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
+
+    if(vkCreateImage(this->device->handle, &imageInfo, nullptr, &this->handle) != VK_SUCCESS)
+        throw std::runtime_error("failed to create image!");
+}
+
+void Image::create(const VkExtent3D      &extent,
+                   VkFormat              format,
+                   VkImageTiling         tiling,
+                   VkImageUsageFlags     usage,
+                   VkMemoryPropertyFlags properties)
+{
+    alive = true;
+
+    width    = extent.width;
+    height   = extent.height;
+
+    createImage(extent, format, tiling, usage);
+    VkMemoryRequirements memRequirements;
+    vkGetImageMemoryRequirements(this->device->handle, this->handle, &memRequirements);
+    allocateMemory(memRequirements, properties);
+    vkBindImageMemory(this->device->handle, this->handle, this->memory, 0);
+}
+
+void Image::destroy()
+{
+    if(alive)
+    {
+         vkDestroyImage(device->handle, handle, nullptr);
+         Buffer::destroy();
+         alive = false;
+         resetImageInfo();
+    }
+}
+
+///////////////////////// IMAGE END //////////////////////////////
+
+
+///////////////////////// PUBLIC BEG //////////////////////////////
 
 VkFormat findDepthFormat(VkPhysicalDevice physicalDevice)
 {
@@ -231,3 +236,5 @@ bool hasStencilComponent(VkFormat format)
     return format == VK_FORMAT_D32_SFLOAT_S8_UINT || 
            format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
+
+///////////////////////// PUBLIC END //////////////////////////////

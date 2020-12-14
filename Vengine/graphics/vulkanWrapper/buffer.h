@@ -16,22 +16,25 @@
 
 struct UniformBufferObject
 {
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 proj;
+    glm::mat4  model;
+    glm::mat4  view;
+    glm::mat4  proj;
+    alignas(16)
+    bool noTexture;
+    //glm::uint8 
 };
 
 
 struct Buffer
 {
     VkBuffer              handle;
-    VkDeviceMemory        memory;
     VkDeviceSize          size;
-    const LogicalDevice   *device;
+    const LogicalDevice  *device;
 
     Buffer();
-
     Buffer(const LogicalDevice *logicalDevice);
+
+    ~Buffer();
 
     void create(VkDeviceSize          size, 
                 VkBufferUsageFlags    usage, 
@@ -44,6 +47,9 @@ struct Buffer
     void destroy();
 
 protected:
+    bool            alive;    
+    VkDeviceMemory  memory;
+
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage);
 
     void allocateMemory(const VkMemoryRequirements &memRequirements,
@@ -66,7 +72,7 @@ void createIndexBuffer(CommandPool                 &commandPool,
 
 void createUniformBuffers(const LogicalDevice         &device,
                           std::vector<Buffer>         &uniformBuffers,
-                          int                         amount);
+                          uint32_t                     amount);
 
 
 void updateUniformBuffer(VkDevice                    logicalDevice,

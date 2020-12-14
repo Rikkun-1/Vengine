@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+///////////////////////// PUBLIC BEG //////////////////////////////
+
 void setupPipelineLayoutInfo(const VkDescriptorSetLayout       &descriptorSetLayout,
                                    VkPipelineLayoutCreateInfo  &pipelineLayoutInfo)
 {
@@ -25,3 +27,5 @@ VkPipelineLayout createPipelineLayout(VkDevice                    logicalDevice,
 
     return pipelineLayout;
 }
+
+///////////////////////// PUBLIC END //////////////////////////////

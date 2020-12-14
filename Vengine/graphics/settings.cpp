@@ -1,4 +1,6 @@
-#include "vkSettings.h"
+#include "settings.h"
+
+///////////////////////// VK SETTINGS BEG //////////////////////////////
 
 vkSettings::vkSettings()
 {
@@ -23,3 +25,5 @@ vkSettings::vkSettings()
     model_path = "models/viking_room.obj";
     texture_path = "textures/viking_room.png";
 };
+
+///////////////////////// VK SETTINGS END //////////////////////////////

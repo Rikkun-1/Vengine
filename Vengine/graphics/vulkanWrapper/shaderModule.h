@@ -18,12 +18,11 @@ struct ShaderModule
     
     void setDevice(const LogicalDevice    &device);
 
-    void create(const std::vector<char>    &code,
-                VkShaderStageFlagBits       stage,
-                const std::string          &entry);
+    void create(const std::vector<char>     &code,
+                      VkShaderStageFlagBits  stage,
+                const std::string           &entry);
 
     void destroy();
-
 
     ~ShaderModule();
 };

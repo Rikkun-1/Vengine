@@ -1,5 +1,7 @@
 #include "vertex.h"
 
+///////////////////////// VERTEX BEG //////////////////////////////
+
 // эта функция нужна для того чтобы описать каким образом этот формат данных
 // должен передаваться в вершинный шейдер
 VkVertexInputBindingDescription Vertex::getBindingDescription()
@@ -39,3 +41,5 @@ std::array<VkVertexInputAttributeDescription, 3> Vertex::getAttributeDescription
 
     return attributeDescriptions;
 }
+
+///////////////////////// VERTEX END //////////////////////////////

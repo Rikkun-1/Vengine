@@ -6,12 +6,8 @@
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-
-#ifdef USE_VALIDATION_LAYERS
-    const bool enableValidationLayers = false;
-#else
-    const bool enableValidationLayers = true;
-#endif
+    
+///////////////////////// PUBLIC BEG //////////////////////////////
 
 /*
 * Проверяет что все требуемые расширения поддеживаются 
@@ -20,7 +16,7 @@
 * Выводит в консоль те расширения которые требуются, но не поддерживаются
 * Возвращает true если все требуемые расширения поддерживаются и false в ином случае
 */
-static bool checkExtensionsSupport(const std::vector<const char *> &requiredExtensions)
+bool checkExtensionsSupport(const std::vector<const char *> &requiredExtensions)
 {
     uint32_t supportedExtensionCount = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &supportedExtensionCount, nullptr);
@@ -62,7 +58,7 @@ static bool checkExtensionsSupport(const std::vector<const char *> &requiredExte
 /*
 * Возвращает список расширений, требуемых для glfw и слоев валидации, если они включены
 */
-static std::vector<const char *> getRequiredExtensions(bool enableValidationLayers)
+std::vector<const char *> getRequiredExtensions(bool enableValidationLayers)
 {
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtensions;
@@ -76,7 +72,7 @@ static std::vector<const char *> getRequiredExtensions(bool enableValidationLaye
     return requeredExtensions;
 }
 
-
+#include <iostream>
 VkInstance createInstance(const std::vector<const char *> &validationLayers,
                           const std::vector<const char *> &instanceExtensions)
 {
@@ -88,8 +84,8 @@ VkInstance createInstance(const std::vector<const char *> &validationLayers,
     appInfo.sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName   = "3D graphics engine";
     appInfo.pEngineName        = "Vengine";
-    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.engineVersion      = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.applicationVersion = VK_MAKE_VERSION(0, 1, 0);
+    appInfo.engineVersion      = VK_MAKE_VERSION(0, 1, 0);
     appInfo.apiVersion         = VK_API_VERSION_1_0;
 
 
@@ -135,3 +131,5 @@ VkInstance createInstance(const std::vector<const char *> &validationLayers,
 
     return instance;
 }
+
+///////////////////////// PUBLIC END //////////////////////////////

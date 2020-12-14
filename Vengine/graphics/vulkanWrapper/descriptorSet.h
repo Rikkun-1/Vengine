@@ -16,4 +16,4 @@ void createDescriptorSets(const LogicalDevice          &device,
                           std::vector<Buffer>          &uniformBuffers,
                           VkImageView                  textureImageView,
                           VkSampler                    textureSampler,
-                          int                          amount);
+                          uint32_t                     amount);

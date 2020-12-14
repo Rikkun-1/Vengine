@@ -1,10 +1,12 @@
 #include "descriptorSet.h"
 
+///////////////////////// PUBLIC BEG //////////////////////////////
+
 static void allocateDescriptorSets(VkDevice                      logicalDevice,
                                    VkDescriptorPool              descriptorPool,
                                    VkDescriptorSetLayout        &descriptorSetLayout,
                                    std::vector<VkDescriptorSet> &descriptorSets,
-                                   int                           amount)
+                                   uint32_t                      amount)
 {
     std::vector<VkDescriptorSetLayout> layouts(amount, descriptorSetLayout);
     
@@ -51,7 +53,7 @@ void createDescriptorSets(const LogicalDevice          &device,
                           std::vector<Buffer>          &uniformBuffers,
                           VkImageView                  textureImageView,
                           VkSampler                    textureSampler,
-                          int                          amount)
+                          uint32_t                     amount)
 {
     allocateDescriptorSets(device.handle,
                            descriptorPool,
@@ -98,3 +100,5 @@ void createDescriptorSets(const LogicalDevice          &device,
                                nullptr);
     }
 }
+
+///////////////////////// PUBLIC END /////////////////////////////

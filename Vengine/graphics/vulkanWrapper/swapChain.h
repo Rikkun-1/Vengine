@@ -10,7 +10,7 @@
 #include "image.h"
 #include "framebuffer.h"
 
-struct SwapChain
+struct Swapchain
 {
 public:
     LogicalDevice              *device;

@@ -9,6 +9,7 @@ class Texture
 {
 public:
     Texture();
+    ~Texture();
     Texture(std::string path);
 
     void loadFromFile(std::string path);
@@ -19,14 +20,13 @@ public:
 
     void  setPixel(int x, int y, Pixel pixel);
     Pixel getPixel(int x, int y);
-
-    void *getRaw();
-
-private:
+    
+    std::vector<Pixel> pixels;
+    
     int width;
     int height;
     int channels;
 
-    Pixel *pixels;
+private:
 };
 

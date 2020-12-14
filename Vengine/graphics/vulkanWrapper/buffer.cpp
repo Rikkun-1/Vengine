@@ -4,6 +4,7 @@
 
 #include "commandBuffer.h"
 
+///////////////////////// STATIC BEG //////////////////////////////
 
 static uint32_t findMemoryType(VkPhysicalDevice       physicalDevice,
                                uint32_t               typeFilter,
@@ -29,96 +30,10 @@ static uint32_t findMemoryType(VkPhysicalDevice       physicalDevice,
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-    
-Buffer::Buffer()
-{
-    this->device = VK_NULL_HANDLE;
-    this->handle = VK_NULL_HANDLE;
-    this->memory = VK_NULL_HANDLE;
-    this->size   = 0;
-}
-
-Buffer::Buffer(const LogicalDevice *device)
-{
-    Buffer();
-    this->device = device;
-}
-
-void Buffer::setDevice(const LogicalDevice *device)
-{
-     this->device = device;
-}
-
-void Buffer::create(VkDeviceSize           size,
-                    VkBufferUsageFlags     usage,
-                    VkMemoryPropertyFlags  properties)
-{
-    createBuffer(size, usage);
-    
-    VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(device->handle, this->handle, &memRequirements);
-    allocateMemory(memRequirements, properties);
-    vkBindBufferMemory(device->handle, this->handle, this->memory, 0);
-}
-
-void Buffer::destroy()
-{
-    if(handle)
-    {
-        vkDestroyBuffer(device->handle, handle, nullptr);
-        handle = VK_NULL_HANDLE;
-    }
-    if(memory)
-    {
-        vkFreeMemory(device->handle, memory, nullptr);
-        memory = VK_NULL_HANDLE;
-    }
-}
-
-void Buffer::createBuffer(VkDeviceSize        size,
-                          VkBufferUsageFlags  usage) 
-{
-    this->size = size;
-
-    VkBufferCreateInfo bufferInfo{};
-    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferInfo.size  = size;
-    bufferInfo.usage = usage;
-    // буфер может использоваться конкретным семейством или же быть
-    // быть общим для нескольких
-    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-    if(vkCreateBuffer(device->handle, &bufferInfo, nullptr, &this->handle) != VK_SUCCESS)
-        throw std::runtime_error("failed to create vertex buffer!");
-}
-
-void Buffer::allocateMemory(const VkMemoryRequirements &memRequirements,
-                            VkMemoryPropertyFlags       properties)
-{
-    VkMemoryAllocateInfo allocInfo{};
-    allocInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize  = memRequirements.size;
-    allocInfo.memoryTypeIndex = findMemoryType(device->physicalDevice,
-                                               memRequirements.memoryTypeBits,
-                                               properties);
-
-    if(vkAllocateMemory(device->handle, &allocInfo, nullptr, &this->memory) != VK_SUCCESS)
-        throw std::runtime_error("failed to allocate vertex buffer memory!");
-}
-
-void Buffer::mapMemory(VkDeviceSize  dataSize,
-                       const void   *data)
-{
-    void *destination;
-    vkMapMemory(this->device->handle, this->memory, 0, dataSize, 0, &destination);
-    memcpy(destination, data, (size_t) dataSize);
-    vkUnmapMemory(this->device->handle, this->memory);
-}
-
 
 static void copyBuffer(CommandPool          &commandPool,
-                       Buffer               srcBuffer,
-                       Buffer               dstBuffer,
+                       Buffer               &srcBuffer,
+                       Buffer               &dstBuffer,
                        VkDeviceSize         size)
 {
     VkCommandBuffer commandBuffer;
@@ -183,10 +98,110 @@ static void transferDataToGPU(CommandPool            &commandPool,
     stagingBuffer.mapMemory(dataSize, data);
 
     transferBufferToGPU(commandPool, usage, stagingBuffer, bufferOnGpu);
-
-    stagingBuffer.destroy();
 }
 
+///////////////////////// STATIC END //////////////////////////////
+
+
+
+///////////////////////// BUFFER BEG ///////////////////////////////////
+
+Buffer::Buffer()
+{
+    this->device = VK_NULL_HANDLE;
+    this->handle = VK_NULL_HANDLE;
+    this->memory = VK_NULL_HANDLE;
+    this->size   = 0;
+}
+
+Buffer::Buffer(const LogicalDevice *device) : Buffer()
+{
+    setDevice(device);
+}
+
+Buffer::~Buffer()
+{
+    destroy();
+}
+
+void Buffer::create(VkDeviceSize           size,
+                    VkBufferUsageFlags     usage,
+                    VkMemoryPropertyFlags  properties)
+{
+    createBuffer(size, usage);
+    
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(device->handle, this->handle, &memRequirements);
+    allocateMemory(memRequirements, properties);
+    vkBindBufferMemory(device->handle, this->handle, this->memory, 0);
+
+    alive = true;
+}
+
+void Buffer::setDevice(const LogicalDevice *device)
+{
+     this->device = device;
+}
+
+void Buffer::mapMemory(VkDeviceSize  dataSize,
+                       const void   *data)
+{
+    void *destination;
+    vkMapMemory(this->device->handle, this->memory, 0, dataSize, 0, &destination);
+    memcpy(destination, data, (size_t) dataSize);
+    vkUnmapMemory(this->device->handle, this->memory);
+}
+
+void Buffer::destroy()
+{
+    if(alive)
+    {
+        vkDestroyBuffer(device->handle, handle, nullptr);
+        vkFreeMemory(device->handle, memory, nullptr);
+        handle = VK_NULL_HANDLE;
+        device = VK_NULL_HANDLE;
+        alive = false;
+        size = 0;
+    }
+}
+
+
+void Buffer::createBuffer(VkDeviceSize        size,
+                          VkBufferUsageFlags  usage) 
+{
+    this->size = size;
+
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size  = size;
+    bufferInfo.usage = usage;
+    // буфер может использоваться конкретным семейством или же быть
+    // быть общим для нескольких
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    if(vkCreateBuffer(device->handle, &bufferInfo, nullptr, &this->handle) != VK_SUCCESS)
+        throw std::runtime_error("failed to create buffer!");
+}
+
+void Buffer::allocateMemory(const VkMemoryRequirements &memRequirements,
+                            VkMemoryPropertyFlags       properties)
+{
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize  = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(device->physicalDevice,
+                                               memRequirements.memoryTypeBits,
+                                               properties);
+
+    if(vkAllocateMemory(device->handle, &allocInfo, nullptr, &this->memory) != VK_SUCCESS)
+        throw std::runtime_error("failed to allocate vertex buffer memory!");
+}
+
+///////////////////////// BUFFER END //////////////////////////////
+
+
+
+///////////////////////// PUBLIC BEG ///////////////////////////////////
 
 void createStagingBuffer(VkDeviceSize bufferSize,
                          Buffer       &buffer)
@@ -225,7 +240,7 @@ void createIndexBuffer(CommandPool                 &commandPool,
 
 void createUniformBuffers(const LogicalDevice         &device,
                           std::vector<Buffer>         &uniformBuffers,
-                          int                         amount)
+                          uint32_t                     amount)
 {
     VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
@@ -238,7 +253,6 @@ void createUniformBuffers(const LogicalDevice         &device,
     }
 }
 
-#include <iostream>
 void updateUniformBuffer(VkDevice                    logicalDevice,
                          uint32_t                    currentImage,
                          VkExtent2D                  swapChainExtent,
@@ -251,21 +265,18 @@ void updateUniformBuffer(VkDevice                    logicalDevice,
 
     ubo.model = glm::mat4(1.0f);
     rotation  = glm::radians(rotation);
-
-
+    
+    
+    
     ubo.model = glm::translate(ubo.model, position);
+    
 
-    ubo.model = glm::rotate(ubo.model, rotation.x, glm::vec3(1.0f, 0.0f, 0.0f)); 
-    ubo.model = glm::rotate(ubo.model, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f)); 
-    ubo.model = glm::rotate(ubo.model, rotation.z, glm::vec3(0.0f, 0.0f, 1.0f)); 
-
-    ubo.model = glm::scale(ubo.model, scale);
-
-    ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), // кординаты точки зрения
+    ubo.view = glm::lookAt(glm::vec3(0.0f, 1.5f, 0.0f), // кординаты точки зрения
                            glm::vec3(0.0f, 0.0f, 0.0f), // координаты центра мира
                            glm::vec3(0.0f, 0.0f, 1.0f));// ось направленная вверх
 
-    ubo.proj = glm::perspective(glm::radians(45.0f), // вертикальный угол обзора
+
+    ubo.proj = glm::perspective(glm::radians(90.0f), // вертикальный угол обзора
                                 // соотношение сторон
                                 swapChainExtent.width / (float) swapChainExtent.height,
                                 0.1f,   // ближайшая дистанция 
@@ -274,10 +285,18 @@ void updateUniformBuffer(VkDevice                    logicalDevice,
     // простейший способ компенсировать это - инвертировать Y компоненту
     // коэффициента масштабирования
 
+    ubo.model = glm::rotate(ubo.model, rotation.x, glm::vec3(1.0f, 0.0f, 0.0f)); 
+    ubo.model = glm::rotate(ubo.model, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f)); 
+    ubo.model = glm::rotate(ubo.model, rotation.z, glm::vec3(0.0f, 0.0f, 1.0f)); 
+    
+    ubo.model = glm::scale(ubo.model, scale);
+
+
     ubo.proj[1][1] *= -1;
 
     uniformBuffers[currentImage].mapMemory(sizeof(ubo), &ubo);
 }
 
+///////////////////////// PUBLIC END //////////////////////////////
 
 

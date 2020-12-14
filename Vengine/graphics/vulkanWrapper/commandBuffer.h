@@ -6,7 +6,7 @@
 #include "swapChain.h"
 
 void writeCommandBuffersForDrawing(CommandPool                  &commandPool,
-                                   SwapChain                    &swapChain,
+                                   Swapchain                    &swapChain,
                                    VkRenderPass                 renderPass,
                                    VkPipeline                   graphicsPipeline,
                                    VkPipelineLayout             pipelineLayout,

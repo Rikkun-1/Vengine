@@ -1,5 +1,7 @@
 #include "Mesh.h"
 
+///////////////////////// MESH BEG //////////////////////////////
+
 Mesh::Mesh(std::string path)
 {
     loadFromFile(path);
@@ -7,5 +9,7 @@ Mesh::Mesh(std::string path)
 
 void Mesh::loadFromFile(std::string path)
 {
-    vkTools::loadMesh(path, vertices, indices);
+    VengineTools::loadMesh(path, vertices, indices);
 }
+
+///////////////////////// MESH END //////////////////////////////

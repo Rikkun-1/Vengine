@@ -1,22 +1,62 @@
 #include "Renderer.h"
 
 #include <chrono>
+    
+///////////////////////// STATIC BEG //////////////////////////////
 
-#ifdef USE_VALIDATION_LAYERS
-    const bool enableValidationLayers = false;
-#else
-    const bool enableValidationLayers = true;
-#endif
+static bool endsWith(std::string str1, std::string str2)
+{
+    size_t len1 = str1.length();
+    size_t len2 = str2.length();
+
+    if(len1 < len2) return false;
+
+    std::string str1end = str1.substr(len1 - len2, len2);
+
+    return str1end.compare(str2) == 0;
+}
 
 static void framebufferResizeCallback(GLFWwindow *window, int width, int height)
 {
-    auto app = reinterpret_cast<Renderer *>(glfwGetWindowUserPointer(window));
+    Renderer *app = reinterpret_cast<Renderer *>(glfwGetWindowUserPointer(window));
     app->framebufferResized = true;
 }
 
+static void glfwKeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
+    Renderer *app = reinterpret_cast<Renderer *>(glfwGetWindowUserPointer(window));
+    if(app->interfaceCallback)
+        app->interfaceCallback(key, action, mods, app);
+}
+
+static void drop_callback(GLFWwindow* window, int count, const char** paths)
+{
+    Renderer *app = reinterpret_cast<Renderer *>(glfwGetWindowUserPointer(window));
+    std::string path = paths[0];
+
+    if(endsWith(path, ".obj"))
+    {
+        Mesh mesh(path);
+        app->setMesh(mesh);
+        app->pushMesh();
+    } 
+    else if(endsWith(path, ".png") ||
+            endsWith(path, ".jpg") ||
+            endsWith(path, ".bmp"))
+    {
+        Texture texture(path);
+        app->setTexture(texture);
+        app->pushTexture();
+    }
+}
+
+///////////////////////// STATIC END //////////////////////////////
+
+
+///////////////////////// RENDERER BEG //////////////////////////////
+
 Renderer::Renderer() 
 {
-
 }
 
 void Renderer::loadShader(Shader shader) 
@@ -31,14 +71,117 @@ void Renderer::loadShader(Shader shader)
     }
 }
 
-void Renderer::changeModel(Model model) 
+void Renderer::setModel(Model model) 
 {
     this->model = model;
 }
 
-void Renderer::changeTexture(Texture texture) 
+void Renderer::setMesh(Mesh mesh) 
 {
-    this->texture = texture;
+    this->model.mesh = mesh;
+}
+
+void Renderer::setTexture(Texture texture) 
+{
+    this->model.texture = texture;
+}
+
+void Renderer::setInterfaceCallback(void (*interfaceCallbackFun)(int, int, int, Renderer *))
+{
+    this->interfaceCallback = interfaceCallbackFun;
+}
+
+
+void Renderer::pushModel() 
+{
+    pushMesh(false);
+    pushTexture();
+}
+
+void Renderer::pushMesh(bool rewriteCommandBuffers) 
+{      
+    if(model.mesh.vertices.empty())
+    {
+        const std::vector<Vertex> vertices = {
+            {{1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+            {{-1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
+            {{1.0f, 0.0f, -1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 0.0f}},
+            {{-1.0f, 0.0f, -1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}}
+        };
+
+        model.mesh.vertices = vertices;
+
+        std::vector<uint32_t> indices = {2, 3, 0, 0, 3, 1};
+        model.mesh.indices = indices;
+    }
+
+    vkDeviceWaitIdle(device.handle);
+
+    if(!vertexBuffer.device)
+        vertexBuffer.setDevice(&device);
+
+    if(!indexBuffer.device)
+        indexBuffer.setDevice(&device);
+
+    vertexBuffer.destroy();
+    indexBuffer.destroy();
+
+    createVertexBuffer(commandPool,
+                       model.mesh.vertices,
+                       vertexBuffer);
+            
+    createIndexBuffer(commandPool,
+                      model.mesh.indices,
+                      indexBuffer);
+
+    if(rewriteCommandBuffers)
+        writeCommandsForDrawing();
+}
+
+void Renderer::pushTexture(bool rewriteCommandBuffers) 
+{
+    if(model.texture.pixels.empty())
+    {
+        model.texture.pixels.push_back(Pixel{255, 255, 255, 255});
+        model.texture.width    = 1;
+        model.texture.height   = 1;
+        model.texture.channels = 4;
+    }
+
+    VkExtent3D textureExtent{
+        model.texture.getWidth(),
+        model.texture.getHeight(),
+        1
+    };
+    vkDeviceWaitIdle(device.handle);
+
+    if(!textureImage.device)
+        textureImage.setDevice(&device);
+
+    vkDestroyImageView(device.handle, textureImageView, nullptr);
+    textureImage.destroy();
+
+    createTextureImage(model.texture.pixels.data(),
+                       model.texture.getChannels(),
+                       textureExtent,
+                       commandPool,
+                       textureImage);
+    createTextureImageView(device, textureImage, textureImageView);
+
+    if(descriptorSets.data())
+        vkResetDescriptorPool(device.handle, descriptorPool, 0);
+
+    createDescriptorSets(device,
+                         descriptorPool,
+                         descriptorSetLayout,
+                         descriptorSets,
+                         uniformBuffers,
+                         textureImageView,
+                         textureSampler,
+                         swapChain.images.size());
+
+    if(rewriteCommandBuffers)
+        writeCommandsForDrawing();
 }
 
 void Renderer::run()
@@ -49,12 +192,17 @@ void Renderer::run()
     cleanup();
 }
 
+
+
 void Renderer::initWindow()
 {
     glfwInit();
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+
+    //pWindow = glfwCreateWindow(settings.windowWidth, settings.windowHeight, 
+    //                          settings.windowTitle, glfwGetPrimaryMonitor(), nullptr);
 
     pWindow = glfwCreateWindow(settings.windowWidth, settings.windowHeight, 
                               settings.windowTitle, nullptr, nullptr);
@@ -63,6 +211,9 @@ void Renderer::initWindow()
     // чтобы в framebufferResizeCallback иметь доступ к framebufferResized
     glfwSetWindowUserPointer(pWindow, this);
     glfwSetFramebufferSizeCallback(pWindow, framebufferResizeCallback);
+    
+    glfwSetKeyCallback(pWindow, glfwKeyCallback);
+    glfwSetDropCallback(pWindow, drop_callback);
 }
 
 void Renderer::initVulkan()
@@ -71,116 +222,39 @@ void Renderer::initVulkan()
                               settings.instanceExtensions);
 
     debugMessenger = setupDebugMessenger(instance);
-
+    
     if(glfwCreateWindowSurface(instance, pWindow, nullptr, &surface) != VK_SUCCESS)
         std::runtime_error("failed to create window surface");
 
-    VkPhysicalDevice physicalDevice;
-    physicalDevice = pickPhysicalDevice(instance, 
-                                        surface, 
-                                        settings.deviceExtensions);
+    setupLogicalDevice();
 
-    device = createLogicalDevice(instance,
-                                 physicalDevice,
-                                 surface, 
-                                 settings.deviceExtensions);
+    setupSwapchain();
+    createUniformBuffers(device,
+                         uniformBuffers,
+                         swapChain.images.size());
 
-    int width, height;
-    glfwGetFramebufferSize(pWindow, &width, &height);
-
-    VkExtent2D swapChainExtent {width, height};
-
-    swapChain.create(device, surface, swapChainExtent);
-
-    renderPass          = createRenderPass(device, swapChain.imageFormat);
+    setupShaderModules();
 
     descriptorSetLayout = createDescriptorSetLayout(device.handle);
-
     pipelineLayout      = createPipelineLayout(device.handle, descriptorSetLayout);
 
-    vertexShaderModule.setDevice(device);
-    fragmentShaderModule.setDevice(device);
+    pipelineFixedFunctions.setup(swapChain.extent);
+    setupPipeline();
 
-    vertexShaderModule.create(vertexShader.binaryCode,
-                              VK_SHADER_STAGE_VERTEX_BIT,
-                              vertexShader.entry);
-
-    fragmentShaderModule.create(fragmentShader.binaryCode,
-                                VK_SHADER_STAGE_FRAGMENT_BIT,
-                                fragmentShader.entry);
-
-    graphicsPipeline    = createGraphicsPipeline(device,
-                                                 swapChain.extent,
-                                                 renderPass,
-                                                 vertexShaderModule,
-                                                 fragmentShaderModule,
-                                                 descriptorSetLayout,
-                                                 pipelineLayout);
-
-    commandPool.setDevice(&this->device);
-    commandPool.create();
+    setupCommandPool();
 
     createDepthResources(commandPool,
                          swapChain.extent,
                          depthImage,
                          depthImageView);
-
-    swapChain.createFrameBuffers(renderPass, depthImageView);
-
-    VkExtent3D textureExtent {
-        model.texture.getWidth(),
-        model.texture.getHeight(),
-        1
-    };
-
-    createTextureImage(model.texture.getRaw(),
-                       model.texture.getChannels(),
-                       textureExtent,
-                       commandPool,
-                       textureImage);
-
-    createTextureImageView(device, textureImage, textureImageView);
-
+    
     createTextureSampler(device, textureSampler);
 
-    createVertexBuffer(commandPool,
-                       model.mesh.vertices,
-                       vertexBuffer);
-
-    createIndexBuffer(commandPool,
-                      model.mesh.indices,
-                      indexBuffer);
-
-    createUniformBuffers(device,
-                         uniformBuffers,
-                         swapChain.images.size());
-
-    descriptorPool = createDescriptorPool(device, swapChain.images.size());
-
-    createDescriptorSets(device, 
-                         descriptorPool,
-                         descriptorSetLayout,
-                         descriptorSets,
-                         uniformBuffers,
-                         textureImageView,
-                         textureSampler,
-                         swapChain.images.size());
-
-    commandBuffers.resize(swapChain.images.size());
-    commandPool.allocateCommandBuffers(commandBuffers.size(),
-                                       commandBuffers.data());
+    swapChain.createFrameBuffers(renderPass, depthImageView);
     
-    writeCommandBuffersForDrawing(commandPool,
-                                  swapChain,
-                                  renderPass,
-                                  graphicsPipeline,
-                                  pipelineLayout,
-                                  vertexBuffer.handle,
-                                  indexBuffer.handle,
-                                  model.mesh.indices.size(),
-                                  descriptorSets,
-                                  commandBuffers);
-                                  
+    descriptorPool = createDescriptorPool(device, swapChain.images.size());
+    pushModel();
+
     createSyncObjects(device,
                       MAX_FRAMES_IN_FLIGHT,
                       swapChain,
@@ -191,92 +265,26 @@ void Renderer::initVulkan()
 }
 
 void Renderer::mainLoop()
-{
-    static auto startTime = std::chrono::high_resolution_clock::now();
-    
+{    
+    int tick = 0;
+    static float lastTime = 0;
     while(!glfwWindowShouldClose(pWindow))
     {
+        static auto startTime = std::chrono::high_resolution_clock::now();
         auto currentTime = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-        model.rotation.z = time * 5;
+        //model.rotation.z = time * 10;
         //model.position.z = time;
-        model.scale.z   = time / 4;
-        model.scale.x   = time / 4;
+        //model.scale.z   = time / 4;
+        //model.scale.x   = time / 4;
         glfwPollEvents();
+
         drawFrame();
     }
-
+    
     // прежде чем выйти из главного цикла мы ждем чтобы видеокарта закончила выполнения последнего
     // командного буфера 
     vkDeviceWaitIdle(device.handle);
-}
-
-void Renderer::recreateSwapChain()
-{
-    int width  = 0, 
-        height = 0;
-    glfwGetFramebufferSize(pWindow, &width, &height);
-
-    // если окно свернуто, то glfwGetFramebufferSize вернет нули
-    // вместо ширины и высоты. Поэтому мы ждем пока размер окна не примет адекватные значения
-    // это произойдет когда окно вновь будет развернуто
-    std::cout << width << "  " << height << std::endl;
-    while(width == 0 || height == 0)
-    {
-        std::cout << width << " || " << height << std::endl;
-        glfwGetFramebufferSize(pWindow, &width, &height);
-        glfwWaitEvents();
-    }
-
-    vkDeviceWaitIdle(device.handle);
-
-    cleanupSwapChain();
-
-    VkExtent2D swapChainExtent = {width, height};
-    swapChain.create(device, surface, swapChainExtent);
-
-    renderPass          = createRenderPass(device, swapChain.imageFormat);
-    pipelineLayout      = createPipelineLayout(device.handle, descriptorSetLayout);
-    graphicsPipeline    = createGraphicsPipeline(device,
-                                                 swapChain.extent,
-                                                 renderPass,
-                                                 vertexShaderModule,
-                                                 fragmentShaderModule,
-                                                 descriptorSetLayout,
-                                                 pipelineLayout);
-
-    createDepthResources(commandPool,
-                         swapChain.extent,
-                         depthImage,
-                         depthImageView);
-
-    swapChain.createFrameBuffers(renderPass, depthImageView);
-
-    createUniformBuffers(device,
-                         uniformBuffers,
-                         swapChain.images.size());
-
-    descriptorPool = createDescriptorPool(device, swapChain.images.size());
-
-    createDescriptorSets(device, 
-                         descriptorPool,
-                         descriptorSetLayout,
-                         descriptorSets,
-                         uniformBuffers,
-                         textureImageView,
-                         textureSampler,
-                         swapChain.images.size());
-    
-    writeCommandBuffersForDrawing(commandPool,
-                                  swapChain,
-                                  renderPass,
-                                  graphicsPipeline,
-                                  pipelineLayout,
-                                  vertexBuffer.handle,
-                                  indexBuffer.handle,
-                                  model.mesh.indices.size(),
-                                  descriptorSets,
-                                  commandBuffers);
 }
 
 void Renderer::drawFrame()
@@ -416,6 +424,146 @@ void Renderer::drawFrame()
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
+void Renderer::setupShaderModules()
+{
+    if(vertexShaderModule.handle)
+        vertexShaderModule.destroy();
+
+    if(vertexShaderModule.handle)
+        fragmentShaderModule.destroy();
+
+    if(!vertexShaderModule.device)
+        vertexShaderModule.setDevice(device);
+
+    if(!fragmentShaderModule.device)
+        fragmentShaderModule.setDevice(device);
+
+    vertexShaderModule.create(vertexShader.binaryCode,
+                              VK_SHADER_STAGE_VERTEX_BIT,
+                              vertexShader.entry);
+
+    fragmentShaderModule.create(fragmentShader.binaryCode,
+                                VK_SHADER_STAGE_FRAGMENT_BIT,
+                                fragmentShader.entry);
+}
+
+void Renderer::setupLogicalDevice()
+{
+    VkPhysicalDevice physicalDevice;
+    physicalDevice = pickPhysicalDevice(instance, 
+                                        surface, 
+                                        settings.deviceExtensions);
+
+    device = createLogicalDevice(instance,
+                                 physicalDevice,
+                                 surface, 
+                                 settings.deviceExtensions);
+}
+
+void Renderer::setupSwapchain()
+{    
+    int width, height;
+    glfwGetFramebufferSize(pWindow, &width, &height);
+
+    VkExtent2D swapChainExtent {width, height};
+
+    swapChain.create(device, surface, swapChainExtent);
+}
+
+void Renderer::setupCommandPool()
+{    
+    commandPool.setDevice(&this->device);
+    commandPool.create();
+
+    commandBuffers.resize(swapChain.images.size());
+
+    commandPool.allocateCommandBuffers(commandBuffers.size(),
+                                       commandBuffers.data());
+}
+
+void Renderer::setupPipeline()
+{    
+    if(!renderPass)
+        renderPass = createRenderPass(device, swapChain.imageFormat);
+
+    if(graphicsPipeline)
+    {
+        vkDestroyPipeline(device.handle, graphicsPipeline, nullptr);
+        graphicsPipeline = VK_NULL_HANDLE;
+    }
+
+    graphicsPipeline = createGraphicsPipeline(device,
+                                              swapChain.extent,
+                                              pipelineFixedFunctions,
+                                              renderPass,
+                                              vertexShaderModule,
+                                              fragmentShaderModule,
+                                              descriptorSetLayout,
+                                              pipelineLayout);
+}
+
+void Renderer::writeCommandsForDrawing()
+{
+    writeCommandBuffersForDrawing(commandPool,
+                                  swapChain,
+                                  renderPass,
+                                  graphicsPipeline,
+                                  pipelineLayout,
+                                  vertexBuffer.handle,
+                                  indexBuffer.handle,
+                                  model.mesh.indices.size(),
+                                  descriptorSets,
+                                  commandBuffers);
+}
+
+void Renderer::recreateSwapChain()
+{
+    int width  = 0, 
+        height = 0;
+    glfwGetFramebufferSize(pWindow, &width, &height);
+
+    // если окно свернуто, то glfwGetFramebufferSize вернет нули
+    // вместо ширины и высоты. Поэтому мы ждем пока размер окна не примет адекватные значения
+    // это произойдет когда окно вновь будет развернуто
+    while(width == 0 || height == 0)
+    {
+        glfwGetFramebufferSize(pWindow, &width, &height);
+        glfwWaitEvents();
+    }
+    vkDeviceWaitIdle(device.handle);
+
+    cleanupSwapChain();
+
+    VkExtent2D swapChainExtent = {width, height};
+    swapChain.create(device, surface, swapChainExtent);
+
+    pipelineFixedFunctions.setupViewPortAndScissor(swapChain.extent);
+    setupPipeline();
+
+    createDepthResources(commandPool,
+                         swapChain.extent,
+                         depthImage,
+                         depthImageView);
+
+    swapChain.createFrameBuffers(renderPass, depthImageView);
+    
+    if(descriptorSets.data())
+        vkResetDescriptorPool(device.handle, descriptorPool, 0);
+
+    createDescriptorSets(device, 
+                         descriptorPool,
+                         descriptorSetLayout,
+                         descriptorSets,
+                         uniformBuffers,
+                         textureImageView,
+                         textureSampler,
+                         swapChain.images.size());
+
+    commandPool.allocateCommandBuffers(swapChain.images.size(),
+                                       commandBuffers.data());
+    writeCommandsForDrawing();
+}
+
 void Renderer::cleanupSwapChain()
 {
     vkDestroyImageView(device.handle, depthImageView, nullptr);
@@ -424,32 +572,29 @@ void Renderer::cleanupSwapChain()
     // вместо того чтобы создавать новый командный пул и выделять буферы в нем
     // мы можем освободить текущий и выделить новые командные буферы в нем
 
-    commandPool.freeCommandBuffers(commandBuffers.size(),
-                                   commandBuffers.data());
-
-    vkDestroyPipeline(device.handle, graphicsPipeline, nullptr);
-    vkDestroyPipelineLayout(device.handle, pipelineLayout, nullptr);
-    vkDestroyRenderPass(device.handle, renderPass, nullptr);
-
-    for(size_t i = 0; i < swapChain.images.size(); i++)
-        uniformBuffers[i].destroy();
+    vkResetCommandPool(device.handle, commandPool.handle, 0);
 
     swapChain.destroy();
-
-    vkDestroyDescriptorPool(device.handle, descriptorPool, nullptr);
 }
 
 void Renderer::cleanup()
 {
     cleanupSwapChain();
 
+    for(size_t i = 0; i < uniformBuffers.size(); i++)
+        uniformBuffers[i].destroy();
+    
+    vkDestroyPipeline(device.handle, graphicsPipeline, nullptr);
+    vkDestroyPipelineLayout(device.handle, pipelineLayout, nullptr);
+    vkDestroyRenderPass(device.handle, renderPass, nullptr);
+
+    vkDestroyDescriptorPool(device.handle, descriptorPool, nullptr);
+
     vkDestroySampler(device.handle, textureSampler, nullptr);
     vkDestroyImageView(device.handle, textureImageView, nullptr);
-
+    textureImage.destroy();
 
     vkDestroyDescriptorSetLayout(device.handle, descriptorSetLayout, nullptr);
-    
-    textureImage.destroy();
 
     indexBuffer.destroy();
     vertexBuffer.destroy();
@@ -463,7 +608,8 @@ void Renderer::cleanup()
         vkDestroySemaphore(device.handle, imageAvailableSemaphores[i], nullptr);
         vkDestroyFence    (device.handle, inFlightFences[i],           nullptr);
     }
-
+    
+    vkDestroyCommandPool(device.handle, commandPool.handle, nullptr);
     vkDestroyDevice(device.handle, nullptr);
 
     if(enableValidationLayers)
@@ -478,3 +624,4 @@ void Renderer::cleanup()
     glfwTerminate();
 }
 
+///////////////////////// RENDERER END //////////////////////////////

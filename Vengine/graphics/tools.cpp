@@ -1,10 +1,12 @@
-﻿#include "vkTools.h"
+﻿#include "tools.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "libraries/tiny_obj_loader.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+
+///////////////////////// STATIC BEG /////////////////////////////
 
 static std::vector<char> loadFile(const std::string &filename)
 {
@@ -25,10 +27,16 @@ static std::vector<char> loadFile(const std::string &filename)
         return buffer;
 }
 
-namespace vkTools
+///////////////////////// STATIC END //////////////////////////////
+
+
+
+///////////////////////// VK TOOLS BEG //////////////////////////////
+
+namespace VengineTools
 {
-    void loadMesh(std::string           path,
-                  std::vector<Vertex> &vertices,
+    void loadMesh(std::string            path,
+                  std::vector<Vertex>   &vertices,
                   std::vector<uint32_t> &indices)
     {
         tinyobj::attrib_t attrib;
@@ -65,21 +73,29 @@ namespace vkTools
     }
 
 
-    unsigned char *loadImage(const std::string  path,
-                             int                &loadedWidth,
-                             int                &loadedHeight,
-                             int                &loadedChannels)
+    void loadImage(const std::string  path,
+                   int                &loadedWidth,
+                   int                &loadedHeight,
+                   int                &loadedChannels,
+                   std::vector<Pixel> &pixels)
     {
-        stbi_uc *pixels = stbi_load(path.c_str(),
-                                    &loadedWidth,
-                                    &loadedHeight,
-                                    &loadedChannels,
-                                    STBI_rgb_alpha);
+        stbi_uc *rawPixels = stbi_load(path.c_str(),
+                                       &loadedWidth,
+                                       &loadedHeight,
+                                       &loadedChannels,
+                                       STBI_rgb_alpha);
+        
         loadedChannels = 4; // STBI_rgb_alpha имеет 4 канала
-        if(!pixels)
+
+        if(!rawPixels)
             throw std::runtime_error("failed to load texture image! " + path);
 
-        return pixels;
+        size_t rawPixelsByteSize = loadedWidth * loadedHeight * loadedChannels;
+
+        pixels.resize(loadedWidth * loadedHeight);
+
+        memcpy(pixels.data(), rawPixels, rawPixelsByteSize);
+        stbi_image_free(rawPixels);
     }
 
 
@@ -88,4 +104,6 @@ namespace vkTools
         return loadFile(filename);
     }
 }
+
+///////////////////////// VK TOOLS END //////////////////////////////
 

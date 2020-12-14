@@ -9,6 +9,55 @@ enum class TransitionType
     DEPTH_STENCIL_OPTIMAL = 2
 };
 
+///////////////////////// STATIC BEG //////////////////////////////
+
+static TransitionType getTransitionType(VkImageLayout  oldLayout,
+                                        VkImageLayout  newLayout)
+{
+    if(oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && 
+       newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+    {
+        return TransitionType::WRITE_OPTIMAL;
+    }
+    else if(oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && 
+            newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+    {
+        return TransitionType::SHADER_READ_OPTIMAL;
+    }
+    else if(oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && 
+            newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+    {
+        return TransitionType::DEPTH_STENCIL_OPTIMAL;
+    } else
+         throw std::invalid_argument("unsupported layout transition!");
+}
+
+static void setupImageMemoryBarrier(VkImageLayout          oldLayout,
+                                    VkImageLayout          newLayout,
+                                    VkImage                image,
+                                    VkImageMemoryBarrier  &barrier)
+{
+    barrier.sType     = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.oldLayout = oldLayout;
+    barrier.newLayout = newLayout;
+
+    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+    barrier.image = image;
+    barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+    barrier.subresourceRange.baseMipLevel   = 0;
+    barrier.subresourceRange.levelCount     = 1;
+    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.layerCount     = 1;
+
+    barrier.srcAccessMask = 0;
+    barrier.dstAccessMask = 0;
+}
+
+///////////////////////// STATIC END //////////////////////////////
+
+///////////////////////// IMAGE TRANSITION INFO BEG //////////////////////////////
 
 struct ImageTransitionInfo
 {
@@ -78,52 +127,10 @@ void ImageTransitionInfo::setupForDepthStencil(VkFormat  format)
       destinationStage = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 }
 
-
-static TransitionType getTransitionType(VkImageLayout  oldLayout,
-                                        VkImageLayout  newLayout)
-{
-    if(oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && 
-       newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-    {
-        return TransitionType::WRITE_OPTIMAL;
-    }
-    else if(oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && 
-            newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-    {
-        return TransitionType::SHADER_READ_OPTIMAL;
-    }
-    else if(oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && 
-            newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-    {
-        return TransitionType::DEPTH_STENCIL_OPTIMAL;
-    } else
-         throw std::invalid_argument("unsupported layout transition!");
-}
+///////////////////////// IMAGE TRANSITION INFO END //////////////////////////////
 
 
-static void setupImageMemoryBarrier(VkImageLayout          oldLayout,
-                                    VkImageLayout          newLayout,
-                                    VkImage                image,
-                                    VkImageMemoryBarrier  &barrier)
-{
-    barrier.sType     = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barrier.oldLayout = oldLayout;
-    barrier.newLayout = newLayout;
-
-    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-
-    barrier.image = image;
-    barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
-    barrier.subresourceRange.baseMipLevel   = 0;
-    barrier.subresourceRange.levelCount     = 1;
-    barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount     = 1;
-
-    barrier.srcAccessMask = 0;
-    barrier.dstAccessMask = 0;
-}
-
+///////////////////////// PUBLIC BEG //////////////////////////////
 
 void transitionImageLayout(CommandPool    &commandPool,
                            Image          &image,
@@ -154,3 +161,5 @@ void transitionImageLayout(CommandPool    &commandPool,
     endSingleTimeCommands(commandPool,
                           commandBuffer);
 }
+
+///////////////////////// PUBLIC END //////////////////////////////

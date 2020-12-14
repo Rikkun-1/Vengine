@@ -44,12 +44,6 @@
     <ClCompile Include="graphics\Renderer.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="graphics\vkSettings.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="graphics\vkTools.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="graphics\Mesh.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -122,13 +116,16 @@
     <ClCompile Include="graphics\vulkanWrapper\vulkanWrapper.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="graphics\vulkanWrapper\swapChainSupportDetails.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="graphics\vulkanWrapper\vertex.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="graphics\vulkanWrapper\buffer.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="graphics\tools.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="graphics\settings.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -139,12 +136,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="graphics\Renderer.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="graphics\vkSettings.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="graphics\vkTools.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="graphics\Mesh.h">
@@ -219,13 +210,28 @@
     <ClInclude Include="graphics\vulkanWrapper\descriptorSet.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="graphics\vulkanWrapper\swapChainSupportDetails.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="graphics\vulkanWrapper\vertex.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="graphics\vulkanWrapper\buffer.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics\tools.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics\settings.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics\libraries\tiny_obj_loader\tiny_obj_loader.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics\libraries\stb\stb_image.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics\libraries\tiny_obj_loader.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics\libraries\stb_image.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

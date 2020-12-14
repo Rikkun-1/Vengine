@@ -2,35 +2,7 @@
 
 #include <stdexcept>
 
-void CommandPool::freeCommandBuffers(int              amount,
-                                     VkCommandBuffer *commandBuffers)
-{
-     vkFreeCommandBuffers(device->handle, 
-                          handle, 
-                          static_cast<uint32_t>(amount), 
-                          commandBuffers);
-}
-
-void CommandPool::allocateCommandBuffers(int              amount,
-                                         VkCommandBuffer  *commandBuffers)  
-{
-    VkCommandBufferAllocateInfo allocInfo{};
-    allocInfo.sType       = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = handle;
-
-    // Этот буфер является первичным или вторичным
-    // VK_COMMAND_BUFFER_LEVEL_PRIMARY - буфер является первичным.
-    // его можно отправить в очередь для исполнения, но его нельзя вызывать из других буферов
-    // VK_COMMAND_BUFFER_LEVEL_SECONDARY - буфер является вторичным. Не может быть
-    // отправлен в очередь напрямую, но может быть вызван из первичных буферов
-    // во вторичном буфере можно описать частоиспользуемые команды чтобы вызывать их 
-    // из главного буфера в нужные моменты
-    allocInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = static_cast<uint32_t>(amount);
-
-    if(vkAllocateCommandBuffers(device->handle, &allocInfo, commandBuffers) != VK_SUCCESS)
-        throw std::runtime_error("failed to allocate command buffers!");
-}
+///////////////////////// COMMAND POOL BEG ///////////////////////////
 
 CommandPool::CommandPool()
 {
@@ -40,9 +12,14 @@ CommandPool::CommandPool()
 
 CommandPool::CommandPool(const LogicalDevice *device)
 {
-    handle           = VK_NULL_HANDLE;
-    device           = device;
-    queueFamilyIndex = device->familyIndices.graphicsFamily.value();
+    handle = VK_NULL_HANDLE;
+    setDevice(device);
+}
+
+void CommandPool::setDevice(const LogicalDevice *device)
+{
+    this->device           = device;
+    this->queueFamilyIndex = device->familyIndices.graphicsFamily.value();
 }
 
 void CommandPool::create() 
@@ -64,13 +41,39 @@ void CommandPool::create()
         throw std::runtime_error("failed to create command pool!");
 }
 
-void CommandPool::setDevice(const LogicalDevice *device)
+void CommandPool::allocateCommandBuffers(uint32_t          amount,
+                                         VkCommandBuffer  *commandBuffers)  
 {
-    this->device           = device;
-    this->queueFamilyIndex = device->familyIndices.graphicsFamily.value();
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType       = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = handle;
+
+    // Этот буфер является первичным или вторичным
+    // VK_COMMAND_BUFFER_LEVEL_PRIMARY - буфер является первичным.
+    // его можно отправить в очередь для исполнения, но его нельзя вызывать из других буферов
+    // VK_COMMAND_BUFFER_LEVEL_SECONDARY - буфер является вторичным. Не может быть
+    // отправлен в очередь напрямую, но может быть вызван из первичных буферов
+    // во вторичном буфере можно описать частоиспользуемые команды чтобы вызывать их 
+    // из главного буфера в нужные моменты
+    allocInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = static_cast<uint32_t>(amount);
+
+    if(vkAllocateCommandBuffers(device->handle, &allocInfo, commandBuffers) != VK_SUCCESS)
+        throw std::runtime_error("failed to allocate command buffers!");
+}
+
+void CommandPool::freeCommandBuffers(uint32_t         amount,
+                                     VkCommandBuffer *commandBuffers)
+{
+     vkFreeCommandBuffers(device->handle, 
+                          handle, 
+                          static_cast<uint32_t>(amount), 
+                          commandBuffers);
 }
 
 void CommandPool::destroy()
 {
     vkDestroyCommandPool(this->device->handle, this->handle, nullptr);
 }
+
+///////////////////////// COMMAND POOL END ///////////////////////////

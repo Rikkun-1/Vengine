@@ -4,26 +4,40 @@
 #include <GLFW/glfw3.h>
 
 #include "vulkanWrapper/vulkanWrapper.h"
-#include "vkSettings.h"
+#include "settings.h"
 #include "Model.h"
 #include "Shader.h"
 
 class Renderer
 {
 public:
-    vkSettings settings;
     bool framebufferResized = false;
+
+    vkSettings settings;
+    PipelineFixedFunctions pipelineFixedFunctions;
+
+    Model   model;
 
     Renderer();
 
     void run();
 
-    void changeModel(Model model);
-    void changeTexture(Texture texture);
+    void setModel(Model model);
+    void setMesh(Mesh mesh);
+    void setTexture(Texture texture);
+    void setInterfaceCallback(void (*interfaceCallback)(int, int, int, Renderer *));
+
+    void pushModel();
+    void pushMesh   (bool rewriteCommandBuffers = true);
+    void pushTexture(bool rewriteCommandBuffers = true);
 
     void loadShader(Shader shader);
+    
+    void setupPipeline();
 
 private:
+    void (*interfaceCallback)(int, int, int, Renderer *);
+
     VkInstance               instance;
 
     VkDebugUtilsMessengerEXT debugMessenger;
@@ -32,15 +46,13 @@ private:
     VkSurfaceKHR             surface;
 
     LogicalDevice            device;
-    SwapChain                swapChain;
+    Swapchain                swapChain;
     
     VkRenderPass               renderPass;
     VkDescriptorSetLayout      descriptorSetLayout;
     VkPipelineLayout           pipelineLayout;
 
     VkPipeline                 graphicsPipeline;
-
-    std::vector<VkFramebuffer> swapChainFramebuffers;
 
     CommandPool                   commandPool;
     std::vector<VkCommandBuffer>  commandBuffers;
@@ -54,12 +66,12 @@ private:
     Buffer                      indexBuffer;
     std::vector<Buffer>         uniformBuffers;
         
-    Image                       textureImage;
-    VkImageView                 textureImageView;
-    VkSampler                   textureSampler;
+    Image                        textureImage;
+    VkImageView                  textureImageView;
+    VkSampler                    textureSampler;
 
-    Image                       depthImage;
-    VkImageView                 depthImageView;
+    Image                        depthImage;
+    VkImageView                  depthImageView;
 
     VkDescriptorPool             descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
@@ -67,9 +79,6 @@ private:
 
     int MAX_FRAMES_IN_FLIGHT = 2;
     size_t currentFrame      = 0;
-
-    Model   model;
-    Texture texture;
 
     Shader vertexShader;
     Shader fragmentShader;
@@ -81,8 +90,15 @@ private:
     void initVulkan();
     void mainLoop();
     void drawFrame();
+    void setupShaderModules();
+    void setupLogicalDevice();
+    void setupSwapchain();
+    void setupCommandPool();
+    void writeCommandsForDrawing();
     void recreateSwapChain();
     void cleanupSwapChain();
     void cleanup();
+
+    friend void glfwKeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
 };
 

@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+///////////////////////// STATIC BEG //////////////////////////////
+
 static void setupSamplerCreateInfo(const LogicalDevice        &device,
                                    VkSamplerCreateInfo  &samplerInfo)
 {
@@ -31,6 +33,9 @@ static void setupSamplerCreateInfo(const LogicalDevice        &device,
     samplerInfo.maxLod     = 0.0f;
 }
 
+///////////////////////// STATIC BEG //////////////////////////////
+
+///////////////////////// PUBLIC BEG //////////////////////////////
 
 void createTextureImage(void               *pixels,
                         int                 textureChannels,
@@ -96,3 +101,5 @@ void createTextureSampler(const LogicalDevice    &device,
     if(vkCreateSampler(device.handle, &samplerInfo, nullptr, &textureSampler) != VK_SUCCESS)
         throw std::runtime_error("failed to create texture sampler!");
 }
+
+///////////////////////// PUBLIC END //////////////////////////////

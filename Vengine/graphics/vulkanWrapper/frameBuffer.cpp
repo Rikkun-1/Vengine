@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+///////////////////////// PUBLIC BEG //////////////////////////////
+
 VkFramebuffer createFrameBuffer(const LogicalDevice              &device,
                                 VkRenderPass                      renderPass,
                                 const VkExtent3D                 &extent,
@@ -22,3 +24,5 @@ VkFramebuffer createFrameBuffer(const LogicalDevice              &device,
 
     return frameBuffer;
 }
+
+///////////////////////// PUBLIC END //////////////////////////////

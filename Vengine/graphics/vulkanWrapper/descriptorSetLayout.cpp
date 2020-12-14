@@ -1,5 +1,7 @@
 #include "descriptorSetLayout.h"
 
+///////////////////////// PUBLIC BEG //////////////////////////////
+
 void setupDescriptorSetLayoutBinding(uint32_t                     binding,
                                      uint32_t                     count,
                                      VkDescriptorType             descriptorType,
@@ -24,7 +26,7 @@ VkDescriptorSetLayout createDescriptorSetLayout(VkDevice  logicalDevice)
     setupDescriptorSetLayoutBinding(0, //binding
                                     1, //count
                                     VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                                    VK_SHADER_STAGE_VERTEX_BIT,
+                                    VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                                     uboLayoutBinding);
 
     VkDescriptorSetLayoutBinding samplerLayoutBinding{};
@@ -35,7 +37,6 @@ VkDescriptorSetLayout createDescriptorSetLayout(VkDevice  logicalDevice)
                                     samplerLayoutBinding);
 
     std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
-
 
     VkDescriptorSetLayoutCreateInfo layoutInfo{};
     layoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -48,3 +49,5 @@ VkDescriptorSetLayout createDescriptorSetLayout(VkDevice  logicalDevice)
 
     return descriptorSetLayout;
 }
+
+///////////////////////// PUBLIC END //////////////////////////////

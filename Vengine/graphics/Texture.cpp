@@ -1,6 +1,8 @@
 #include "Texture.h"
 
-#include "vkTools.h"
+#include "tools.h"
+
+///////////////////////// TEXTURE BEG //////////////////////////////
 
 Texture::Texture()
 {
@@ -8,6 +10,8 @@ Texture::Texture()
     int height   = 0;
     int channels = 0;
 }
+
+Texture::~Texture() {}
 
 Texture::Texture(std::string path)
 {
@@ -20,20 +24,17 @@ int Texture::getChannels() { return channels; }
 
 void Texture::loadFromFile(std::string path)
 {
-    pixels = reinterpret_cast<Pixel *>(vkTools::loadImage(path, width, height, channels));
+    VengineTools::loadImage(path, width, height, channels, pixels);
 }
 
 void Texture::setPixel(int x, int y, Pixel pixel)
 {
-    pixels[(y * height + x) * channels] = pixel;
+    pixels[(y * width + x)] = pixel;
 }
 
 Pixel Texture::getPixel(int x, int y)
 {
-    return pixels[(y * height + x) * channels];
+    return pixels[(y * width + x)];
 }
 
-void *Texture::getRaw()
-{
-    return static_cast<void *>(pixels);
-}
+///////////////////////// TEXTURE END //////////////////////////////

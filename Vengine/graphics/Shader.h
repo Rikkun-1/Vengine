@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "vkTools.h"
+#include "tools.h"
 
 enum class ShaderStages
 {
