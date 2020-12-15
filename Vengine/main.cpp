@@ -93,8 +93,6 @@ void interfaceCallBack(int key, int action, int modificators, Renderer *renderer
 
 int main() 
 {
-
-
     Shader vertexShader("shaders/bin/vert.spv", ShaderStages::VERTEX_STAGE);
     Shader fragmentShader("shaders/bin/frag.spv", ShaderStages::FRAGMENT_STAGE);
 
@@ -102,11 +100,11 @@ int main()
     app.loadShader(vertexShader);
     app.loadShader(fragmentShader);
 
-    Mesh    mesh("models/viking_room.obj");
-    Texture texture("textures/viking_room.png");
-    Model   model(mesh, texture);
+    //Mesh    mesh("models/viking_room.obj");
+    //Texture texture("textures/viking_room.png");
+    //Model   model(mesh, texture);
 
-    app.setModel(model);
+    //app.setModel(model);
 
     app.setInterfaceCallback(interfaceCallBack);
 
