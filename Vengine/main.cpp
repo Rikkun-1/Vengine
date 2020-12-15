@@ -50,12 +50,12 @@ void interfaceCallBack(int key, int action, int modificators, Renderer *renderer
 
     if(modificators == GLFW_MOD_ALT)
     {
-        if(key == GLFW_KEY_KP_4 || key == GLFW_KEY_LEFT ) scale.x += onePressScale;
-        if(key == GLFW_KEY_KP_6 || key == GLFW_KEY_RIGHT) scale.x -= onePressScale;
-        if(key == GLFW_KEY_KP_2 || key == GLFW_KEY_KP_2 ) scale.y += onePressScale;
-        if(key == GLFW_KEY_KP_8 || key == GLFW_KEY_UP   ) scale.y -= onePressScale;
-        if(key == GLFW_KEY_KP_9 || key == GLFW_KEY_KP_9 ) scale.z += onePressScale;  
-        if(key == GLFW_KEY_KP_3 || key == GLFW_KEY_KP_3 ) scale.z -= onePressScale;
+        if(key == GLFW_KEY_KP_4 || key == GLFW_KEY_LEFT      ) scale.x += onePressScale;
+        if(key == GLFW_KEY_KP_6 || key == GLFW_KEY_RIGHT     ) scale.x -= onePressScale;
+        if(key == GLFW_KEY_KP_2 || key == GLFW_KEY_DOWN      ) scale.y += onePressScale;
+        if(key == GLFW_KEY_KP_8 || key == GLFW_KEY_UP        ) scale.y -= onePressScale;
+        if(key == GLFW_KEY_KP_9 || key == GLFW_KEY_PAGE_UP   ) scale.z += onePressScale;  
+        if(key == GLFW_KEY_KP_3 || key == GLFW_KEY_PAGE_DOWN ) scale.z -= onePressScale;
     }
 
     if(key == GLFW_KEY_F) fixedFunctions.rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
