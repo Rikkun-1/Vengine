@@ -30,32 +30,32 @@ void interfaceCallBack(int key, int action, int modificators, Renderer *renderer
     
     if(modificators == 0)
     {
-        if(key == GLFW_KEY_KP_4) position.x += onePressPosition;
-        if(key == GLFW_KEY_KP_6) position.x -= onePressPosition;
-        if(key == GLFW_KEY_KP_8) position.y -= onePressPosition;
-        if(key == GLFW_KEY_KP_2) position.y += onePressPosition;
-        if(key == GLFW_KEY_KP_9) position.z += onePressPosition;
-        if(key == GLFW_KEY_KP_3) position.z -= onePressPosition;
+        if(key == GLFW_KEY_KP_4 || key == GLFW_KEY_LEFT     ) position.x += onePressPosition;
+        if(key == GLFW_KEY_KP_6 || key == GLFW_KEY_RIGHT    ) position.x -= onePressPosition;
+        if(key == GLFW_KEY_KP_8 || key == GLFW_KEY_UP       ) position.y -= onePressPosition;
+        if(key == GLFW_KEY_KP_2 || key == GLFW_KEY_DOWN     ) position.y += onePressPosition;
+        if(key == GLFW_KEY_KP_9 || key == GLFW_KEY_PAGE_UP  ) position.z += onePressPosition;
+        if(key == GLFW_KEY_KP_3 || key == GLFW_KEY_PAGE_DOWN) position.z -= onePressPosition;
     }
 
     if(modificators == GLFW_MOD_SHIFT)
     {
-        if(key == GLFW_KEY_KP_8) rotation.x += onePressRotation;
-        if(key == GLFW_KEY_KP_2) rotation.x -= onePressRotation;
-        if(key == GLFW_KEY_KP_9) rotation.y -= onePressRotation;
-        if(key == GLFW_KEY_KP_3) rotation.y += onePressRotation;
-        if(key == GLFW_KEY_KP_4) rotation.z -= onePressRotation;
-        if(key == GLFW_KEY_KP_6) rotation.z += onePressRotation;
+        if(key == GLFW_KEY_KP_8 || key == GLFW_KEY_UP       ) rotation.x += onePressRotation;
+        if(key == GLFW_KEY_KP_2 || key == GLFW_KEY_DOWN     ) rotation.x -= onePressRotation;
+        if(key == GLFW_KEY_KP_3 || key == GLFW_KEY_PAGE_DOWN) rotation.y += onePressRotation;
+        if(key == GLFW_KEY_KP_9 || key == GLFW_KEY_PAGE_UP  ) rotation.y -= onePressRotation;
+        if(key == GLFW_KEY_KP_6 || key == GLFW_KEY_RIGHT    ) rotation.z += onePressRotation;
+        if(key == GLFW_KEY_KP_4 || key == GLFW_KEY_LEFT     ) rotation.z -= onePressRotation;
     }
 
     if(modificators == GLFW_MOD_ALT)
     {
-        if(key == GLFW_KEY_KP_4) scale.x += onePressScale;
-        if(key == GLFW_KEY_KP_6) scale.x -= onePressScale;
-        if(key == GLFW_KEY_KP_8) scale.y -= onePressScale;
-        if(key == GLFW_KEY_KP_2) scale.y += onePressScale;
-        if(key == GLFW_KEY_KP_9) scale.z += onePressScale;
-        if(key == GLFW_KEY_KP_3) scale.z -= onePressScale;
+        if(key == GLFW_KEY_KP_4 || key == GLFW_KEY_LEFT ) scale.x += onePressScale;
+        if(key == GLFW_KEY_KP_6 || key == GLFW_KEY_RIGHT) scale.x -= onePressScale;
+        if(key == GLFW_KEY_KP_2 || key == GLFW_KEY_KP_2 ) scale.y += onePressScale;
+        if(key == GLFW_KEY_KP_8 || key == GLFW_KEY_UP   ) scale.y -= onePressScale;
+        if(key == GLFW_KEY_KP_9 || key == GLFW_KEY_KP_9 ) scale.z += onePressScale;  
+        if(key == GLFW_KEY_KP_3 || key == GLFW_KEY_KP_3 ) scale.z -= onePressScale;
     }
 
     if(key == GLFW_KEY_F) fixedFunctions.rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
@@ -99,12 +99,6 @@ int main()
     Renderer app;
     app.loadShader(vertexShader);
     app.loadShader(fragmentShader);
-
-    //Mesh    mesh("models/viking_room.obj");
-    //Texture texture("textures/viking_room.png");
-    //Model   model(mesh, texture);
-
-    //app.setModel(model);
 
     app.setInterfaceCallback(interfaceCallBack);
 
