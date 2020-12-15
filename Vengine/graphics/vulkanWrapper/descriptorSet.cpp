@@ -13,7 +13,7 @@ static void allocateDescriptorSets(VkDevice                      logicalDevice,
     VkDescriptorSetAllocateInfo allocInfo{};
     allocInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfo.descriptorPool     = descriptorPool;
-    allocInfo.descriptorSetCount = static_cast<uint32_t>(amount);
+    allocInfo.descriptorSetCount = amount;
     allocInfo.pSetLayouts        = layouts.data();
 
     descriptorSets.resize(amount);

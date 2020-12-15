@@ -88,13 +88,6 @@ void interfaceCallBack(int key, int action, int modificators, Renderer *renderer
         renderer->setTexture(justColor);
         renderer->pushTexture();
     }
-    
-    if(key == GLFW_KEY_T)
-    {
-        std::string path;
-        system("ECHO \"Enter texture path\" & ");
-    }
-    if(key == GLFW_KEY_M) color = Pixel{255, 255, 255}; // 
 }
 
 

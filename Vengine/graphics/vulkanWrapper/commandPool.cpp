@@ -56,7 +56,7 @@ void CommandPool::allocateCommandBuffers(uint32_t          amount,
     // во вторичном буфере можно описать частоиспользуемые команды чтобы вызывать их 
     // из главного буфера в нужные моменты
     allocInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = static_cast<uint32_t>(amount);
+    allocInfo.commandBufferCount = amount;
 
     if(vkAllocateCommandBuffers(device->handle, &allocInfo, commandBuffers) != VK_SUCCESS)
         throw std::runtime_error("failed to allocate command buffers!");
@@ -67,7 +67,7 @@ void CommandPool::freeCommandBuffers(uint32_t         amount,
 {
      vkFreeCommandBuffers(device->handle, 
                           handle, 
-                          static_cast<uint32_t>(amount), 
+                          amount, 
                           commandBuffers);
 }
 
