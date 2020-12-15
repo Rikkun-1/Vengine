@@ -7,9 +7,9 @@
 - stb_image       - уже есть в папке graphihcs/libraries
 - tiny_obj_loader - уже есть в папке graphihcs/libraries
 
-- GLFW версии 3.3.2  и выше - [Оффициальный сайт](https://www.glfw.org/download.html)
-- GLM версии 0.9.9.8 и выше - [Оффициальный сайт](https://github.com/g-truc/glm)
-
+- GLFW версии 3.3.2     и выше - [Оффициальный сайт](https://www.glfw.org/download.html)
+- GLM  версии 0.9.9.8   и выше - [Оффициальный сайт](https://github.com/g-truc/glm)
+- VULKAN SDK версии 1.0 и выше - [Оффициальный сайт](https://www.lunarg.com/vulkan-sdk/)
 
 ### Как пользоваться
 Скачайте один из релизов и разместите его в удобном месте
