@@ -26,7 +26,5 @@ public:
     int width;
     int height;
     int channels;
-
-private:
 };
 

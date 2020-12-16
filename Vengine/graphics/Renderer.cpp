@@ -71,6 +71,24 @@ void Renderer::loadShader(Shader shader)
     }
 }
 
+void Renderer::setFillMode(FillMode fillMode)
+{
+    if (fillMode == FillMode::FILL)
+        pipelineFixedFunctions.rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+
+    if (fillMode == FillMode::LINE)
+        pipelineFixedFunctions.rasterizer.polygonMode = VK_POLYGON_MODE_LINE;
+
+    if (fillMode == FillMode::POINT)
+        pipelineFixedFunctions.rasterizer.polygonMode = VK_POLYGON_MODE_POINT;
+    
+    vkDeviceWaitIdle(device.handle);
+
+    setupPipeline();
+
+    writeCommandsForDrawing();
+}
+
 void Renderer::setModel(Model model) 
 {
     this->model = model;
@@ -270,13 +288,6 @@ void Renderer::mainLoop()
     static float lastTime = 0;
     while(!glfwWindowShouldClose(pWindow))
     {
-        static auto startTime = std::chrono::high_resolution_clock::now();
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-        //model.rotation.z = time * 10;
-        //model.position.z = time;
-        //model.scale.z   = time / 4;
-        //model.scale.x   = time / 4;
         glfwPollEvents();
 
         drawFrame();

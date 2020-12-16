@@ -14,8 +14,6 @@
 
 #include "graphics/tools.h"
 
-#include <chrono>
-
 
 void interfaceCallBack(int key, int action, int modificators, Renderer *renderer)
 {
@@ -58,12 +56,9 @@ void interfaceCallBack(int key, int action, int modificators, Renderer *renderer
         if(key == GLFW_KEY_KP_3 || key == GLFW_KEY_PAGE_DOWN ) scale.z -= onePressScale;
     }
 
-    if(key == GLFW_KEY_F) fixedFunctions.rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-    if(key == GLFW_KEY_L) fixedFunctions.rasterizer.polygonMode = VK_POLYGON_MODE_LINE;
-    if(key == GLFW_KEY_P) fixedFunctions.rasterizer.polygonMode = VK_POLYGON_MODE_POINT;
-
-    if(key == GLFW_KEY_F || key == GLFW_KEY_L || key == GLFW_KEY_P)
-        renderer->setupPipeline();
+    if(key == GLFW_KEY_F) renderer->setFillMode(FillMode::FILL);
+    if(key == GLFW_KEY_L) renderer->setFillMode(FillMode::LINE);
+    if(key == GLFW_KEY_P) renderer->setFillMode(FillMode::POINT);
 
     Pixel color;
     if(key == GLFW_KEY_1) color = Pixel{204, 255,   0}; // салатовый

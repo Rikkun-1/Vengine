@@ -8,6 +8,13 @@
 #include "Model.h"
 #include "Shader.h"
 
+enum class FillMode
+{
+    FILL   = 0,
+    LINE   = 1,
+    POINT  = 2
+};
+
 class Renderer
 {
 public:
@@ -22,6 +29,7 @@ public:
 
     void run();
 
+    void setFillMode(FillMode fillMode);
     void setModel(Model model);
     void setMesh(Mesh mesh);
     void setTexture(Texture texture);
@@ -33,7 +41,7 @@ public:
 
     void loadShader(Shader shader);
     
-    void setupPipeline();
+    
 
 private:
     void (*interfaceCallback)(int, int, int, Renderer *);
@@ -94,6 +102,7 @@ private:
     void setupLogicalDevice();
     void setupSwapchain();
     void setupCommandPool();
+    void setupPipeline();
     void writeCommandsForDrawing();
     void recreateSwapChain();
     void cleanupSwapChain();

@@ -70,10 +70,10 @@ void PipelineFixedFunctions:: setupVertexInputDescriptions()
 
 void PipelineFixedFunctions:: setupViewPortAndScissor(const VkExtent2D  &swapChainExtent)
     {
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width  = (float) swapChainExtent.width;
-        viewport.height = (float) swapChainExtent.height;
+        viewport.x        = 0.0f;
+        viewport.y        = 0.0f;
+        viewport.width    = (float) swapChainExtent.width;
+        viewport.height   = (float) swapChainExtent.height;
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
